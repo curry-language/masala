@@ -1,97 +1,130 @@
-Sign Up
-Vorbedingung: Benutzer nicht eingeloggt
-Wo: Beliebige Seite
-1. Benutzer klickt auf "Sign Up"
-2. Anwendung leitet Benutzer weiter auf Registrierungsseite
-3. Benutzer gibt E-Mail Adresse, Benutzername und 2 mal Passwort ein
-4. Benutzer klickt auf "Sign Up"
-5. Anwendung überprüft, dass das zweite Passwort gleich dem ersten ist
-6. Anwendung sendet Daten an Server
-7. Server überprüft, dass Nutzername und E-Mail frei sind
-8. Wenn frei:
-    1. Server trägt neuen Benutzer mit diesen Daten ein
-    2. Server stellt Nutzer als "Not Trusted" ein
-    3. Server stellt Nutzer als "Invalid" ein
-    4. Server sendet Bestätigungsemail an Benutzer mit Validierungslink
-    5. Benutzer wird über erfolgreiche Registrierung und Bestätigungsemail informiert
-9. Wenn nicht frei:
-    1. Anwendung informiert Benutzer, ob Benutzername oder E-Mail bereits vergeben ist
-    2. Benutzer bleibt auf Registrierungseite
-    3. Anwendung behält eingetragene Daten bei außer Passwort
-    4. Anwendung markiert fehlerhafte Stelle
+**User Roles**
+1. Trusted:
+    User is validated and trusted by Admin. Is allowed to upload packages, which will be publicized by Admin.
+2. Not Trusted:
+    User is validated but not trusted by Admin.
+3. Invalid:
+    User has been registered but not yet validated. Has no rights for now including login.
 
-**Übergang von Invalid?**
+**Admin functionality regarding users**
+1. Admin can change roles of users from "Not Trusted" to "Trusted" and vice versa
+2. Admin can delete users
 
-Login
-Vorbedingung: Benutzer nicht eingeloggt
-Wo: Beliebige Seite
-1. Benutzer klickt auf "Login"
-2. Anwendung leitet Benutzer weiter auf Loginseite
-3. Benutzer gibt wahlweise Benutzername oder E-Mail und Passwort an
-4. Anwendung sendet Daten an Server
-5. Server überprüft, dass Nutzer vorhanden ist und Passwort korrekt ist
-6. Wenn vorhanden:
-    1. Wenn korrekt:
-        1. Server erstellt neuen Logintoken für Benutzer
-        2. Server sendet Bestätigung und Token an Benutzer
-        3. Anwendung leitet Benutzer unter Anwendung des Tokens auf Hauptseite weiter
-    2. Wenn nicht korrekt:
-        1. Anwendung informiert Benutzer darüber, dass Passwort falsch ist
-        2. Benutzer bleibt auf Loginseite
-        3. Anwendung löscht auf Seite eingetragenes Passwort, Benutzername bleibt
-7. Wenn nicht vorhanden:
-    1. Anwendung informiert Benutzer darüber, dass ein solcher Nutzer nicht existiert
-    2. Benutzer bleibt auf Loginseite
-    3. Anwendung löscht auf Seite eingetragene Daten
+**Admin functionality regarding packages: checking, publishing**
+1. Admin has a list of all uploaded but not yet published packages
+2. Admin can run test on unpublished packages
+3. Admin can look into unpublished packages files
+4. Admin can publish unpublished packages, if tests run successfully
 
-Logout
-Vorbedingung: Benutzer eingeloggt
-Wo: Beliebige Seite
-1. Benutzer klickt auf "Logout"
-2. Server löscht Logintoken
-3. Anwendung leitet Benutzer auf Hauptseite ohne Token weiter
+**Validation Email**
+Is send to a new user on successful sign up. Contains a validation link to validate user. Validation link is itself valid for 10 minutes.
 
-Upload Package
-Vorbedingung: Benutzer eingeloggt
-Wo: Hauptseite
-1. Benutzer klickt auf "Upload Package"
-2. Anwendung leitet Benutzer weiter auf Uploadseite
-3. Benutzer gibt JSON-Datei und tar-Datei an, die das Package ausmachen
-4. Benutzer klickt auf "Upload"
-5. Anwendung informiert Benutzer, dass Upload permanent sein wird
-6. Wenn Benutzer auf "Bestätigen" klickt:
-    1. Anwendung überprüft, dass Namen der Dateien übereinstimmen
-    2. Wenn übereinstimmen:
-        1. Anwendung sendet Namen an Server
-        2. Server überprüft, ob Package mit dem Namen schon existiert
-        3. Wenn existiert:
-            1. Anwendung informiert Benutzer, dass Package bereits existiert
-            2. Anwendung informiert Benutzer, dass anderer Name benutzt werden muss oder ein Update hochgeladen werden soll
-        4. Wenn nicht existiert:
-            1. Server überprüft, ob Benutzer "Trusted" ist
-            2. Wenn "Trusted":
-                1. Anwendung sendet Datein an Server
-                2. Server erstellt neuen Eintrag für neues Package
-                3. Neues Package wird auf "Ungeprüft" eingestellt
-                4. Benutzer wird als Ersteller eingestellt
-                5. Anwendung informiert Benutzer über erfolgreiches Hochladen
-            3. Wenn "Untrusted":
-                1. Paket wird wird nicht publiziert
-                2. Nur Admin kann dies ähnlich wie "Trusted" freischalten.
-                3. Anwendung informiert Benutzer, dass dieser auf den
-                Admin warten muss, solange noch "Untrusted" ist
-                4. Anwendung sendet Email an Admin
-    3. Wenn nicht übereinstimmen:
-        1. Anwendung informiert Benutzer, dass die Dateien den gleichen Namen haben sollen
-7. Wenn Benutzer auf "Abbrechen" klickt:
-    1. Anwendung leiter Benutzer auf Uploadseite zurück
-    2. Anwendung behält Daten bei
+**Changing User from "Invalid" to "Not Trusted"**
+*Precondition: Sing up was successful and validation email was send*
+1. User opens their emails
+2. User looks for the validation email
+3. User clicks on validation link
+4. If link still valid:
+    1. App changes User from "Invalid" to "Not Trusted"
+    2. App moves User to main page
+    3. User is still logged out
+5. If link not valid anymore:
+    1. App moves User to website with a button, which resends a validation email
 
-**Übergang von Untrusted -> Trusted?**
+**Changing User from "Not Trusted" to "Trusted"**
+*Precondition: Logged in*
+*Who: Admin*
+1. Admin clicks userlist
+2. App shows list of all users
+3. Admin can use a filter to only see users with "Not Trusted" role
+4. Admin selects one or more users with "Not Trusted" role by clicking on checkboxes next to them
+5. Admin clicks on button "Change to Trusted"
+6. App changes Role of all selected users to "Trusted"
 
-**Admin-Funktionalität für User**
+**Sign Up**
+*Precondition: User not logged in*
+*Where: Arbitrary*
+1. User clicks button "Sign Up"
+2. App moves User to Registrationside
+3. User inputs e-mail address, username und 2 times the same password
+4. User clicks button "Sign Up"
+5. App checks, that both passwords are the same
+6. App checks, that username and e-mail are available
+7. If available:
+    1. App creates new User Entry in database with this data
+    2. App configures User as "Invalid"
+    3. App sends a validation email to User with a validation link
+    4. App informs User about successful sing up and the validation email
+    5. App provides a button for User to resend validation email
+8. If not available:
+    1. App informs User whether e-mail address or username is not available
+    2. User remains on Registrationside
+    3. Input data remains except password
+    4. App marks faulty data
 
-**Admin-Funktionalität für Pakete: prüfen, publizieren**
+**Login**
+*Precondition: User is logged out*
+*Where: Arbitrary*
+1. User clicks button "Login"
+2. App moves User to Loginpage
+3. User inputs either username or email and password
+4. App checks, that data is correct
+5. If user with username or email does not exist:
+    1. App informs User, that such a user does not exist
+    2. User remains on Loginpage
+    3. App deletes input data
+6. If user with username or email does exist:
+    1. App checks that password is correct
+    2. If password is correct:
+        1. App generates new Logintoken
+        2. App sends confirmation and token to User
+        3. App moves User to main page using token
+    3. If password is not correct:
+        1. App informs User, that password is not correct
+        2. User remains on Loginpage
+        3. App deletes password but username or email remains
 
-**Benutzerrollen?**
+**Logout**
+**Precondition: User is logged in*
+*Where: Arbitrary*
+1. User clicks button "Logout"
+2. App deletes current Logintoken
+3. App moves User to mainpage without token
 
+**Upload Package**
+*Precondition: User is logged in*
+*Where: mainpage*
+1. User clicks button "Upload Package"
+2. App moves User to upload page
+3. User inputs JSON-file and tar-file, that form the package
+4. User clicks button "Upload"
+5. App informs User that upload is permanent and asks for confirmation
+6. If User clicks button "Cancel":
+    1. User remains on upload page
+    2. Input data remains
+7. If User clicks button "Upload":
+    1. App checks, that both files have the same name
+    2. If names are not the same:
+        1. App informs User that both files need the same name
+        2. User remains on upload page
+        3. Input data remains
+    3. If names are the same:
+        1. App checks if a package with that name already exists
+        2. If package already exists:
+            1. App informs User, that a package with that name already exists
+            2. App informs User, that they either use a different name or upload an update
+        3. If package does not exist:
+            1. App runs automatic tests on package to check that it works
+            2. If tests fail:
+                1. App informs User, that some tests failed and tells them what tests
+            3. If tests are successful:
+                1. App creates new package entry with given data
+                2. User is set as Maintainer of that package
+                3. App informs User that package has been uploaded
+                4. App checks Role of User
+                5. If User has Role "Not Trusted":
+                    1. App sends email to Admin, that a new package has been uploaded
+                    2. App informs User, that they have to wait for Admin to publish the package
+                6. If User has Role "Trusted":
+                    1. App publishes package
+                    2. App informs User that package has been published
