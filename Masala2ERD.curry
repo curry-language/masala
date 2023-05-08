@@ -17,8 +17,7 @@ masalaERD =
             ]
         , Entity "Package"
             [ Attribute "Name"      (StringDom Nothing) Unique False
-            , Attribute "Abandoned" (BoolDom Nothing) NoKey False
-            , Attribute "Description"     (StringDom Nothing) NoKey False]
+            , Attribute "Abandoned" (BoolDom Nothing) NoKey False]
         , Entity "Version"
             [ Attribute "Version"      (StringDom Nothing) NoKey False
               -- Whether the version has been published by an admin
