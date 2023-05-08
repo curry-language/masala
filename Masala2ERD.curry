@@ -29,7 +29,7 @@ masalaERD =
             , Attribute "JobStatus"     (StringDom Nothing) NoKey False
             , Attribute "Downloads" (IntDom Nothing) NoKey False
             , Attribute "UploadDate" (DateDom Nothing) NoKey False
-            , Attribute "Deprecated" (BoolDom Nothing) NoKey False
+            , Attribute "Deprecated" (BoolDom Nothing) NoKey False]
         , Entity "Category" 
             [ Attribute "Name"      (StringDom Nothing) Unique False
             , Attribute "Description"     (StringDom Nothing) NoKey False]
@@ -69,6 +69,6 @@ masalaERD =
         , Relationship "Categorizes"
             [ REnd "Category" "categorizes" (Between 0 Infinite)
             , REnd "Version" "categorized_by" (Between 0 Infinite)]
-        , RelationShip "Validating"
+        , Relationship "Validating"
             [ REnd "User" "validated_by" (Exactly 1)
             , REnd "ValidationToken" "validates" (Exactly 1)]]
