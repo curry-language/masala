@@ -13,7 +13,8 @@ masalaERD =
               -- One of ADMIN,TRUSTED,NOT TRUSTED,INVALID
             , Attribute "Role"     (StringDom Nothing) NoKey False
             , Attribute "Password"     (StringDom Nothing) NoKey False 
-            , Attribute "Token"     (StringDom Nothing) NoKey False
+            , Attribute "Token"     (StringDom Nothing) NoKey True
+            , Attribute "LastLogin" (DateDom Nothing) NoKey True
             ]
         , Entity "Package"
             [ Attribute "Name"      (StringDom Nothing) Unique False
@@ -70,4 +71,4 @@ masalaERD =
             , REnd "Version" "categorized_by" (Between 0 Infinite)]
         , Relationship "Validating"
             [ REnd "User" "validated_by" (Exactly 1)
-            , REnd "ValidationToken" "validates" (Exactly 1)]]
+            , REnd "ValidationToken" "validates" (Between 0 (Max 1))]]
