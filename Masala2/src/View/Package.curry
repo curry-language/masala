@@ -1,0 +1,65 @@
+module View.Package
+  ( wPackage, tuple2Package, package2Tuple, wPackageType, showPackageView
+  , listPackageView ) where
+
+import Data.List
+import Data.Time
+import HTML.Base
+import HTML.Styles.Bootstrap4
+import HTML.WUI
+import Masala2
+import Config.EntityRoutes
+import System.SessionInfo
+import System.Spicey
+import View.EntitiesToHtml
+
+--- The WUI specification for the entity type Package.
+wPackage :: WuiSpec (String,Bool)
+wPackage =
+  withRendering (wPair wRequiredString wBoolean)
+   (renderLabels packageLabelList)
+
+--- Transformation from data of a WUI form to entity type Package.
+tuple2Package :: Package -> (String,Bool) -> Package
+tuple2Package packageToUpdate (name,abandoned) =
+  setPackageName (setPackageAbandoned packageToUpdate abandoned) name
+
+--- Transformation from entity type Package to a tuple
+--- which can be used in WUI specifications.
+package2Tuple :: Package -> (String,Bool)
+package2Tuple package = (packageName package,packageAbandoned package)
+
+--- WUI Type for editing or creating Package entities.
+--- Includes fields for associated entities.
+wPackageType :: Package -> WuiSpec Package
+wPackageType package =
+  transformWSpec (tuple2Package package,package2Tuple) wPackage
+
+--- Supplies a view to show the details of a Package.
+showPackageView :: UserSessionInfo -> Package -> [BaseHtml]
+showPackageView _ package =
+  packageToDetailsView package
+   ++ [hrefPrimSmButton "?Package/list" [htxt "back to Package list"]]
+
+--- Compares two Package entities. This order is used in the list view.
+leqPackage :: Package -> Package -> Bool
+leqPackage x1 x2 =
+  (packageName x1,packageAbandoned x1) <= (packageName x2,packageAbandoned x2)
+
+--- Supplies a list view for a given list of Package entities.
+--- Shows also show/edit/delete buttons if the user is logged in.
+--- The arguments are the session info and the list of Package entities.
+listPackageView :: UserSessionInfo -> [Package] -> [BaseHtml]
+listPackageView sinfo packages =
+  [h1 [htxt "Package list"]
+  ,spTable
+    ([take 2 packageLabelList]
+      ++ map listPackage (sortBy leqPackage packages))]
+  where
+    listPackage package =
+      packageToListView package
+       ++ (if userLoginOfSession sinfo == Nothing
+              then []
+              else [[hrefPrimBadge (showRoute package) [htxt "Show"]]
+                   ,[hrefPrimBadge (editRoute package) [htxt "Edit"]]
+                   ,[hrefPrimBadge (deleteRoute package) [htxt "Delete"]]])

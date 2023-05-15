@@ -1,0 +1,94 @@
+{- ERD specification transformed from Masala2ERD.curry -}
+
+ ERD "Masala2"
+   [Entity "Categorizes"
+           [Attribute "CategoryCategorizesKey" (KeyDom "Category") PKey False,
+            Attribute "VersionCategorizesKey" (KeyDom "Version") PKey False],
+    Entity "Maintainer"
+           [Attribute "UserMaintainerKey" (KeyDom "User") PKey False,
+            Attribute "PackageMaintainerKey" (KeyDom "Package") PKey False],
+    Entity "Depending"
+           [Attribute "VersionDependingKey" (KeyDom "Version") PKey False,
+            Attribute "PackageDependingKey" (KeyDom "Package") PKey False],
+    Entity "Exporting"
+           [Attribute "VersionExportingKey" (KeyDom "Version") PKey False,
+            Attribute "CurryModuleExportingKey" (KeyDom "CurryModule") PKey False],
+    Entity "Watching"
+           [Attribute "UserWatchingKey" (KeyDom "User") PKey False,
+            Attribute "PackageWatchingKey" (KeyDom "Package") PKey False],
+    Entity "User"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Name" (StringDom Nothing) Unique False,
+            Attribute "Email" (StringDom Nothing) Unique False,
+            Attribute "PublicEmail" (StringDom Nothing) NoKey False,
+            Attribute "Role" (StringDom Nothing) NoKey False,
+            Attribute "Password" (StringDom Nothing) NoKey False,
+            Attribute "Token" (StringDom Nothing) NoKey True,
+            Attribute "LastLogin" (DateDom Nothing) NoKey True],
+    Entity "Package"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Name" (StringDom Nothing) Unique False,
+            Attribute "Abandoned" (BoolDom Nothing) NoKey False],
+    Entity "Version"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Version" (StringDom Nothing) NoKey False,
+            Attribute "Published" (BoolDom Nothing) NoKey False,
+            Attribute "Tested" (BoolDom Nothing) NoKey False,
+            Attribute "Description" (StringDom Nothing) NoKey False,
+            Attribute "JobStatus" (StringDom Nothing) NoKey False,
+            Attribute "Downloads" (IntDom Nothing) NoKey False,
+            Attribute "UploadDate" (DateDom Nothing) NoKey False,
+            Attribute "Deprecated" (BoolDom Nothing) NoKey False,
+            Attribute "PackageVersioningKey" (KeyDom "Package") NoKey False,
+            Attribute "UserUploadKey" (KeyDom "User") NoKey False],
+    Entity "Category"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Name" (StringDom Nothing) Unique False,
+            Attribute "Description" (StringDom Nothing) NoKey False],
+    Entity "CurryModule"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Name" (StringDom Nothing) Unique False],
+    Entity "ValidationToken"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Token" (StringDom Nothing) Unique False,
+            Attribute "ValidSince" (DateDom Nothing) NoKey False,
+            Attribute "UserValidatingKey" (KeyDom "User") Unique False]]
+   [Relationship "Validating"
+                 [REnd "User" "validated_by" (Exactly 1),
+                  REnd "ValidationToken" "validates" (Between 0 (Max 1))],
+    Relationship ""
+                 [REnd "Category" "" (Exactly 1),
+                  REnd "Categorizes" "categorized_by" (Between 0 Infinite)],
+    Relationship ""
+                 [REnd "Version" "" (Exactly 1),
+                  REnd "Categorizes" "categorizes" (Between 0 Infinite)],
+    Relationship "Upload"
+                 [REnd "User" "uploads" (Exactly 1),
+                  REnd "Version" "uploaded_by" (Between 0 Infinite)],
+    Relationship ""
+                 [REnd "User" "" (Exactly 1),
+                  REnd "Maintainer" "maintained_by" (Between 0 Infinite)],
+    Relationship ""
+                 [REnd "Package" "" (Exactly 1),
+                  REnd "Maintainer" "maintains" (Between 0 Infinite)],
+    Relationship ""
+                 [REnd "Version" "" (Exactly 1),
+                  REnd "Depending" "dependency_of" (Between 0 Infinite)],
+    Relationship ""
+                 [REnd "Package" "" (Exactly 1),
+                  REnd "Depending" "depends_on" (Between 0 Infinite)],
+    Relationship "Versioning"
+                 [REnd "Package" "package_of" (Exactly 1),
+                  REnd "Version" "version_of" (Between 0 Infinite)],
+    Relationship ""
+                 [REnd "Version" "" (Exactly 1),
+                  REnd "Exporting" "exported_by" (Between 1 Infinite)],
+    Relationship ""
+                 [REnd "CurryModule" "" (Exactly 1),
+                  REnd "Exporting" "exports" (Between 0 Infinite)],
+    Relationship ""
+                 [REnd "User" "" (Exactly 1),
+                  REnd "Watching" "watched_by" (Between 0 Infinite)],
+    Relationship ""
+                 [REnd "Package" "" (Exactly 1),
+                  REnd "Watching" "watches" (Between 0 Infinite)]]

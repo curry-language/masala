@@ -1,0 +1,19 @@
+AuthType Basic
+AuthName Spicey
+AuthUserFile /dev/null
+AuthGroupFile /dev/null
+
+<Limit GET>
+<IfVersion < 2.3>
+  # old access rules
+  order deny,allow
+  deny from all
+  satisfy any
+  #allow from 127.0.0.
+</IfVersion>
+<IfVersion >= 2.3>
+  # new access rules via authz_mod_core
+  Require all denied
+  #Require local
+</IfVersion>
+</Limit>
