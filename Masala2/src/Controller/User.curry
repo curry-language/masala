@@ -47,7 +47,7 @@ newUserController =
    $ (\sinfo ->
      do allPackages <- runQ queryAllPackages
         --allPackages <- runQ queryAllPackages
-        ctime <- getClockTime
+        --ctime <- getClockTime
         setParWuiStore newUserStore (sinfo,allPackages,allPackages)
          ("","","","","","",Nothing,[],[])
         return [formElem newUserForm])

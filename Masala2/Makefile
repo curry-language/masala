@@ -12,6 +12,9 @@ CURRYOPTIONS=:set -time
 # should be stored, e.g.: $(HOME)/public_html
 WEBSERVERDIR = $(HOME)/public_html/masala2
 
+# Directory containing Masala data:
+DATADIR=$(WEBSERVERDIR)/data
+
 # Executable of the Curry Package Manager CPM:
 CPM := $(CURRYBIN)/cypm
 
@@ -68,6 +71,8 @@ deploy: checkdeploy
 	# copy other files (style sheets, images,...)
 	cp -r public/* $(WEBSERVERDIR)
 	chmod -R go+rX $(WEBSERVERDIR)
+	mkdir -p $(DATADIR)
+	chmod 700 $(DATADIR)
 	# recreate directory for storing local session data:
 	/bin/rm -rf $(WEBSERVERDIR)/sessiondata
 	mkdir -p $(WEBSERVERDIR)/sessiondata

@@ -72,7 +72,7 @@ newValidationTokenStore = sessionStore "newValidationTokenStore"
 createValidationTokenT :: NewValidationToken -> DBAction ()
 createValidationTokenT (token,validSince,user) =
   newValidationTokenWithUserValidatingKey token validSince (userKey user)
-   >>= (\newentity -> return ())
+   >>= (\_ -> return ())
 
 --- Shows a form to edit the given ValidationToken entity.
 editValidationTokenController :: ValidationToken -> Controller

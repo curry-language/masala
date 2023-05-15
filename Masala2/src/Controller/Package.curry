@@ -61,7 +61,7 @@ newPackageStore = sessionStore "newPackageStore"
 --- Transaction to persist a new Package entity to the database.
 createPackageT :: NewPackage -> DBAction ()
 createPackageT (name,abandoned) =
-  newPackage name abandoned >>= (\newentity -> return ())
+  newPackage name abandoned >>= (\_ -> return ())
 
 --- Shows a form to edit the given Package entity.
 editPackageController :: Package -> Controller

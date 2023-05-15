@@ -24,4 +24,4 @@ getController fktref =
     CategoryController -> mainCategoryController
     CurryModuleController -> mainCurryModuleController
     ValidationTokenController -> mainValidationTokenController
-    _ -> displayError "getController: no mapping found"
+    -- _ -> displayError "getController: no mapping found"

@@ -60,7 +60,7 @@ newCurryModuleStore = sessionStore "newCurryModuleStore"
 
 --- Transaction to persist a new CurryModule entity to the database.
 createCurryModuleT :: NewCurryModule -> DBAction ()
-createCurryModuleT name = newCurryModule name >>= (\newentity -> return ())
+createCurryModuleT name = newCurryModule name >>= (\_ -> return ())
 
 --- Shows a form to edit the given CurryModule entity.
 editCurryModuleController :: CurryModule -> Controller

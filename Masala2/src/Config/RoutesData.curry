@@ -27,8 +27,8 @@ getRoutes :: IO [Route]
 getRoutes =
   do login <- getSessionLogin
      return
-      [("Processes",Exact "spiceyProcesses",ProcessListController)
-      ,("List User",Prefix "User" "list",UserController)
+      --[("Processes",Exact "spiceyProcesses",ProcessListController)
+      [("List User",Prefix "User" "list",UserController)
       ,("New User",Prefix "User" "new",UserController)
       ,("List Package",Prefix "Package" "list",PackageController)
       ,("New Package",Prefix "Package" "new",PackageController)
