@@ -51,8 +51,8 @@ userLabelList =
   ,[textstyle "spicey_label spicey_label_for_type_string" "Password"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Token"]
   ,[textstyle "spicey_label spicey_label_for_type_date" "LastLogin"]
-  ,[textstyle "spicey_label spicey_label_for_type_relation" "MaintainerPackage"]
-  ,[textstyle "spicey_label spicey_label_for_type_relation" "WatchingPackage"]]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Maintains Packages"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Watching Packages"]]
 
 --- The list view of a Package entity in HTML format.
 --- This view is used in a row of a table of all entities.
@@ -136,9 +136,9 @@ versionLabelList =
   ,[textstyle "spicey_label spicey_label_for_type_int" "Downloads"]
   ,[textstyle "spicey_label spicey_label_for_type_date" "UploadDate"]
   ,[textstyle "spicey_label spicey_label_for_type_bool" "Deprecated"]
-  ,[textstyle "spicey_label spicey_label_for_type_relation" "User"]
-  ,[textstyle "spicey_label spicey_label_for_type_relation" "Package"]
-  ,[textstyle "spicey_label spicey_label_for_type_relation" "Package"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Uploaded by"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Version of Package"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Depends on Packages"]
   ,[textstyle "spicey_label spicey_label_for_type_relation" "CurryModule"]]
 
 --- The list view of a Category entity in HTML format.
