@@ -589,7 +589,7 @@ user_CDBI_Description =
      [Database.CDBI.Connection.SQLInt key
      ,Database.CDBI.Connection.SQLString name
      ,Database.CDBI.Connection.SQLString email
-     ,Database.CDBI.Connection.SQLString publicEmail
+     ,Database.CDBI.Description.sqlString publicEmail
      ,Database.CDBI.Connection.SQLString role
      ,Database.CDBI.Connection.SQLString password
      ,Database.CDBI.Description.sqlString token
@@ -598,7 +598,7 @@ user_CDBI_Description =
      [Database.CDBI.Connection.SQLNull
      ,Database.CDBI.Connection.SQLString name
      ,Database.CDBI.Connection.SQLString email
-     ,Database.CDBI.Connection.SQLString publicEmail
+     ,Database.CDBI.Description.sqlString publicEmail
      ,Database.CDBI.Connection.SQLString role
      ,Database.CDBI.Connection.SQLString password
      ,Database.CDBI.Description.sqlString token
@@ -606,12 +606,15 @@ user_CDBI_Description =
    (\[Database.CDBI.Connection.SQLInt key
      ,Database.CDBI.Connection.SQLString name
      ,Database.CDBI.Connection.SQLString email
-     ,Database.CDBI.Connection.SQLString publicEmail
+     ,publicEmail
      ,Database.CDBI.Connection.SQLString role
      ,Database.CDBI.Connection.SQLString password
      ,token
      ,lastLogin] ->
-     User (UserID key) name email publicEmail role password
+     User (UserID key) name email
+      (Database.CDBI.Description.fromStringOrNull publicEmail)
+      role
+      password
       (Database.CDBI.Description.fromStringOrNull token)
       (Database.CDBI.Description.dateOrNothing lastLogin))
 
@@ -685,8 +688,8 @@ userPublicEmailColDesc :: Database.CDBI.Description.ColumnDescription String
 userPublicEmailColDesc =
   Database.CDBI.Description.ColDesc "\"User\".\"PublicEmail\""
    Database.CDBI.Connection.SQLTypeString
-   (\publicEmail -> Database.CDBI.Connection.SQLString publicEmail)
-   (\(Database.CDBI.Connection.SQLString publicEmail) -> publicEmail)
+   (\publicEmail -> Database.CDBI.Description.sqlString publicEmail)
+   (\publicEmail -> Database.CDBI.Description.fromStringOrNull publicEmail)
 
 --- The description of the database column `Role` of the `User` entity.
 userRoleColDesc :: Database.CDBI.Description.ColumnDescription String
@@ -1015,7 +1018,7 @@ version_CDBI_Description =
      ,Database.CDBI.Connection.SQLBool published
      ,Database.CDBI.Connection.SQLBool tested
      ,Database.CDBI.Connection.SQLString description
-     ,Database.CDBI.Connection.SQLString jobStatus
+     ,Database.CDBI.Description.sqlString jobStatus
      ,Database.CDBI.Connection.SQLInt downloads
      ,Database.CDBI.Connection.SQLDate uploadDate
      ,Database.CDBI.Connection.SQLBool deprecated
@@ -1038,7 +1041,7 @@ version_CDBI_Description =
      ,Database.CDBI.Connection.SQLBool published
      ,Database.CDBI.Connection.SQLBool tested
      ,Database.CDBI.Connection.SQLString description
-     ,Database.CDBI.Connection.SQLString jobStatus
+     ,Database.CDBI.Description.sqlString jobStatus
      ,Database.CDBI.Connection.SQLInt downloads
      ,Database.CDBI.Connection.SQLDate uploadDate
      ,Database.CDBI.Connection.SQLBool deprecated
@@ -1049,13 +1052,14 @@ version_CDBI_Description =
      ,Database.CDBI.Connection.SQLBool published
      ,Database.CDBI.Connection.SQLBool tested
      ,Database.CDBI.Connection.SQLString description
-     ,Database.CDBI.Connection.SQLString jobStatus
+     ,jobStatus
      ,Database.CDBI.Connection.SQLInt downloads
      ,Database.CDBI.Connection.SQLDate uploadDate
      ,Database.CDBI.Connection.SQLBool deprecated
      ,Database.CDBI.Connection.SQLInt packageVersioningKey
      ,Database.CDBI.Connection.SQLInt userUploadKey] ->
-     Version (VersionID key) version published tested description jobStatus
+     Version (VersionID key) version published tested description
+      (Database.CDBI.Description.fromStringOrNull jobStatus)
       downloads
       uploadDate
       deprecated
@@ -1169,8 +1173,8 @@ versionJobStatusColDesc :: Database.CDBI.Description.ColumnDescription String
 versionJobStatusColDesc =
   Database.CDBI.Description.ColDesc "\"Version\".\"JobStatus\""
    Database.CDBI.Connection.SQLTypeString
-   (\jobStatus -> Database.CDBI.Connection.SQLString jobStatus)
-   (\(Database.CDBI.Connection.SQLString jobStatus) -> jobStatus)
+   (\jobStatus -> Database.CDBI.Description.sqlString jobStatus)
+   (\jobStatus -> Database.CDBI.Description.fromStringOrNull jobStatus)
 
 --- The description of the database column `Downloads` of the `Version` entity.
 versionDownloadsColDesc :: Database.CDBI.Description.ColumnDescription Int
@@ -1404,15 +1408,16 @@ category_CDBI_Description =
    (\(Category (CategoryID key) name description) ->
      [Database.CDBI.Connection.SQLInt key
      ,Database.CDBI.Connection.SQLString name
-     ,Database.CDBI.Connection.SQLString description])
+     ,Database.CDBI.Description.sqlString description])
    (\(Category _ name description) ->
      [Database.CDBI.Connection.SQLNull
      ,Database.CDBI.Connection.SQLString name
-     ,Database.CDBI.Connection.SQLString description])
+     ,Database.CDBI.Description.sqlString description])
    (\[Database.CDBI.Connection.SQLInt key
      ,Database.CDBI.Connection.SQLString name
-     ,Database.CDBI.Connection.SQLString description] ->
-     Category (CategoryID key) name description)
+     ,description] ->
+     Category (CategoryID key) name
+      (Database.CDBI.Description.fromStringOrNull description))
 
 --- The database table of the `Category` entity.
 categoryTable :: Database.CDBI.Description.Table
@@ -1455,8 +1460,8 @@ categoryDescriptionColDesc :: Database.CDBI.Description.ColumnDescription String
 categoryDescriptionColDesc =
   Database.CDBI.Description.ColDesc "\"Category\".\"Description\""
    Database.CDBI.Connection.SQLTypeString
-   (\description -> Database.CDBI.Connection.SQLString description)
-   (\(Database.CDBI.Connection.SQLString description) -> description)
+   (\description -> Database.CDBI.Description.sqlString description)
+   (\description -> Database.CDBI.Description.fromStringOrNull description)
 
 --- Gets the attribute `Key` of the `Category` entity.
 categoryKey :: Category -> CategoryID
@@ -1871,10 +1876,10 @@ createNewDB dbfile =
        ,"create table 'Depending'('VersionDependingKey' int REFERENCES 'Version'(Key) not null ,'PackageDependingKey' int REFERENCES 'Package'(Key) not null, primary key ('VersionDependingKey', 'PackageDependingKey'));"
        ,"create table 'Exporting'('VersionExportingKey' int REFERENCES 'Version'(Key) not null ,'CurryModuleExportingKey' int REFERENCES 'CurryModule'(Key) not null, primary key ('VersionExportingKey', 'CurryModuleExportingKey'));"
        ,"create table 'Watching'('UserWatchingKey' int REFERENCES 'User'(Key) not null ,'PackageWatchingKey' int REFERENCES 'Package'(Key) not null, primary key ('UserWatchingKey', 'PackageWatchingKey'));"
-       ,"create table 'User'('Key' integer primary key ,'Name' string unique not null ,'Email' string unique not null ,'PublicEmail' string not null ,'Role' string not null ,'Password' string not null ,'Token' string ,'LastLogin' string);"
+       ,"create table 'User'('Key' integer primary key ,'Name' string unique not null ,'Email' string unique not null ,'PublicEmail' string ,'Role' string not null ,'Password' string not null ,'Token' string ,'LastLogin' string);"
        ,"create table 'Package'('Key' integer primary key ,'Name' string unique not null ,'Abandoned' string not null);"
-       ,"create table 'Version'('Key' integer primary key ,'Version' string not null ,'Published' string not null ,'Tested' string not null ,'Description' string not null ,'JobStatus' string not null ,'Downloads' not null ,'UploadDate' string not null ,'Deprecated' string not null ,'PackageVersioningKey' int REFERENCES 'Package'(Key) not null ,'UserUploadKey' int REFERENCES 'User'(Key) not null);"
-       ,"create table 'Category'('Key' integer primary key ,'Name' string unique not null ,'Description' string not null);"
+       ,"create table 'Version'('Key' integer primary key ,'Version' string not null ,'Published' string not null ,'Tested' string not null ,'Description' string not null ,'JobStatus' string ,'Downloads' not null ,'UploadDate' string not null ,'Deprecated' string not null ,'PackageVersioningKey' int REFERENCES 'Package'(Key) not null ,'UserUploadKey' int REFERENCES 'User'(Key) not null);"
+       ,"create table 'Category'('Key' integer primary key ,'Name' string unique not null ,'Description' string);"
        ,"create table 'CurryModule'('Key' integer primary key ,'Name' string unique not null);"
        ,"create table 'ValidationToken'('Key' integer primary key ,'Token' string unique not null ,'ValidSince' string not null ,'UserValidatingKey' int REFERENCES 'User'(Key) unique not null);"]
 

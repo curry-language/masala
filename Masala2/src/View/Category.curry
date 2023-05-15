@@ -18,7 +18,7 @@ import View.EntitiesToHtml
 wCategory :: [Version] -> WuiSpec (String,String,[Version])
 wCategory versionList =
   withRendering
-   (wTriple wRequiredString wRequiredString
+   (wTriple wRequiredString wString
      (wMultiCheckSelect (\version -> [htxt (versionToShortView version)])
        versionList))
    (renderLabels categoryLabelList)

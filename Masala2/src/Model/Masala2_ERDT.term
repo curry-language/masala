@@ -20,7 +20,7 @@
            [Attribute "Key" (IntDom Nothing) PKey False,
             Attribute "Name" (StringDom Nothing) Unique False,
             Attribute "Email" (StringDom Nothing) Unique False,
-            Attribute "PublicEmail" (StringDom Nothing) NoKey False,
+            Attribute "PublicEmail" (StringDom Nothing) NoKey True,
             Attribute "Role" (StringDom Nothing) NoKey False,
             Attribute "Password" (StringDom Nothing) NoKey False,
             Attribute "Token" (StringDom Nothing) NoKey True,
@@ -35,7 +35,7 @@
             Attribute "Published" (BoolDom Nothing) NoKey False,
             Attribute "Tested" (BoolDom Nothing) NoKey False,
             Attribute "Description" (StringDom Nothing) NoKey False,
-            Attribute "JobStatus" (StringDom Nothing) NoKey False,
+            Attribute "JobStatus" (StringDom Nothing) NoKey True,
             Attribute "Downloads" (IntDom Nothing) NoKey False,
             Attribute "UploadDate" (DateDom Nothing) NoKey False,
             Attribute "Deprecated" (BoolDom Nothing) NoKey False,
@@ -44,7 +44,7 @@
     Entity "Category"
            [Attribute "Key" (IntDom Nothing) PKey False,
             Attribute "Name" (StringDom Nothing) Unique False,
-            Attribute "Description" (StringDom Nothing) NoKey False],
+            Attribute "Description" (StringDom Nothing) NoKey True],
     Entity "CurryModule"
            [Attribute "Key" (IntDom Nothing) PKey False,
             Attribute "Name" (StringDom Nothing) Unique False],

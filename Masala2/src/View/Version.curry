@@ -34,8 +34,7 @@ wVersion
              ,[CurryModule])
 wVersion userList versioningPackageList dependingPackageList curryModuleList =
   withRendering
-   (w12Tuple wRequiredString wBoolean wBoolean wRequiredString wRequiredString
-     wInt
+   (w12Tuple wRequiredString wBoolean wBoolean wRequiredString wString wInt
      wDateType
      wBoolean
      (wSelect userToShortView userList)

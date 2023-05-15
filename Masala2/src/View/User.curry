@@ -29,7 +29,7 @@ wUser
              ,[Package])
 wUser maintainerPackageList watchingPackageList =
   withRendering
-   (w9Tuple wRequiredString wRequiredString wRequiredString wRequiredString
+   (w9Tuple wRequiredString wRequiredString wString wRequiredString
      wRequiredString
      wString
      (wUncheckMaybe (toClockTime (CalendarTime 2018 1 1 0 0 0 0)) wDateType)
