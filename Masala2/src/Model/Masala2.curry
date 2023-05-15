@@ -81,7 +81,7 @@ data ValidationTokenID = ValidationTokenID Int
 
 --- The name of the SQLite database file.
 sqliteDBFile :: String
-sqliteDBFile = "/home/mh/home/curry/masala2/repository/Masala2/Masala2.db"
+sqliteDBFile = "data/Masala2.db"
 
 --- The ER description of the `Categorizes` entity.
 categorizes_CDBI_Description
