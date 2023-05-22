@@ -22,6 +22,7 @@ type NewUser = (String
                ,String
                ,String
                ,String
+               ,String
                ,Maybe ClockTime
                ,[Package]
                ,[Package])
@@ -49,7 +50,7 @@ newUserController =
         --allPackages <- runQ queryAllPackages
         --ctime <- getClockTime
         setParWuiStore newUserStore (sinfo,allPackages,allPackages)
-         ("","","","","","",Nothing,[],[])
+         ("","","","","","","",Nothing,[],[])
         return [formElem newUserForm])
 
 --- A WUI form to create a new User entity.
@@ -76,9 +77,9 @@ newUserStore = sessionStore "newUserStore"
 --- Transaction to persist a new User entity to the database.
 createUserT :: NewUser -> DBAction ()
 createUserT
-    (name,email,publicEmail,role,password,token,lastLogin,
-     maintainerpackages,watchingpackages) =
-  newUser name email publicEmail role password token lastLogin
+    (loginName,publicName,email,publicEmail,role,password,token,lastLogin
+    ,maintainerpackages,watchingpackages) =
+  newUser loginName publicName email publicEmail role password token lastLogin
    >>= (\newentity ->
      addMaintainer maintainerpackages newentity
       >> (addWatching watchingpackages newentity >> return ()))

@@ -10,7 +10,8 @@ import Masala2
 --- This view is used in a row of a table of all entities.
 userToListView :: HTML h => User -> [[h]]
 userToListView user =
-  [[stringToHtml (userName user)]
+  [[stringToHtml (userLoginName user)]
+  ,[stringToHtml (userPublicName user)]
   ,[stringToHtml (userEmail user)]
   ,[stringToHtml (userPublicEmail user)]
   ,[stringToHtml (userRole user)]
@@ -21,7 +22,7 @@ userToListView user =
 --- The short view of a User entity as a string.
 --- This view is used in menus and comments to refer to a User entity.
 userToShortView :: User -> String
-userToShortView user = userName user
+userToShortView user = userPublicName user
 
 --- The detailed view of a User entity in HTML format.
 --- It also takes associated entities for every associated entity type.
@@ -31,7 +32,8 @@ userToDetailsView user maintainerpackages watchingpackages =
     (map (\(label,value) -> [label,value]) (zip userLabelList detailedView))]
   where
     detailedView =
-      [[stringToHtml (userName user)]
+      [[stringToHtml (userLoginName user)]
+      ,[stringToHtml (userPublicName user)]
       ,[stringToHtml (userEmail user)]
       ,[stringToHtml (userPublicEmail user)]
       ,[stringToHtml (userRole user)]
@@ -44,7 +46,8 @@ userToDetailsView user maintainerpackages watchingpackages =
 --- The labels of a User entity, as used in HTML tables.
 userLabelList :: HTML h => [[h]]
 userLabelList =
-  [[textstyle "spicey_label spicey_label_for_type_string" "Name"]
+  [[textstyle "spicey_label spicey_label_for_type_string" "LoginName"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "PublicName"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Email"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "PublicEmail"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Role"]

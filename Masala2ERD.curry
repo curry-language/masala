@@ -5,7 +5,9 @@ masalaERD =
     ERD "Masala2"
         [ Entity "User"
             [ -- Login name
-              Attribute "Name"        (StringDom Nothing) Unique False
+              Attribute "LoginName"   (StringDom Nothing) Unique False
+              -- Displayed name
+            , Attribute "PublicName"  (StringDom Nothing) NoKey  False
             , Attribute "Email"       (StringDom Nothing) Unique False
               -- Displayed email
             , Attribute "PublicEmail" (StringDom Nothing) NoKey True

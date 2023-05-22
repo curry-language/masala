@@ -36,7 +36,8 @@ PInfo "/home/mh/home/curry/masala2/repository/Masala2/Masala2.db" "Masala2"
  ,("watchingUserWatchingKey",False)
  ,("watchingPackageWatchingKey",False)
  ,("userKey",False)
- ,("userName",False)
+ ,("userLoginName",False)
+ ,("userPublicName",False)
  ,("userEmail",False)
  ,("userPublicEmail",True)
  ,("userRole",False)
@@ -74,7 +75,15 @@ PInfo "/home/mh/home/curry/masala2/repository/Masala2/Masala2.db" "Masala2"
  ,("watching",("Watching",["UserWatchingKey","PackageWatchingKey"]))
  ,("user"
   ,("User"
-   ,["Key","Name","Email","PublicEmail","Role","Password","Token","LastLogin"]))
+   ,["Key"
+    ,"LoginName"
+    ,"PublicName"
+    ,"Email"
+    ,"PublicEmail"
+    ,"Role"
+    ,"Password"
+    ,"Token"
+    ,"LastLogin"]))
  ,("package",("Package",["Key","Name","Abandoned"]))
  ,("version"
   ,("Version"
@@ -104,7 +113,8 @@ PInfo "/home/mh/home/curry/masala2/repository/Masala2/Masala2.db" "Masala2"
  ,("watchingUserWatchingKey","User")
  ,("watchingPackageWatchingKey","Package")
  ,("userKey","User")
- ,("userName","string")
+ ,("userLoginName","string")
+ ,("userPublicName","string")
  ,("userEmail","string")
  ,("userPublicEmail","string")
  ,("userRole","string")

@@ -18,7 +18,8 @@
             Attribute "PackageWatchingKey" (KeyDom "Package") PKey False],
     Entity "User"
            [Attribute "Key" (IntDom Nothing) PKey False,
-            Attribute "Name" (StringDom Nothing) Unique False,
+            Attribute "LoginName" (StringDom Nothing) Unique False,
+            Attribute "PublicName" (StringDom Nothing) NoKey False,
             Attribute "Email" (StringDom Nothing) Unique False,
             Attribute "PublicEmail" (StringDom Nothing) NoKey True,
             Attribute "Role" (StringDom Nothing) NoKey False,

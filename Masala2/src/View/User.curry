@@ -24,12 +24,14 @@ wUser
              ,String
              ,String
              ,String
+             ,String
              ,Maybe ClockTime
              ,[Package]
              ,[Package])
 wUser maintainerPackageList watchingPackageList =
   withRendering
-   (w9Tuple wRequiredString wRequiredString wString wRequiredString
+   (w10Tuple wRequiredString wRequiredString wRequiredString wString
+     wRequiredString
      wRequiredString
      wString
      (wUncheckMaybe (toClockTime (CalendarTime 2018 1 1 0 0 0 0)) wDateType)
@@ -48,25 +50,28 @@ tuple2User
      ,String
      ,String
      ,String
+     ,String
      ,Maybe ClockTime
      ,[Package]
      ,[Package])
   -> (User,[Package],[Package])
 tuple2User
     userToUpdate
-    (name,email,publicEmail,role,password,token,lastLogin,maintainerpackages,
+    (loginName,publicName,email,publicEmail,role,password,token,lastLogin,maintainerpackages,
      watchingpackages) =
-  (setUserName
-    (setUserEmail
-      (setUserPublicEmail
-        (setUserRole
-          (setUserPassword
-            (setUserToken (setUserLastLogin userToUpdate lastLogin) token)
-            password)
-          role)
-        publicEmail)
-      email)
-    name
+  (setUserLoginName
+    (setUserPublicName
+      (setUserEmail
+        (setUserPublicEmail
+          (setUserRole
+            (setUserPassword
+              (setUserToken (setUserLastLogin userToUpdate lastLogin) token)
+              password)
+            role)
+          publicEmail)
+        email)
+      publicName)
+    loginName
   ,maintainerpackages
   ,watchingpackages)
 
@@ -80,11 +85,13 @@ user2Tuple
      ,String
      ,String
      ,String
+     ,String
      ,Maybe ClockTime
      ,[Package]
      ,[Package])
 user2Tuple (user,maintainerpackages,watchingpackages) =
-  (userName user
+  (userLoginName user
+  ,userPublicName user
   ,userEmail user
   ,userPublicEmail user
   ,userRole user
@@ -112,12 +119,16 @@ showUserView _ user maintainerpackages watchingpackages =
 --- Compares two User entities. This order is used in the list view.
 leqUser :: User -> User -> Bool
 leqUser x1 x2 =
-  (userName x1,userEmail x1,userPublicEmail x1,userRole x1,userPassword x1)
-   <= (userName x2
+  (userLoginName x1
+  ,userPublicName x1
+  ,userEmail x1
+  ,userPublicEmail x1
+  ,userRole x1)
+   <= (userLoginName x2
+      ,userPublicName x2
       ,userEmail x2
       ,userPublicEmail x2
-      ,userRole x2
-      ,userPassword x2)
+      ,userRole x2)
 
 --- Supplies a list view for a given list of User entities.
 --- Shows also show/edit/delete buttons if the user is logged in.
@@ -125,7 +136,7 @@ leqUser x1 x2 =
 listUserView :: UserSessionInfo -> [User] -> [BaseHtml]
 listUserView sinfo users =
   [h1 [htxt "User list"]
-  ,spTable ([take 7 userLabelList] ++ map listUser (sortBy leqUser users))]
+  ,spTable ([take 8 userLabelList] ++ map listUser (sortBy leqUser users))]
   where
     listUser user =
       userToListView user

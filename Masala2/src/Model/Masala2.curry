@@ -43,7 +43,7 @@ data Watching = Watching UserID PackageID
 data WatchingID = WatchingID Int
  deriving (Eq,Show,Read)
 
-data User = User UserID String String String String String String (Maybe Data.Time.ClockTime)
+data User = User UserID String String String String String String String (Maybe Data.Time.ClockTime)
  deriving (Eq,Show,Read)
 
 data UserID = UserID Int
@@ -584,19 +584,40 @@ user_CDBI_Description =
    ,Database.CDBI.Connection.SQLTypeString
    ,Database.CDBI.Connection.SQLTypeString
    ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
    ,Database.CDBI.Connection.SQLTypeDate]
-   (\(User (UserID key) name email publicEmail role password token lastLogin) ->
+   (\(User
+       (UserID key)
+       loginName
+       publicName
+       email
+       publicEmail
+       role
+       password
+       token
+       lastLogin) ->
      [Database.CDBI.Connection.SQLInt key
-     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Connection.SQLString loginName
+     ,Database.CDBI.Connection.SQLString publicName
      ,Database.CDBI.Connection.SQLString email
      ,Database.CDBI.Description.sqlString publicEmail
      ,Database.CDBI.Connection.SQLString role
      ,Database.CDBI.Connection.SQLString password
      ,Database.CDBI.Description.sqlString token
      ,Database.CDBI.Description.sqlDateOrNull lastLogin])
-   (\(User _ name email publicEmail role password token lastLogin) ->
+   (\(User
+       _
+       loginName
+       publicName
+       email
+       publicEmail
+       role
+       password
+       token
+       lastLogin) ->
      [Database.CDBI.Connection.SQLNull
-     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Connection.SQLString loginName
+     ,Database.CDBI.Connection.SQLString publicName
      ,Database.CDBI.Connection.SQLString email
      ,Database.CDBI.Description.sqlString publicEmail
      ,Database.CDBI.Connection.SQLString role
@@ -604,14 +625,15 @@ user_CDBI_Description =
      ,Database.CDBI.Description.sqlString token
      ,Database.CDBI.Description.sqlDateOrNull lastLogin])
    (\[Database.CDBI.Connection.SQLInt key
-     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Connection.SQLString loginName
+     ,Database.CDBI.Connection.SQLString publicName
      ,Database.CDBI.Connection.SQLString email
      ,publicEmail
      ,Database.CDBI.Connection.SQLString role
      ,Database.CDBI.Connection.SQLString password
      ,token
      ,lastLogin] ->
-     User (UserID key) name email
+     User (UserID key) loginName publicName email
       (Database.CDBI.Description.fromStringOrNull publicEmail)
       role
       password
@@ -626,9 +648,15 @@ userTable = "User"
 userColumnKey :: Database.CDBI.Description.Column UserID
 userColumnKey = Database.CDBI.Description.Column "\"Key\"" "\"User\".\"Key\""
 
---- The database column `Name` of the `User` entity.
-userColumnName :: Database.CDBI.Description.Column String
-userColumnName = Database.CDBI.Description.Column "\"Name\"" "\"User\".\"Name\""
+--- The database column `LoginName` of the `User` entity.
+userColumnLoginName :: Database.CDBI.Description.Column String
+userColumnLoginName =
+  Database.CDBI.Description.Column "\"LoginName\"" "\"User\".\"LoginName\""
+
+--- The database column `PublicName` of the `User` entity.
+userColumnPublicName :: Database.CDBI.Description.Column String
+userColumnPublicName =
+  Database.CDBI.Description.Column "\"PublicName\"" "\"User\".\"PublicName\""
 
 --- The database column `Email` of the `User` entity.
 userColumnEmail :: Database.CDBI.Description.Column String
@@ -667,13 +695,21 @@ userKeyColDesc =
    (\(UserID key) -> Database.CDBI.Connection.SQLInt key)
    (\(Database.CDBI.Connection.SQLInt key) -> UserID key)
 
---- The description of the database column `Name` of the `User` entity.
-userNameColDesc :: Database.CDBI.Description.ColumnDescription String
-userNameColDesc =
-  Database.CDBI.Description.ColDesc "\"User\".\"Name\""
+--- The description of the database column `LoginName` of the `User` entity.
+userLoginNameColDesc :: Database.CDBI.Description.ColumnDescription String
+userLoginNameColDesc =
+  Database.CDBI.Description.ColDesc "\"User\".\"LoginName\""
    Database.CDBI.Connection.SQLTypeString
-   (\name -> Database.CDBI.Connection.SQLString name)
-   (\(Database.CDBI.Connection.SQLString name) -> name)
+   (\loginName -> Database.CDBI.Connection.SQLString loginName)
+   (\(Database.CDBI.Connection.SQLString loginName) -> loginName)
+
+--- The description of the database column `PublicName` of the `User` entity.
+userPublicNameColDesc :: Database.CDBI.Description.ColumnDescription String
+userPublicNameColDesc =
+  Database.CDBI.Description.ColDesc "\"User\".\"PublicName\""
+   Database.CDBI.Connection.SQLTypeString
+   (\publicName -> Database.CDBI.Connection.SQLString publicName)
+   (\(Database.CDBI.Connection.SQLString publicName) -> publicName)
 
 --- The description of the database column `Email` of the `User` entity.
 userEmailColDesc :: Database.CDBI.Description.ColumnDescription String
@@ -726,67 +762,80 @@ userLastLoginColDesc =
 
 --- Gets the attribute `Key` of the `User` entity.
 userKey :: User -> UserID
-userKey (User a _ _ _ _ _ _ _) = a
+userKey (User a _ _ _ _ _ _ _ _) = a
 
---- Gets the attribute `Name` of the `User` entity.
-userName :: User -> String
-userName (User _ a _ _ _ _ _ _) = a
+--- Gets the attribute `LoginName` of the `User` entity.
+userLoginName :: User -> String
+userLoginName (User _ a _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `PublicName` of the `User` entity.
+userPublicName :: User -> String
+userPublicName (User _ _ a _ _ _ _ _ _) = a
 
 --- Gets the attribute `Email` of the `User` entity.
 userEmail :: User -> String
-userEmail (User _ _ a _ _ _ _ _) = a
+userEmail (User _ _ _ a _ _ _ _ _) = a
 
 --- Gets the attribute `PublicEmail` of the `User` entity.
 userPublicEmail :: User -> String
-userPublicEmail (User _ _ _ a _ _ _ _) = a
+userPublicEmail (User _ _ _ _ a _ _ _ _) = a
 
 --- Gets the attribute `Role` of the `User` entity.
 userRole :: User -> String
-userRole (User _ _ _ _ a _ _ _) = a
+userRole (User _ _ _ _ _ a _ _ _) = a
 
 --- Gets the attribute `Password` of the `User` entity.
 userPassword :: User -> String
-userPassword (User _ _ _ _ _ a _ _) = a
+userPassword (User _ _ _ _ _ _ a _ _) = a
 
 --- Gets the attribute `Token` of the `User` entity.
 userToken :: User -> String
-userToken (User _ _ _ _ _ _ a _) = a
+userToken (User _ _ _ _ _ _ _ a _) = a
 
 --- Gets the attribute `LastLogin` of the `User` entity.
 userLastLogin :: User -> Maybe Data.Time.ClockTime
-userLastLogin (User _ _ _ _ _ _ _ a) = a
+userLastLogin (User _ _ _ _ _ _ _ _ a) = a
 
 --- Sets the attribute `Key` of the `User` entity.
 setUserKey :: User -> UserID -> User
-setUserKey (User _ b7 b6 b5 b4 b3 b2 b1) a = User a b7 b6 b5 b4 b3 b2 b1
+setUserKey (User _ b8 b7 b6 b5 b4 b3 b2 b1) a = User a b8 b7 b6 b5 b4 b3 b2 b1
 
---- Sets the attribute `Name` of the `User` entity.
-setUserName :: User -> String -> User
-setUserName (User a2 _ b6 b5 b4 b3 b2 b1) a = User a2 a b6 b5 b4 b3 b2 b1
+--- Sets the attribute `LoginName` of the `User` entity.
+setUserLoginName :: User -> String -> User
+setUserLoginName (User a2 _ b7 b6 b5 b4 b3 b2 b1) a =
+  User a2 a b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `PublicName` of the `User` entity.
+setUserPublicName :: User -> String -> User
+setUserPublicName (User a3 a2 _ b6 b5 b4 b3 b2 b1) a =
+  User a3 a2 a b6 b5 b4 b3 b2 b1
 
 --- Sets the attribute `Email` of the `User` entity.
 setUserEmail :: User -> String -> User
-setUserEmail (User a3 a2 _ b5 b4 b3 b2 b1) a = User a3 a2 a b5 b4 b3 b2 b1
+setUserEmail (User a4 a3 a2 _ b5 b4 b3 b2 b1) a = User a4 a3 a2 a b5 b4 b3 b2 b1
 
 --- Sets the attribute `PublicEmail` of the `User` entity.
 setUserPublicEmail :: User -> String -> User
-setUserPublicEmail (User a4 a3 a2 _ b4 b3 b2 b1) a = User a4 a3 a2 a b4 b3 b2 b1
+setUserPublicEmail (User a5 a4 a3 a2 _ b4 b3 b2 b1) a =
+  User a5 a4 a3 a2 a b4 b3 b2 b1
 
 --- Sets the attribute `Role` of the `User` entity.
 setUserRole :: User -> String -> User
-setUserRole (User a5 a4 a3 a2 _ b3 b2 b1) a = User a5 a4 a3 a2 a b3 b2 b1
+setUserRole (User a6 a5 a4 a3 a2 _ b3 b2 b1) a = User a6 a5 a4 a3 a2 a b3 b2 b1
 
 --- Sets the attribute `Password` of the `User` entity.
 setUserPassword :: User -> String -> User
-setUserPassword (User a6 a5 a4 a3 a2 _ b2 b1) a = User a6 a5 a4 a3 a2 a b2 b1
+setUserPassword (User a7 a6 a5 a4 a3 a2 _ b2 b1) a =
+  User a7 a6 a5 a4 a3 a2 a b2 b1
 
 --- Sets the attribute `Token` of the `User` entity.
 setUserToken :: User -> String -> User
-setUserToken (User a7 a6 a5 a4 a3 a2 _ b1) a = User a7 a6 a5 a4 a3 a2 a b1
+setUserToken (User a8 a7 a6 a5 a4 a3 a2 _ b1) a = User a8 a7 a6 a5 a4 a3 a2 a b1
 
 --- Sets the attribute `LastLogin` of the `User` entity.
 setUserLastLogin :: User -> Maybe Data.Time.ClockTime -> User
-setUserLastLogin (User a8 a7 a6 a5 a4 a3 a2 _) a = User a8 a7 a6 a5 a4 a3 a2 a
+setUserLastLogin (User a9 a8 a7 a6 a5 a4 a3 a2 _) a =
+  User a9 a8 a7 a6 a5 a4 a3 a2 a
 
 --- id-to-value function for entity `User`.
 userID :: UserID -> Database.CDBI.Criteria.Value UserID
@@ -830,10 +879,21 @@ newUser
   -> String
   -> String
   -> String
+  -> String
   -> Maybe Data.Time.ClockTime -> Database.CDBI.Connection.DBAction User
-newUser name_p email_p publicEmail_p role_p password_p token_p lastLogin_p =
+newUser
+    loginName_p
+    publicName_p
+    email_p
+    publicEmail_p
+    role_p
+    password_p
+    token_p
+    lastLogin_p =
   Database.CDBI.ER.insertNewEntry user_CDBI_Description setUserKey UserID
-   (User (UserID 0) name_p email_p publicEmail_p role_p password_p token_p
+   (User (UserID 0) loginName_p publicName_p email_p publicEmail_p role_p
+     password_p
+     token_p
      lastLogin_p)
 
 --- Deletes an existing `User` entry by its key.
@@ -1876,7 +1936,7 @@ createNewDB dbfile =
        ,"create table 'Depending'('VersionDependingKey' int REFERENCES 'Version'(Key) not null ,'PackageDependingKey' int REFERENCES 'Package'(Key) not null, primary key ('VersionDependingKey', 'PackageDependingKey'));"
        ,"create table 'Exporting'('VersionExportingKey' int REFERENCES 'Version'(Key) not null ,'CurryModuleExportingKey' int REFERENCES 'CurryModule'(Key) not null, primary key ('VersionExportingKey', 'CurryModuleExportingKey'));"
        ,"create table 'Watching'('UserWatchingKey' int REFERENCES 'User'(Key) not null ,'PackageWatchingKey' int REFERENCES 'Package'(Key) not null, primary key ('UserWatchingKey', 'PackageWatchingKey'));"
-       ,"create table 'User'('Key' integer primary key ,'Name' string unique not null ,'Email' string unique not null ,'PublicEmail' string ,'Role' string not null ,'Password' string not null ,'Token' string ,'LastLogin' string);"
+       ,"create table 'User'('Key' integer primary key ,'LoginName' string unique not null ,'PublicName' string not null ,'Email' string unique not null ,'PublicEmail' string ,'Role' string not null ,'Password' string not null ,'Token' string ,'LastLogin' string);"
        ,"create table 'Package'('Key' integer primary key ,'Name' string unique not null ,'Abandoned' string not null);"
        ,"create table 'Version'('Key' integer primary key ,'Version' string not null ,'Published' string not null ,'Tested' string not null ,'Description' string not null ,'JobStatus' string ,'Downloads' not null ,'UploadDate' string not null ,'Deprecated' string not null ,'PackageVersioningKey' int REFERENCES 'Package'(Key) not null ,'UserUploadKey' int REFERENCES 'User'(Key) not null);"
        ,"create table 'Category'('Key' integer primary key ,'Name' string unique not null ,'Description' string);"

@@ -254,7 +254,7 @@ readMaybeFloat s =
 
 --- The title of this application (shown in the header).
 spiceyTitle :: String
-spiceyTitle = "Spicey Application"
+spiceyTitle = "Masala: The Repository of Curry Packages"
 
 --- The home URL and brand shown at the left top of the main page.
 spiceyHomeBrand :: (String, [BaseHtml])
