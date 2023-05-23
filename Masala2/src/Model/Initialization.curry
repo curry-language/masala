@@ -27,7 +27,7 @@ createCategory category = newCategory category ""
 insertCategories :: Connection -> [[String]]
                  -> IO [Either DBError (String, CategoryID)]
 insertCategories connection lines = do 
-    let cats = nub $ concatMap read $ drop 1 $ concatMap (drop 5) lines
+    let cats = nub $ concatMap read $ drop 1 $ concatMap (drop 6) lines
     results <- mapM (flip runDBAction connection . createCategory) cats
     return $ zipWith (\cat result -> fmap ((,) cat) result) cats (map (fmap categoryKey) results)
 
@@ -37,7 +37,7 @@ createModule = newCurryModule
 insertModules :: Connection -> [[String]]
            -> IO [Either DBError (String, CurryModuleID)]
 insertModules connection lines = do 
-    let mods = nub $ concatMap read $ drop 1 $ concatMap (take 1 . drop 4) lines
+    let mods = nub $ concatMap read $ drop 1 $ concatMap (take 1 . drop 5) lines
     results <- mapM (flip runDBAction connection . createModule) mods
     return $ zipWith (\mod result -> fmap ((,) mod) result) mods (map (fmap curryModuleKey) results)
 
@@ -50,26 +50,41 @@ insertPackages connection lines = do
     results <- mapM (flip runDBAction connection . createPackage) pkgs
     return $ zipWith (\pkg result -> fmap ((,) pkg) result) pkgs (map (fmap packageKey) results)
 
-listToTriple :: [a] -> (a, a, a)
-listToTriple [x, y, z] = (x, y, z)
+listTo4Tuple :: [a] -> (a, a, a, a)
+listTo4Tuple [a, b, c, d] = (a, b, c, d)
 
-uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
-uncurry3 f (a, b, c) = f a b c
+uncurry4 :: (a -> b -> c -> d -> e) -> (a, b, c, d) -> e
+uncurry4 f (a, b, c, d) = f a b c d
 
-createVersion :: [(String, PackageID)] -> UserID -> Data.Time.ClockTime -> String -> String -> String -> DBAction Version
-createVersion packages admin time package version description 
-    | lookup package packages == Just packageID = newVersionWithPackageVersioningKeyWithUserUploadKey version True True description "" 0 time False packageID admin where packageID free
+createVersion :: [(String, PackageID)] -> UserID -> ClockTime -> String
+              -> String -> String -> String -> DBAction Version
+createVersion packages admin ctime package version description uploadtimeS =
+  maybe
+    (error "createVersion: no packageID found!")
+    (\packageID ->
+      let uptime = case reads uploadtimeS of
+                     [(Just uptime, "")] -> toClockTime uptime
+                     _                   -> ctime
+      in newVersionWithPackageVersioningKeyWithUserUploadKey version True True
+           description "" 0 uptime False packageID admin)
+    (lookup package packages)
 
-insertVersion :: Connection -> [[String]] -> [(String, PackageID)] -> UserID -> Data.Time.ClockTime -> IO [Either DBError ((String, String), VersionID)]
-insertVersion connection lines packages admin time = do
-    let versions = map listToTriple $ map (take 3) $ drop 1 lines
-    results <- mapM (flip runDBAction connection . (uncurry3 (createVersion packages admin time))) versions
-    return $ zipWith (\(pkg, vsn, dsc) result -> fmap ((,) (pkg, vsn)) result) versions (map (fmap versionKey) results)
+insertVersion :: Connection -> [[String]] -> [(String, PackageID)] -> UserID
+              -> ClockTime -> IO [Either DBError ((String, String), VersionID)]
+insertVersion connection lines packages admin currtime = do
+    let versions = map listTo4Tuple $ map (take 4) $ drop 1 lines
+    results <- mapM (flip runDBAction connection .
+                       (uncurry4 (createVersion packages admin currtime)))
+                    versions
+    return $ zipWith (\(pkg, vsn, dsc, _) result -> fmap ((,) (pkg, vsn)) result)
+                     versions
+                     (map (fmap versionKey) results)
 
 createMaintainer :: UserID -> PackageID -> DBAction ()
 createMaintainer = newMaintainer
 
-insertMaintainer :: Connection -> [(String, PackageID)] -> UserID -> IO [Either DBError ()]
+insertMaintainer :: Connection -> [(String, PackageID)] -> UserID
+                 -> IO [Either DBError ()]
 insertMaintainer connection packageKeys admin = do
     let dbactions = map (createMaintainer admin) (map snd packageKeys) :: [DBAction ()]
     mapM (flip runDBAction connection) dbactions
@@ -92,7 +107,7 @@ createDepending packageKeys versionKeys line =
         $ map (newDepending versionKey)
         $ map fromJust
         $ filter isJust
-        $ map (flip lookup packageKeys) ((read::String -> [String]) $ line !! 3)
+        $ map (flip lookup packageKeys) ((read::String -> [String]) $ line !! 4)
     Nothing -> error "createDepending: no version key found"
 
 
