@@ -1,6 +1,6 @@
 module View.Package
   ( wPackage, tuple2Package, package2Tuple, wPackageType, showPackageView
-  , listPackageView ) where
+  , leqPackage, listPackageView ) where
 
 import Data.List
 import Data.Time

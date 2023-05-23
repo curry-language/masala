@@ -230,7 +230,8 @@ listVersionController =
   checkAuthorization (versionOperationAllowed ListEntities)
    $ (\sinfo ->
      do versions <- runQ queryAllVersions
-        return (listVersionView sinfo versions))
+        pkgs <- runQ (mapM getVersioningPackage versions)
+        return (listVersionView sinfo (zip pkgs versions)))
 
 --- Shows a Version entity.
 showVersionController :: Version -> Controller

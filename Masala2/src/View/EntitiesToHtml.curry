@@ -86,6 +86,20 @@ packageLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Name"]
   ,[textstyle "spicey_label spicey_label_for_type_bool" "Abandoned"]]
 
+--- The list view of a Version entity together with its Package in HTML format.
+--- This view is used in a row of a table of all entities.
+packageVersionToListView :: HTML h => (Package,Version) -> [[h]]
+packageVersionToListView (pkg,version) =
+  [[stringToHtml (packageName pkg)]
+  ,[stringToHtml (versionVersion version)]
+  ,[boolToHtml (versionPublished version)]
+  ,[boolToHtml (versionTested version)]
+  ,[stringToHtml (versionDescription version)]
+  ,[stringToHtml (versionJobStatus version)]
+  ,[intToHtml (versionDownloads version)]
+  ,[dateToHtml (versionUploadDate version)]
+  ,[boolToHtml (versionDeprecated version)]]
+
 --- The list view of a Version entity in HTML format.
 --- This view is used in a row of a table of all entities.
 versionToListView :: HTML h => Version -> [[h]]
@@ -131,11 +145,11 @@ versionToDetailsView
 --- The labels of a Version entity, as used in HTML tables.
 versionLabelList :: HTML h => [[h]]
 versionLabelList =
-  [[textstyle "spicey_label spicey_label_for_type_string" "Version"]
+  [[textstyle "spicey_label" "Version"]
   ,[textstyle "spicey_label spicey_label_for_type_bool" "Published"]
   ,[textstyle "spicey_label spicey_label_for_type_bool" "Tested"]
-  ,[textstyle "spicey_label spicey_label_for_type_string" "Description"]
-  ,[textstyle "spicey_label spicey_label_for_type_string" "JobStatus"]
+  ,[textstyle "spicey_label" "Description"]
+  ,[textstyle "spicey_label" "JobStatus"]
   ,[textstyle "spicey_label spicey_label_for_type_int" "Downloads"]
   ,[textstyle "spicey_label spicey_label_for_type_date" "UploadDate"]
   ,[textstyle "spicey_label spicey_label_for_type_bool" "Deprecated"]

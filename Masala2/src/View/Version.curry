@@ -12,6 +12,7 @@ import Config.EntityRoutes
 import System.SessionInfo
 import System.Spicey
 import View.EntitiesToHtml
+import View.Package
 
 --- The WUI specification for the entity type Version.
 --- It also includes fields for associated entities.
@@ -162,15 +163,18 @@ leqVersion x1 x2 =
 --- Supplies a list view for a given list of Version entities.
 --- Shows also show/edit/delete buttons if the user is logged in.
 --- The arguments are the session info and the list of Version entities.
-listVersionView :: UserSessionInfo -> [Version] -> [BaseHtml]
-listVersionView sinfo versions =
-  [h1 [htxt "Version list"]
+listVersionView :: UserSessionInfo -> [(Package,Version)] -> [BaseHtml]
+listVersionView sinfo pkgversions =
+  [h1 [htxt "Package version list"]
   ,spTable
-    ([take 8 versionLabelList]
-      ++ map listVersion (sortBy leqVersion versions))]
-  where
-    listVersion version =
-      versionToListView version
+    ([[textstyle "spicey_label" "Package"] : take 8 versionLabelList]
+      ++ map listVersion (sortBy leqPkgVersion pkgversions))]
+ where
+  leqPkgVersion (p1,v1) (p2,v2) =
+    leqPackage p1 p2 || (packageName p1 == packageName p2 && leqVersion v1 v2)
+
+  listVersion (pkg,version) =
+      packageVersionToListView (pkg,version)
        ++ (if userLoginOfSession sinfo == Nothing
               then []
               else [[hrefPrimBadge (showRoute version) [htxt "Show"]]
