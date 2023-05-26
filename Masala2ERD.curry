@@ -43,34 +43,34 @@ masalaERD =
         ]
         [ -- A user can watch any number of packages
           Relationship "Watching"
-            [ REnd "User" "watches"       (Between 0 Infinite)
-            , REnd "Package" "watched_by" (Between 0 Infinite)]
+            [ REnd "User" "watchedBy"       (Between 0 Infinite)
+            , REnd "Package" "watches" (Between 0 Infinite)]
           -- A version exports any number of modules
         , Relationship "Exporting"
-            [ REnd "Version" "exports"         (Between 0 Infinite)
-            , REnd "CurryModule" "exported_by" (Between 1 Infinite)]
+            [ REnd "Version" "exportedBy"  (Between 0 Infinite)
+            , REnd "CurryModule" "exports" (Between 1 Infinite)]
           -- A package may have any number of versions
         , Relationship "Versioning"
-            [ REnd "Package" "package_of" (Exactly 1)
-            , REnd "Version" "version_of" (Between 0 Infinite)]        
+            [ REnd "Package" "versionOf"   (Exactly 1)
+            , REnd "Version" "withVersion" (Between 0 Infinite)]        
           -- A version may depend on any number of other packages
         , Relationship "Depending"
-            [ REnd "Version" "depends_on"    (Between 0 Infinite)
-            , REnd "Package" "dependency_of" (Between 0 Infinite)]
+            [ REnd "Version" "dependencyOf" (Between 0 Infinite)
+            , REnd "Package" "dependsOn"    (Between 0 Infinite)]
           -- A user can be the maintainer of any number of packages
           -- and a package can have any number of maintainers
         , Relationship "Maintainer"
-            [ REnd "User" "maintains"         (Between 0 Infinite)
-            , REnd "Package"  "maintained_by" (Between 0 Infinite)]
+            [ REnd "User" "maintainedBy"  (Between 0 Infinite)
+            , REnd "Package"  "maintains" (Between 0 Infinite)]
           -- A user can upload any number of package versions
         , Relationship "Upload"
-            [ REnd "User" "uploads"        (Exactly 1)
-            , REnd "Version" "uploaded_by" (Between 0 Infinite)]
+            [ REnd "User" "uploadedBy"     (Exactly 1)
+            , REnd "Version" "hasUploaded" (Between 0 Infinite)]
           -- A category categorizes any number of versions
           -- Versions can have multiple categories
         , Relationship "Categorizes"
-            [ REnd "Category" "categorizes"   (Between 0 Infinite)
-            , REnd "Version" "categorized_by" (Between 0 Infinite)]
+            [ REnd "Category" "withCategory" (Between 0 Infinite)
+            , REnd "Version" "categorizes"   (Between 0 Infinite)]
         , Relationship "Validating"
-            [ REnd "User" "validated_by"         (Exactly 1)
-            , REnd "ValidationToken" "validates" (Between 0 (Max 1))]]
+            [ REnd "User" "validates"              (Exactly 1)
+            , REnd "ValidationToken" "validatedBy" (Between 0 (Max 1))]]
