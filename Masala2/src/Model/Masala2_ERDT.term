@@ -55,41 +55,41 @@
             Attribute "ValidSince" (DateDom Nothing) NoKey False,
             Attribute "UserValidatingKey" (KeyDom "User") Unique False]]
    [Relationship "Validating"
-                 [REnd "User" "validated_by" (Exactly 1),
-                  REnd "ValidationToken" "validates" (Between 0 (Max 1))],
+                 [REnd "User" "validates" (Exactly 1),
+                  REnd "ValidationToken" "validatedBy" (Between 0 (Max 1))],
     Relationship ""
                  [REnd "Category" "" (Exactly 1),
-                  REnd "Categorizes" "categorized_by" (Between 0 Infinite)],
+                  REnd "Categorizes" "categorizes" (Between 0 Infinite)],
     Relationship ""
                  [REnd "Version" "" (Exactly 1),
-                  REnd "Categorizes" "categorizes" (Between 0 Infinite)],
+                  REnd "Categorizes" "withCategory" (Between 0 Infinite)],
     Relationship "Upload"
-                 [REnd "User" "uploads" (Exactly 1),
-                  REnd "Version" "uploaded_by" (Between 0 Infinite)],
+                 [REnd "User" "uploadedBy" (Exactly 1),
+                  REnd "Version" "hasUploaded" (Between 0 Infinite)],
     Relationship ""
                  [REnd "User" "" (Exactly 1),
-                  REnd "Maintainer" "maintained_by" (Between 0 Infinite)],
-    Relationship ""
-                 [REnd "Package" "" (Exactly 1),
                   REnd "Maintainer" "maintains" (Between 0 Infinite)],
     Relationship ""
+                 [REnd "Package" "" (Exactly 1),
+                  REnd "Maintainer" "maintainedBy" (Between 0 Infinite)],
+    Relationship ""
                  [REnd "Version" "" (Exactly 1),
-                  REnd "Depending" "dependency_of" (Between 0 Infinite)],
+                  REnd "Depending" "dependsOn" (Between 0 Infinite)],
     Relationship ""
                  [REnd "Package" "" (Exactly 1),
-                  REnd "Depending" "depends_on" (Between 0 Infinite)],
+                  REnd "Depending" "dependencyOf" (Between 0 Infinite)],
     Relationship "Versioning"
-                 [REnd "Package" "package_of" (Exactly 1),
-                  REnd "Version" "version_of" (Between 0 Infinite)],
+                 [REnd "Package" "versionOf" (Exactly 1),
+                  REnd "Version" "withVersion" (Between 0 Infinite)],
     Relationship ""
                  [REnd "Version" "" (Exactly 1),
-                  REnd "Exporting" "exported_by" (Between 1 Infinite)],
+                  REnd "Exporting" "exports" (Between 1 Infinite)],
     Relationship ""
                  [REnd "CurryModule" "" (Exactly 1),
-                  REnd "Exporting" "exports" (Between 0 Infinite)],
+                  REnd "Exporting" "exportedBy" (Between 0 Infinite)],
     Relationship ""
                  [REnd "User" "" (Exactly 1),
-                  REnd "Watching" "watched_by" (Between 0 Infinite)],
+                  REnd "Watching" "watches" (Between 0 Infinite)],
     Relationship ""
                  [REnd "Package" "" (Exactly 1),
-                  REnd "Watching" "watches" (Between 0 Infinite)]]
+                  REnd "Watching" "watchedBy" (Between 0 Infinite)]]
