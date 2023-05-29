@@ -118,6 +118,36 @@ insertDependings connection packageKeys versionKeys lines = do
     let dbactions = map (createDepending packageKeys versionKeys) lines
     mapM (flip runDBAction connection) dbactions
 
+createExporting :: [((String, String), VersionID)] -> [(String, CurryModuleID)] -> [String] -> DBAction ()
+createExporting versionKeys moduleKeys line = case lookup (line !! 0, line !! 1) versionKeys of 
+        Just versionKey -> foldl (>+) (returnDB (Right ()))
+            $ map (newExporting versionKey)
+            $ map fromJust
+            $ filter isJust
+            $ map (flip lookup moduleKeys) (read $ line !! 5)
+        Nothing -> error "createExporting: no version key found"
+
+insertExportings :: Connection -> [((String, String), VersionID)] -> [(String, CurryModuleID)] -> [[String]]
+                 -> IO [Either DBError ()]
+insertExportings connection versionKeys moduleKeys lines = do
+    let dbactions = map (createExporting versionKeys moduleKeys) lines
+    mapM (flip runDBAction connection) dbactions
+
+createCategorizes :: [((String, String), VersionID)] -> [(String, CategoryID)] -> [String] -> DBAction ()
+createCategorizes versionKeys categoryKeys line = case lookup (line !! 0, line !! 1) versionKeys of 
+        Just versionKey -> foldl (>+) (returnDB (Right ()))
+            $ map (flip newCategorizes versionKey)
+            $ map fromJust
+            $ filter isJust
+            $ map (flip lookup categoryKeys) (read $ line !! 6)
+        Nothing -> error "createExporting: no version key found"
+
+insertCategorizes :: Connection -> [((String, String), VersionID)] -> [(String, CategoryID)] -> [[String]]
+                 -> IO [Either DBError ()]
+insertCategorizes connection versionKeys moduleKeys lines = do
+    let dbactions = map (createCategorizes versionKeys moduleKeys) lines
+    mapM (flip runDBAction connection) dbactions
+
 
 resetDatabase :: IO ()
 resetDatabase = do
@@ -141,47 +171,60 @@ main =
 --- and password of the admin user.
 initializeDatabase :: String -> String -> String -> String -> IO ()
 initializeDatabase lname pname email passwd = do
-  resetDatabase
-  connection <- connectSQLite sqliteDBFile
-  putStrLn "Add admin"
-  cryptpasswd <- getUserHash lname passwd
-  result <- runDBAction (createAdmin lname pname email cryptpasswd) connection
-  let admin = userKey $ fromRight result
+    resetDatabase
+    connection <- connectSQLite sqliteDBFile
+    putStrLn "Add admin"
+    cryptpasswd <- getUserHash lname passwd
+    result <- runDBAction (createAdmin lname pname email cryptpasswd) connection
+    let admin = userKey $ fromRight result
 
-  lines <- readCSVFile "allpkgs.csv"
+    lines <- readCSVFile "allpkgs.csv"
 
-  -- Add categories
-  putStrLn "Add categories"
-  categoryResults <- insertCategories connection lines
-  let categoryKeys = rights categoryResults
-  --putStrLn categoryKeys
+    -- Add categories
+    putStrLn "Add categories"
+    categoryResults <- insertCategories connection lines
+    let categoryKeys = rights categoryResults
+    --putStrLn categoryKeys
 
-  -- Add modules
-  putStrLn "Add modules"
-  moduleResults <- insertModules connection lines
-  let moduleKeys = rights moduleResults
-  --putStrLn moduleKeys
-  
-  -- Add packages
-  putStrLn "Add packages"
-  packageResults <- insertPackages connection lines
-  let packageKeys = rights packageResults
-  --putStrLn packageKeys
+    -- Add modules
+    putStrLn "Add modules"
+    moduleResults <- insertModules connection lines
+    let moduleKeys = rights moduleResults
+    --putStrLn moduleKeys
+    
+    -- Add packages
+    putStrLn "Add packages"
+    packageResults <- insertPackages connection lines
+    let packageKeys = rights packageResults
+    --putStrLn packageKeys
 
-  -- Add versions
-  putStrLn "Add versions"
-  time <- Data.Time.getClockTime
-  versionResults <- insertVersion connection lines packageKeys admin time
-  let versionKeys = rights versionResults
-  --putStrLn versionKeys
+    -- Add versions
+    putStrLn "Add versions"
+    time <- Data.Time.getClockTime
+    versionResults <- insertVersion connection lines packageKeys admin time
+    let versionKeys = rights versionResults
+    --putStrLn versionKeys
 
-  -- Add admin as maintainer of all packages
-  putStrLn "Add admin as maintainer"
-  maintainerResults <- insertMaintainer connection packageKeys admin
+    -- Add admin as maintainer of all packages
+    putStrLn "Add admin as maintainer"
+    maintainerResults <- insertMaintainer connection packageKeys admin
 
-  -- Add depending
-  putStrLn "Add depending"
-  dependingResults <- insertDependings connection packageKeys versionKeys
-                                       (drop 1 lines)
+    -- Add depending
+    putStrLn "Add depending"
+    dependingResults <- insertDependings connection packageKeys versionKeys
+                                        (drop 1 lines)
 
-  disconnect connection
+    -- Add exporting
+    putStrLn "Add exporting"
+    exportingResults <- insertExportings connection versionKeys moduleKeys (drop 1 lines)
+
+    -- Add categorizes
+    putStrLn "Add categorizes"
+    categorizesResults <- insertCategorizes connection versionKeys categoryKeys (drop 1 lines)
+
+    disconnect connection
+
+testInitialization :: IO ()
+testInitialization = do
+    resetDatabase
+    initializeDatabase "Admin" "Admin" "admin@masala.org" "123456"
