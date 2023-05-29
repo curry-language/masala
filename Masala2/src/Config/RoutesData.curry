@@ -10,6 +10,7 @@ data ControllerReference = ProcessListController
                          | CategoryController
                          | CurryModuleController
                          | ValidationTokenController
+                         | RegistrationController
 
 data UrlMatch = Exact String
               | Prefix String String
@@ -44,5 +45,8 @@ getRoutes =
       ,("New ValidationToken"
        ,Prefix "ValidationToken" "new"
        ,ValidationTokenController)
+      ,( "Registration"
+       , Exact "Registration"
+       , RegistrationController)
       ,(maybe "Login" (const "Logout") login,Exact "login",LoginController)
       ,("default",Always,UserController)]

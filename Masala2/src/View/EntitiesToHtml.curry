@@ -247,3 +247,12 @@ validationTokenLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Token"]
   ,[textstyle "spicey_label spicey_label_for_type_date" "ValidSince"]
   ,[textstyle "spicey_label spicey_label_for_type_relation" "User"]]
+
+--- The labels of a CurryModule entity, as used in HTML tables.
+RegistrationLabelList :: HTML h => [[h]]
+RegistrationLabelList =
+  [ [textstyle "spicey_label spicey_label_for_type_string" "Login name"]
+  , [textstyle "spicey_label spicey_label_for_type_string" "Public name"]
+  , [textstyle "spicey_label spicey_label_for_type_string" "Email"]
+  , [textstyle "spicey_label spicey_label_for_type_string" "Password"]
+  ]
