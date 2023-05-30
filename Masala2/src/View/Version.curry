@@ -205,21 +205,22 @@ versionInfoAsHTML sinfo version deppackages cats allversions uploader
                  cats)] ++
   [ ("Versions", hitems $ map (showPkgVersion version)
                               (reverse (sortBy leqVersion allversions)))
-  , ("Dependencies", hitems $ map dep2html $ deppackages)
-  , ("Uploaded by",
+  , ("Dependencies", hitems $ map dep2html $ deppackages) ] ++
+  expmods ++
+  [ ("Uploaded by",
      [userToRef uploader, breakline,
       htxt $ "at " ++
              calendarTimeToString (toUTCTime (versionUploadDate version)) ++
              " (UTC)"])
-  , ("Maintainer", vitems $ map userToRef maintainers)
+  , ("Maintainer" ++ if length maintainers > 1 then "s" else "",
+     vitems $ map userToRef maintainers)
   , ("Visibility",
      [htxt (publicText (versionPublished version))] ++ togglePublicButton)
   , ("Deprecated",
      [htxt (if versionDepr then "yes" else "no")] ++ toggleDeprButton)
   , ("JobStatus", [htxt $ versionJobStatus version])
   , ("Downloads", [htxt $ show $ versionDownloads version])
-  ] ++
-  expmods
+  ]
  where
   publicText b = if b then "Public" else "Private"
   versionDepr = versionDeprecated version
@@ -233,7 +234,9 @@ versionInfoAsHTML sinfo version deppackages cats allversions uploader
     if null exportedmods
       then []
       else [("Exported modules",
-             hitems $ map (\m -> code [htxt (curryModuleName m)]) exportedmods)]
+             hitems $ map (\m -> code [textstyle "badge badge-dark"
+                                                 (curryModuleName m)])
+                          exportedmods)]
 
   togglePublicButton =
     if isAdminSession sinfo

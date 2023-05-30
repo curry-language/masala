@@ -258,7 +258,7 @@ spiceyTitle = "Masala: The Repository of Curry Packages"
 
 --- The home URL and brand shown at the left top of the main page.
 spiceyHomeBrand :: (String, [BaseHtml])
-spiceyHomeBrand = ("?", [htxt " Home"])
+spiceyHomeBrand = ("?", [htxt " Masala"])
 
 --- The standard footer of the Spicey page.
 spiceyFooter :: [BaseHtml]
