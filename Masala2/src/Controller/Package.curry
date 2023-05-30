@@ -29,7 +29,7 @@ mainPackageController = do
   args <- getControllerParams
   case args of
     [] -> allPackagesController
-    ["list"] -> listPackageController
+    ["list"] -> allPackagesController
     ["new"] -> newPackageController
     ["show",s] -> controllerOnKey s showPackageController
     ["edit",s] -> controllerOnKey s editPackageController

@@ -52,6 +52,12 @@ getRouteMenu = do
                         then getLinks restroutes
                         else [(hrefNav ("?" ++ string) [htxt name])] :
                              getLinks restroutes
-      Prefix s1 s2 -> [hrefNav ("?"++s1++"/"++s2) [htxt name]] :
-                      getLinks restroutes
+      Prefix s1 s2 -> if (s1,s2) `elem`
+                         map (\e -> (e,"new"))
+                             [ "CurryModule", "Version", "Package", "Category"
+                             , "User"] ++
+                         map (\e -> (e,"list")) ["CurryModule", "Version"]
+                        then getLinks restroutes
+                        else [hrefNav ("?"++s1++"/"++s2) [htxt name]] :
+                             getLinks restroutes
       _ -> getLinks restroutes

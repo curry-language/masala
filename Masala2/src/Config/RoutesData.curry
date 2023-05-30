@@ -29,16 +29,16 @@ getRoutes =
   do login <- getSessionLogin
      return
       --[("Processes",Exact "spiceyProcesses",ProcessListController)
-      [("List User",Prefix "User" "list",UserController)
-      ,("New User",Prefix "User" "new",UserController)
-      ,("List Package",Prefix "Package" "list",PackageController)
+      [("Packages",Prefix "Package" "list",PackageController)
       ,("New Package",Prefix "Package" "new",PackageController)
       ,("List Version",Prefix "Version" "list",VersionController)
       ,("New Version",Prefix "Version" "new",VersionController)
-      ,("List Category",Prefix "Category" "list",CategoryController)
+      ,("Categories",Prefix "Category" "list",CategoryController)
       ,("New Category",Prefix "Category" "new",CategoryController)
       ,("List CurryModule",Prefix "CurryModule" "list",CurryModuleController)
       ,("New CurryModule",Prefix "CurryModule" "new",CurryModuleController)
+      ,("List User",Prefix "User" "list",UserController)
+      ,("New User",Prefix "User" "new",UserController)
       ,("List ValidationToken"
        ,Prefix "ValidationToken" "list"
        ,ValidationTokenController)
