@@ -77,4 +77,6 @@ allPackagesView _ packages =
   , par (intersperse nbsp (map listPackage (sortBy leqPackage packages)))]
   where
     listPackage package =
-      hrefPrimBadge (showRoute package) [htxt (packageName package)]
+      (if packageAbandoned package then hrefScndBadge else hrefPrimBadge)
+        (showRoute package)
+        [htxt (packageName package)]

@@ -11,7 +11,7 @@ import Masala2
 import MasalaQueries
 import Config.EntityRoutes
 import Config.UserProcesses
-import Controller.Version
+import Controller.Version   ( showVersionController )
 import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
@@ -24,6 +24,10 @@ import Database.CDBI.Connection
 type NewPackage = (String,Bool)
 
 --- Choose the controller for a Package entity according to the URL parameter.
+--- In addition to the standard URL parameters, this controller implements
+--- also the following URLs:
+--- * `...?Package/Version/PACKAGE/latest`: show the latest version of PACKAGE
+--- * `...?Package/Version/PACKAGE/VERSION`: show version VERSION of PACKAGE
 mainPackageController :: Controller
 mainPackageController = do
   args <- getControllerParams
@@ -34,8 +38,13 @@ mainPackageController = do
     ["show",s] -> controllerOnKey s showPackageController
     ["edit",s] -> controllerOnKey s editPackageController
     ["toggleabandoned",s] -> controllerOnKey s toggleAbandonedPackageController
-    ["delete",s] -> controllerOnKey s deletePackageController
-    ["destroy",s] -> controllerOnKey s destroyPackageController
+    ["delete",s]    -> controllerOnKey s deletePackageController
+    ["destroy",s]   -> controllerOnKey s destroyPackageController
+    ["Version",p,v] -> if v == "latest"
+                         then getPackageWithName p >>=
+                                maybe displayUrlError showPackageController
+                         else getPackageVersionByName p v >>=
+                                maybe displayUrlError showVersionController
     _ -> displayUrlError
 
 --- Shows a form to create a new Package entity.

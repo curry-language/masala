@@ -12,6 +12,23 @@ import Database.CDBI.ER
 import Masala2
 
 -----------------------------------------------------------------------
+-- Gets the version of a package with a given name and version string.
+getPackageWithName :: String -> IO (Maybe Package)
+getPackageWithName pname = fmap listToMaybe $ runQ
+  ``sql* Select *
+         From Package as p
+         Where p.Name = { pname };''
+
+-- Gets the version of a package with a given name and version string.
+getPackageVersionByName :: String -> String -> IO (Maybe Version)
+getPackageVersionByName pname vers = fmap (listToMaybe . map snd) $ runQ
+  ``sql* Select *
+         From Package as p, Version as v
+         Where p.Name = { pname } And
+               v.Version = { vers } And
+               Satisfies v versionOf p;''
+
+-----------------------------------------------------------------------
 -- Gets the versions of a given package.
 getPackageVersions :: Package -> IO [Version]
 getPackageVersions pkg = fmap (map snd) $ runQ

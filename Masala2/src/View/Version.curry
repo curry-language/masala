@@ -181,14 +181,17 @@ showVersionView sinfo version package uploader maintainers cats allversions
   pkgAbandoned = packageAbandoned package
 
   contents =
-    [ par [htxt $ versionDescription version]
-    , hrule
-    , bold [htxt $ "Abandoned: "], htxt $ show pkgAbandoned ] ++
+    [ par [htxt $ versionDescription version] ] ++
     (if isAdminSession sinfo
-      then [nbsp,
-            hrefWarnBadge (entityRoute "toggleabandoned" package)
-                          [htxt $ "Set to " ++ show (not pkgAbandoned)]]
-      else []) ++
+       then [blockstyle "badge badge-secondary"
+              [ bold [htxt $ "Abandoned: "], htxt $ show pkgAbandoned
+              , nbsp
+              , hrefWarnBadge (entityRoute "toggleabandoned" package)
+                           [htxt $ "Set to " ++ show (not pkgAbandoned)]]]
+       else if pkgAbandoned
+              then [blockstyle "badge badge-secondary"
+                     [ bold [htxt $ "This package is abandoned"]]]
+              else []) ++
     [ hrule ]
 
 --- Renders information about a package as HTML description list.
