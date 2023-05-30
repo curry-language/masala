@@ -1,7 +1,7 @@
 # Generic Makefile for Spicey applications
 
 # Definition of the root of the Curry system to be used:
-SYSTEM=/home/mh/pakcs
+SYSTEM=/opt/pakcs
 
 # Curry bin directory to be used:
 export CURRYBIN=$(SYSTEM)/bin
