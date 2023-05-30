@@ -21,6 +21,12 @@ CPM := $(CURRYBIN)/cypm
 # Executable of the curry2cgi:
 CURRY2CGI := $(shell which curry2cgi)
 
+# Executable of CurryPP (require to compile SQL queries):
+CURRYPP := $(shell which currypp)
+ifeq ("$(CURRYPP)","")
+$(error Executable 'currypp' not found! Install it by 'cypm install currypp' and add '~/.cpm/bin' to your PATH)
+endif
+
 # The root directory of the sources of the Spicey application:
 SRCDIR := $(CURDIR)/src
 
