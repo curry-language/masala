@@ -21,17 +21,19 @@ import System.Authentication
 --- Generates a form for login/logout.
 --- If the passed login name is the empty string,
 --- we offer a login dialog, otherwise a logout dialog.
-loginView :: Maybe String -> [HtmlExp]
-loginView currlogin =
+loginView :: (Maybe String, String) -> [HtmlExp]
+loginView (currlogin,lurl) =
   case currlogin of
    Nothing -> [h3 [htxt "Login as:"],
                textField loginfield "", nbsp,
                primSmButton "Login" loginHandler]
    Just _  -> [h3 [htxt "Really logout?"],
                primSmButton "Logout" logoutHandler, nbsp,
-               hrefScndSmButton "?" [htxt "Cancel"]]
+               hrefScndSmButton lasturl [htxt "Cancel"]]
  where
   loginfield free
+
+  lasturl = '?' : lurl
 
   loginHandler env = do
     let loginname = env loginfield
@@ -40,11 +42,11 @@ loginView currlogin =
       then return ()
       else do loginToSession loginname
               setPageMessage ("Logged in as: "++loginname)
-    nextInProcessOr (redirectController "?") Nothing >>= getPage
+    nextInProcessOr (redirectController lasturl) Nothing >>= getPage
 
   logoutHandler _ = do
     logoutFromSession >> setPageMessage "Logged out"
-    nextInProcessOr (redirectController "?") Nothing >>= getPage
+    nextInProcessOr (redirectController lasturl) Nothing >>= getPage
 
 -----------------------------------------------------------------------------
 --- A view for all processes contained in a given process specification.

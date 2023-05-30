@@ -26,15 +26,16 @@ import View.SpiceySystem
 loginController :: Controller
 loginController = do
   login <- getSessionLogin
-  putSessionData loginViewData login
+  lasturl <- getLastUrl
+  putSessionData loginViewData (login, lasturl)
   return [formElem loginFormDef]
 
-loginFormDef :: HtmlFormDef (Maybe String)
+loginFormDef :: HtmlFormDef (Maybe String, String)
 loginFormDef = formDefWithID "Controller.SpiceySystem.loginFormDef"
-  (getSessionData loginViewData Nothing) loginView
+  (getSessionData loginViewData (Nothing,"")) loginView
 
 --- The data processed by the login form.
-loginViewData :: SessionStore (Maybe String)
+loginViewData :: SessionStore (Maybe String, String)
 loginViewData = sessionStore "loginViewData"
 
 -----------------------------------------------------------------------------
