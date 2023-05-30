@@ -186,8 +186,8 @@ categoryToDetailsView category versions =
 --- The labels of a Category entity, as used in HTML tables.
 categoryLabelList :: HTML h => [[h]]
 categoryLabelList =
-  [[textstyle "spicey_label spicey_label_for_type_string" "Name"]
-  ,[textstyle "spicey_label spicey_label_for_type_string" "Description"]
+  [[textstyle "spicey_label" "Name"]
+  ,[textstyle "spicey_label" "Description"]
   ,[textstyle "spicey_label spicey_label_for_type_relation" "Version"]]
 
 --- The list view of a CurryModule entity in HTML format.

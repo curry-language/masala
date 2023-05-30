@@ -1,11 +1,13 @@
 module Controller.Version
-  ( mainVersionController, newVersionForm, editVersionForm ) where
+  ( mainVersionController, newVersionForm, editVersionForm
+  , showVersionController ) where
 
 import Data.Time
 import HTML.Base
 import HTML.Session
 import HTML.WUI
 import Masala2
+import MasalaQueries
 import Config.EntityRoutes
 import Config.UserProcesses
 import System.SessionInfo
@@ -32,17 +34,20 @@ type NewVersion = (String
 
 --- Choose the controller for a Version entity according to the URL parameter.
 mainVersionController :: Controller
-mainVersionController =
-  do args <- getControllerParams
-     case args of
-       [] -> listVersionController
-       ["list"] -> listVersionController
-       ["new"] -> newVersionController
-       ["show",s] -> controllerOnKey s showVersionController
-       ["edit",s] -> controllerOnKey s editVersionController
-       ["delete",s] -> controllerOnKey s deleteVersionController
-       ["destroy",s] -> controllerOnKey s destroyVersionController
-       _ -> displayUrlError
+mainVersionController = do
+  args <- getControllerParams
+  case args of
+    [] -> listVersionController
+    ["list"] -> listVersionController
+    ["new"] -> newVersionController
+    ["shows",s] -> controllerOnKey s showStandardVersionController
+    ["show",s] -> controllerOnKey s showVersionController
+    ["edit",s] -> controllerOnKey s editVersionController
+    ["toggledepr",s]   -> controllerOnKey s toggleDeprecatedVersionController
+    ["togglepublic",s] -> controllerOnKey s togglePublishedVersionController
+    ["delete",s]       -> controllerOnKey s deleteVersionController
+    ["destroy",s]      -> controllerOnKey s destroyVersionController
+    _                  -> displayUrlError
 
 --- Shows a form to create a new Version entity.
 newVersionController :: Controller
@@ -194,6 +199,22 @@ updateVersionT (version,packagesDepending,curryModulesExporting) =
              >> (addDepending packagesDepending version
                   >> addExporting curryModulesExporting version)))
 
+--- A controller to toggle the deprecated status of the given Version entity.
+toggleDeprecatedVersionController :: Version -> Controller
+toggleDeprecatedVersionController vers =
+  checkAuthorization (versionOperationAllowed (UpdateEntity vers)) $ \_ -> do
+    let newvers = setVersionDeprecated vers (not (versionDeprecated vers))
+    transactionController (runT (updateVersion newvers))
+      (nextInProcessOr (redirectController (showRoute vers)) Nothing)
+
+--- A controller to toggle the published status of the given Version entity.
+togglePublishedVersionController :: Version -> Controller
+togglePublishedVersionController vers =
+  checkAuthorization (versionOperationAllowed (UpdateEntity vers)) $ \_ -> do
+    let newvers = setVersionPublished vers (not (versionPublished vers))
+    transactionController (runT (updateVersion newvers))
+      (nextInProcessOr (redirectController (showRoute vers)) Nothing)
+
 --- Deletes a given Version entity (after asking for confirmation)
 --- and proceeds with the list controller.
 deleteVersionController :: Version -> Controller
@@ -233,9 +254,9 @@ listVersionController =
         pkgs <- runQ (mapM getVersioningPackage versions)
         return (listVersionView sinfo (zip pkgs versions)))
 
---- Shows a Version entity.
-showVersionController :: Version -> Controller
-showVersionController version =
+--- Shows a Version entity in the standard Spicey-generated layout.
+showStandardVersionController :: Version -> Controller
+showStandardVersionController version =
   checkAuthorization (versionOperationAllowed (ShowEntity version))
    $ (\sinfo ->
      do uploadUser <- runJustT (getUploadUser version)
@@ -243,9 +264,25 @@ showVersionController version =
         dependingPackages <- runJustT (getVersionPackages version)
         exportingCurryModules <- runJustT (getVersionCurryModules version)
         return
-         (showVersionView sinfo version uploadUser versioningPackage
+         (showStandardVersionView sinfo version uploadUser versioningPackage
            dependingPackages
            exportingCurryModules))
+
+--- Shows a Version entity.
+showVersionController :: Version -> Controller
+showVersionController version =
+  checkAuthorization (versionOperationAllowed (ShowEntity version))
+   $ (\sinfo ->
+     do uploadUser <- runJustT (getUploadUser version)
+        package <- runJustT (getVersioningPackage version)
+        allversions <- getPackageVersions package
+        dependingPackages <- runJustT (getVersionPackages version)
+        exportingCurryModules <- runJustT (getVersionCurryModules version)
+        cats <- getPackageVersionCategories package version
+        maintainers <- getPackageMaintainers package
+        return
+         (showVersionView sinfo version package uploadUser maintainers cats
+            allversions dependingPackages exportingCurryModules))
 
 --- Associates given entities with the Version entity.
 addDepending :: [Package] -> Version -> DBAction ()

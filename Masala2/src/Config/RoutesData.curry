@@ -49,4 +49,4 @@ getRoutes =
        , Exact "Registration"
        , RegistrationController)
       ,(maybe "Login" (const "Logout") login,Exact "login",LoginController)
-      ,("default",Always,UserController)]
+      ,("default",Always,PackageController)]

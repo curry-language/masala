@@ -1,6 +1,7 @@
 module View.Version
-  ( wVersion, tuple2Version, version2Tuple, wVersionType, showVersionView
-  , listVersionView ) where
+  ( wVersion, tuple2Version, version2Tuple, wVersionType
+  , showStandardVersionView, showVersionView, listVersionView
+  , leqVersion ) where
 
 import Data.List
 import Data.Time
@@ -138,27 +139,139 @@ wVersionType
              curryModuleList)
 
 --- Supplies a view to show the details of a Version.
-showVersionView
+showStandardVersionView
   :: UserSessionInfo
   -> Version -> User -> Package -> [Package] -> [CurryModule] -> [BaseHtml]
-showVersionView _ version relatedUser relatedPackage packages curryModules =
+showStandardVersionView _ version relatedUser relatedPackage packages
+                        curryModules =
   versionToDetailsView version relatedUser relatedPackage packages
    curryModules
    ++ [hrefPrimSmButton "?Version/list" [htxt "back to Version list"]]
 
+--- Supplies a view to show the details of a Version.
+showVersionView
+  :: UserSessionInfo
+  -> Version -> Package -> User -> [User] -> [Category] -> [Version]
+  -> [Package] -> [CurryModule] -> [BaseHtml]
+showVersionView sinfo version package uploader maintainers cats allversions
+                deppackages exportedmods =
+  [blockstyle "container-fluid"
+     ([blockstyle "row"
+        ([blockstyle (bsCols 4)
+                   [blockstyle "card" sidemenu],
+          blockstyle (bsCols 8)
+                   (headerRow ++ contents)])])]
+ where
+  bsCols n = "col-sm-" ++ show n ++ " " ++ "col-md-" ++ show n
+  
+  -- header row:
+  headerRow = [htmlStruct "header" [("class","jumbotron")]
+                          [h1 [smallMutedText "Curry Package ",
+                               htxt $ packageName package]]]
+
+  sidemenu =
+    [ulistWithClass "list-group" "list-group-item"
+       (map (\ (t,c) -> (h5 [htxt t] : c))
+            (versionInfoAsHTML sinfo version deppackages cats allversions
+                               uploader maintainers exportedmods))] ++
+    [if versionTested version
+       then blockstyle "badge badge-success" [htxt "Successfully tested"]
+       else blockstyle "badge badge-secondary" [htxt "not tested"]]
+
+  pkgAbandoned = packageAbandoned package
+
+  contents =
+    [ par [htxt $ versionDescription version]
+    , hrule
+    , bold [htxt $ "Abandoned: "], htxt $ show pkgAbandoned ] ++
+    (if isAdminSession sinfo
+      then [nbsp,
+            hrefWarnBadge (entityRoute "toggleabandoned" package)
+                          [htxt $ "Set to " ++ show (not pkgAbandoned)]]
+      else []) ++
+    [ hrule ]
+
+--- Renders information about a package as HTML description list.
+versionInfoAsHTML :: UserSessionInfo -> Version -> [Package] -> [Category]
+                  -> [Version] -> User -> [User] -> [CurryModule]
+                  -> [(String,[BaseHtml])]
+versionInfoAsHTML sinfo version deppackages cats allversions uploader
+                  maintainers exportedmods =
+  [("Categor" ++ if length cats == 1 then "y" else "ies",
+    hitems $ map (\c -> hrefPrimBadge (showRoute c) [htxt $ categoryName c])
+                 cats)] ++
+  [ ("Versions", hitems $ map (showPkgVersion version)
+                              (reverse (sortBy leqVersion allversions)))
+  , ("Dependencies", hitems $ map dep2html $ deppackages)
+  , ("Uploaded by",
+     [userToRef uploader, breakline,
+      htxt $ "at " ++
+             calendarTimeToString (toUTCTime (versionUploadDate version)) ++
+             " (UTC)"])
+  , ("Maintainer", vitems $ map userToRef maintainers)
+  , ("Visibility",
+     [htxt (publicText (versionPublished version))] ++ togglePublicButton)
+  , ("Deprecated",
+     [htxt (if versionDepr then "yes" else "no")] ++ toggleDeprButton)
+  , ("JobStatus", [htxt $ versionJobStatus version])
+  , ("Downloads", [htxt $ show $ versionDownloads version])
+  ] ++
+  expmods
+ where
+  publicText b = if b then "Public" else "Private"
+  versionDepr = versionDeprecated version
+
+  userToRef u = hrefScndBadge (showRoute u) [htxt (userToShortView u)]
+
+  dep2html deppkg =
+    hrefPrimBadge (showRoute deppkg) [htxt (packageName deppkg)]
+
+  expmods =
+    if null exportedmods
+      then []
+      else [("Exported modules",
+             hitems $ map (\m -> code [htxt (curryModuleName m)]) exportedmods)]
+
+  togglePublicButton =
+    if isAdminSession sinfo
+      then [nbsp,
+            hrefWarnBadge (entityRoute "togglepublic" version)
+              [htxt $ "Set to " ++ publicText (not (versionPublished version))]]
+      else []
+
+  toggleDeprButton =
+    if isAdminSession sinfo
+      then [nbsp,
+            hrefWarnBadge (entityRoute "toggledepr" version)
+               [htxt $ "Set to " ++ if versionDepr then "no" else "yes"]]
+      else []
+
+showPkgVersion :: Version -> Version -> BaseHtml
+showPkgVersion currversion v =
+  (if versionVersion currversion == vers then hrefPrimBadge else hrefScndBadge)
+    (showRoute v) [htxt vers]
+ where
+  vers = versionVersion v
+
+--- Horizontal placement of HTML expressions separated by blanks.
+hitems :: [BaseHtml] -> [BaseHtml]
+hitems = intersperse (htxt " ")
+
+--- Vertical placement of HTML expressions.
+vitems :: [BaseHtml] -> [BaseHtml]
+vitems = intersperse breakline
+
 --- Compares two Version entities. This order is used in the list view.
 leqVersion :: Version -> Version -> Bool
-leqVersion x1 x2 =
-  (versionVersion x1
-  ,versionPublished x1
-  ,versionTested x1
-  ,versionDescription x1
-  ,versionJobStatus x1)
-   <= (versionVersion x2
-      ,versionPublished x2
-      ,versionTested x2
-      ,versionDescription x2
-      ,versionJobStatus x2)
+leqVersion v1 v2 = readVersionString v1 <= readVersionString v2
+ where
+  readVersionString v = case split (=='.') (versionVersion v) of
+    [majs,mins,revpres] -> let (revs,pres) = break (=='-') revpres
+                           in (readN majs, readN mins, read revs, pres)
+    _                   -> (0,0,0,"")
+
+  readN s | all isDigit s = read s
+          | otherwise     = 0
 
 --- Supplies a list view for a given list of Version entities.
 --- Shows also show/edit/delete buttons if the user is logged in.

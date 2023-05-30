@@ -11,7 +11,7 @@
 
 module System.SessionInfo (
   UserSessionInfo(..), userLoginOfSession, setUserLoginOfSession, 
-  getUserSessionInfo, updateUserSessionInfo
+  getUserSessionInfo, updateUserSessionInfo, isAdminSession
  ) where
 
 import HTML.Base    ( fromFormReader )
@@ -50,5 +50,12 @@ getUserSessionInfo =
 --- Updates the data of the current user session.
 updateUserSessionInfo :: (UserSessionInfo -> UserSessionInfo) -> IO ()
 updateUserSessionInfo = modifySessionData userSessionInfo emptySessionInfo
+
+--------------------------------------------------------------------------
+--- Is the current session an administrator session?
+-- TODO: improve when user roles are implemented!
+isAdminSession :: UserSessionInfo -> Bool
+isAdminSession sinfo =
+  maybe False (== "admin") (userLoginOfSession sinfo)
 
 --------------------------------------------------------------------------

@@ -1,11 +1,14 @@
 module Controller.Category
-  ( mainCategoryController, newCategoryForm, editCategoryForm ) where
+  ( mainCategoryController, newCategoryForm
+  , editCategoryDescForm )
+ where
 
 import Data.Time
 import HTML.Base
 import HTML.Session
 import HTML.WUI
 import Masala2
+import MasalaQueries
 import Config.EntityRoutes
 import Config.UserProcesses
 import System.SessionInfo
@@ -16,18 +19,19 @@ import View.EntitiesToHtml
 import View.Category
 import Database.CDBI.Connection
 
-type NewCategory = (String,String,[Version])
+type NewCategory = (String,String)
 
 --- Choose the controller for a Category entity according to the URL parameter.
 mainCategoryController :: Controller
 mainCategoryController =
   do args <- getControllerParams
      case args of
-       [] -> listCategoryController
-       ["list"] -> listCategoryController
+       [] -> allCategoriesController
+       ["list"] -> allCategoriesController
        ["new"] -> newCategoryController
        ["show",s] -> controllerOnKey s showCategoryController
-       ["edit",s] -> controllerOnKey s editCategoryController
+       ["edit",s] -> controllerOnKey s editCategoryDescController
+       --["editversion",s] -> controllerOnKey s editCategoryController
        ["delete",s] -> controllerOnKey s deleteCategoryController
        ["destroy",s] -> controllerOnKey s destroyCategoryController
        _ -> displayUrlError
@@ -37,36 +41,33 @@ newCategoryController :: Controller
 newCategoryController =
   checkAuthorization (categoryOperationAllowed NewEntity)
    $ (\sinfo ->
-     do allVersions <- runQ queryAllVersions
-        setParWuiStore newCategoryStore (sinfo,allVersions) ("","",[])
+     do setParWuiStore newCategoryStore sinfo ("","")
         return [formElem newCategoryForm])
 
 --- A WUI form to create a new Category entity.
 --- The default values for the fields are stored in 'newCategoryStore'.
-newCategoryForm
-  :: HtmlFormDef ((UserSessionInfo,[Version]),WuiStore NewCategory)
+newCategoryForm :: HtmlFormDef (UserSessionInfo,WuiStore NewCategory)
 newCategoryForm =
   pwui2FormDef "Controller.Category.newCategoryForm" newCategoryStore
-   (\(_,possibleVersions) -> wCategory possibleVersions)
+   (\_ -> wCategory)
    (\_ entity ->
      checkAuthorization (categoryOperationAllowed NewEntity)
       (\_ ->
         transactionController (runT (createCategoryT entity))
          (nextInProcessOr (redirectController "?Category/list") Nothing)))
-   (\(sinfo,_) ->
+   (\sinfo ->
      renderWUI sinfo "Create new Category" "Create" "?Category/list" ())
 
 --- The data stored for executing the "new entity" WUI form.
-newCategoryStore
-  :: SessionStore ((UserSessionInfo,[Version]),WuiStore NewCategory)
+newCategoryStore :: SessionStore (UserSessionInfo,WuiStore NewCategory)
 newCategoryStore = sessionStore "newCategoryStore"
 
 --- Transaction to persist a new Category entity to the database.
 createCategoryT :: NewCategory -> DBAction ()
-createCategoryT (name,description,versions) =
-  newCategory name description
-   >>= (\newentity -> addCategorizes versions newentity >> return ())
+createCategoryT (name,description) =
+  newCategory name description >>= \_ -> return ()
 
+{-
 --- Shows a form to edit the given Category entity.
 editCategoryController :: Category -> Controller
 editCategoryController categoryToEdit =
@@ -110,7 +111,44 @@ updateCategoryT (category,versionsCategorizes) =
          >>= (\oldCategorizesVersions ->
            removeCategorizes oldCategorizesVersions category))
         >> addCategorizes versionsCategorizes category)
+-}
+------------------------------------------------------------------------------
+--- Shows a form to edit the description of the given Category entity.
+editCategoryDescController :: Category -> Controller
+editCategoryDescController categoryToEdit =
+  checkAuthorization (categoryOperationAllowed (UpdateEntity categoryToEdit))
+   $ (\sinfo ->
+     do setParWuiStore editCategoryDescStore (sinfo,categoryToEdit)
+                       categoryToEdit
+        return [formElem editCategoryDescForm])
 
+--- A WUI form to edit a Category entity.
+--- The default values for the fields are stored in 'editCategoryDescStore'.
+editCategoryDescForm
+  :: HtmlFormDef ((UserSessionInfo,Category), WuiStore Category)
+editCategoryDescForm =
+  pwui2FormDef "Controller.Category.editCategoryDescForm" editCategoryDescStore
+   (\(_,category) -> wCategoryDescType category)
+   (\_ newcat ->
+     checkAuthorization
+      (categoryOperationAllowed (UpdateEntity newcat))
+      (\_ ->
+        transactionController (runT (updateCategoryDescT newcat))
+         (nextInProcessOr (redirectController (showRoute newcat)) Nothing)))
+   (\(sinfo,cat) ->
+     renderWUI sinfo "Edit Category" "Change" (showRoute cat) ())
+
+--- The data stored for executing the edit WUI form.
+editCategoryDescStore
+  :: SessionStore ((UserSessionInfo,Category), WuiStore Category)
+editCategoryDescStore = sessionStore "editCategoryDescStore"
+
+--- Transaction to persist modifications of a given Category entity
+--- to the database.
+updateCategoryDescT :: Category -> DBAction ()
+updateCategoryDescT category = updateCategory category
+
+------------------------------------------------------------------------------
 --- Deletes a given Category entity (after asking for confirmation)
 --- and proceeds with the list controller.
 deleteCategoryController :: Category -> Controller
@@ -146,13 +184,22 @@ listCategoryController =
      do categorys <- runQ queryAllCategorys
         return (listCategoryView sinfo categorys))
 
+--- Lists all Category entities.
+allCategoriesController :: Controller
+allCategoriesController =
+  checkAuthorization (categoryOperationAllowed ListEntities)
+   $ (\sinfo ->
+     do categorys <- runQ queryAllCategorys
+        return (allCategoriesView sinfo categorys))
+
 --- Shows a Category entity.
 showCategoryController :: Category -> Controller
 showCategoryController category =
-  checkAuthorization (categoryOperationAllowed (ShowEntity category))
-   $ (\sinfo ->
-     do categorizesVersions <- runJustT (getCategoryVersions category)
-        return (showCategoryView sinfo category categorizesVersions))
+  checkAuthorization (categoryOperationAllowed (ShowEntity category)) $
+   \sinfo -> do
+     --categorizesVersions <- runJustT (getCategoryVersions category)
+     packages <- getPackagesOfCategory category
+     return (showCategoryView sinfo category packages)
 
 --- Associates given entities with the Category entity.
 addCategorizes :: [Version] -> Category -> DBAction ()

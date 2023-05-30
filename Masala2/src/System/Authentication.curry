@@ -51,3 +51,9 @@ logoutFromSession :: IO ()
 logoutFromSession = updateUserSessionInfo (setUserLoginOfSession Nothing)
 
 --------------------------------------------------------------------------
+-- Returns true if admin is logged in.
+-- TODO: improve when user roles are implemented!
+isAdmin :: IO Bool
+isAdmin = getUserSessionInfo >>= return . isAdminSession
+
+--------------------------------------------------------------------------

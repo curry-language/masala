@@ -1,36 +1,42 @@
 module Controller.Package
   ( mainPackageController, newPackageForm, editPackageForm ) where
 
+import Data.List ( last, sortBy )
+
 import Data.Time
 import HTML.Base
 import HTML.Session
 import HTML.WUI
 import Masala2
+import MasalaQueries
 import Config.EntityRoutes
 import Config.UserProcesses
+import Controller.Version
 import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
 import System.Spicey
 import View.EntitiesToHtml
 import View.Package
+import View.Version
 import Database.CDBI.Connection
 
 type NewPackage = (String,Bool)
 
 --- Choose the controller for a Package entity according to the URL parameter.
 mainPackageController :: Controller
-mainPackageController =
-  do args <- getControllerParams
-     case args of
-       [] -> listPackageController
-       ["list"] -> listPackageController
-       ["new"] -> newPackageController
-       ["show",s] -> controllerOnKey s showPackageController
-       ["edit",s] -> controllerOnKey s editPackageController
-       ["delete",s] -> controllerOnKey s deletePackageController
-       ["destroy",s] -> controllerOnKey s destroyPackageController
-       _ -> displayUrlError
+mainPackageController = do
+  args <- getControllerParams
+  case args of
+    [] -> allPackagesController
+    ["list"] -> listPackageController
+    ["new"] -> newPackageController
+    ["show",s] -> controllerOnKey s showPackageController
+    ["edit",s] -> controllerOnKey s editPackageController
+    ["toggleabandoned",s] -> controllerOnKey s toggleAbandonedPackageController
+    ["delete",s] -> controllerOnKey s deletePackageController
+    ["destroy",s] -> controllerOnKey s destroyPackageController
+    _ -> displayUrlError
 
 --- Shows a form to create a new Package entity.
 newPackageController :: Controller
@@ -93,6 +99,14 @@ editPackageStore = sessionStore "editPackageStore"
 updatePackageT :: Package -> DBAction ()
 updatePackageT package = updatePackage package
 
+--- A controller to toggle the abandoned status of the given Package entity.
+toggleAbandonedPackageController :: Package -> Controller
+toggleAbandonedPackageController pkg =
+  checkAuthorization (packageOperationAllowed (UpdateEntity pkg)) $ \_ -> do
+    let newpkg = setPackageAbandoned pkg (not (packageAbandoned pkg))
+    transactionController (runT (updatePackage newpkg))
+      (nextInProcessOr (redirectController (showRoute pkg)) Nothing)
+
 --- Deletes a given Package entity (after asking for confirmation)
 --- and proceeds with the list controller.
 deletePackageController :: Package -> Controller
@@ -124,8 +138,18 @@ listPackageController =
      do packages <- runQ queryAllPackages
         return (listPackageView sinfo packages))
 
+--- Lists all Package entities.
+allPackagesController :: Controller
+allPackagesController =
+  checkAuthorization (packageOperationAllowed ListEntities)
+   $ (\sinfo ->
+     do packages <- runQ queryAllPackages
+        return (allPackagesView sinfo packages))
+
 --- Shows a Package entity.
 showPackageController :: Package -> Controller
 showPackageController package =
-  checkAuthorization (packageOperationAllowed (ShowEntity package))
-   $ (\sinfo -> do return (showPackageView sinfo package))
+  checkAuthorization (packageOperationAllowed (ShowEntity package)) $ \_ ->
+    do versions <- getPackageVersions package
+       --return (showPackageView sinfo versions package)
+       showVersionController (last (sortBy leqVersion versions))

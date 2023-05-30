@@ -1,6 +1,6 @@
 module View.Package
   ( wPackage, tuple2Package, package2Tuple, wPackageType, showPackageView
-  , leqPackage, listPackageView ) where
+  , leqPackage, listPackageView, allPackagesView ) where
 
 import Data.List
 import Data.Time
@@ -36,10 +36,15 @@ wPackageType package =
   transformWSpec (tuple2Package package,package2Tuple) wPackage
 
 --- Supplies a view to show the details of a Package.
-showPackageView :: UserSessionInfo -> Package -> [BaseHtml]
-showPackageView _ package =
-  packageToDetailsView package
-   ++ [hrefPrimSmButton "?Package/list" [htxt "back to Package list"]]
+showPackageView :: UserSessionInfo -> [Version] -> Package -> [BaseHtml]
+showPackageView _ versions package =
+  [h2 [htxt $ "Package: " ++ packageName package]
+  ,h5 [htxt $ "Abandoned: " ++ show (packageAbandoned package)]
+  ,h5 [htxt $ "Versions:"]
+  ,par (intersperse nbsp
+          (map (\v -> hrefPrimBadge (showRoute v) [htxt (versionVersion v)])
+            versions))
+  ,hrefPrimSmButton "?Package/list" [htxt "back to Package list"]]
 
 --- Compares two Package entities. This order is used in the list view.
 leqPackage :: Package -> Package -> Bool
@@ -57,9 +62,19 @@ listPackageView sinfo packages =
       ++ map listPackage (sortBy leqPackage packages))]
   where
     listPackage package =
-      packageToListView package
-       ++ (if userLoginOfSession sinfo == Nothing
-              then []
-              else [[hrefPrimBadge (showRoute package) [htxt "Show"]]
-                   ,[hrefPrimBadge (editRoute package) [htxt "Edit"]]
-                   ,[hrefPrimBadge (deleteRoute package) [htxt "Delete"]]])
+      [[hrefPrimBadge (showRoute package) [htxt (packageName package)]]
+      ,[boolToHtml (packageAbandoned package)]] ++
+      (if userLoginOfSession sinfo == Nothing
+          then []
+          else [[hrefPrimBadge (showRoute package) [htxt "Show"]]
+               ,[hrefPrimBadge (editRoute package) [htxt "Edit"]]
+               ,[hrefPrimBadge (deleteRoute package) [htxt "Delete"]]])
+
+--- A view for a given list of Package entities.
+allPackagesView :: UserSessionInfo -> [Package] -> [BaseHtml]
+allPackagesView _ packages =
+  [ h1 [htxt "Index of all packages"]
+  , par (intersperse nbsp (map listPackage (sortBy leqPackage packages)))]
+  where
+    listPackage package =
+      hrefPrimBadge (showRoute package) [htxt (packageName package)]

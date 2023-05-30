@@ -19,7 +19,7 @@ module System.Spicey (
   intToHtml,maybeIntToHtml, floatToHtml, maybeFloatToHtml,
   boolToHtml, maybeBoolToHtml, dateToHtml, maybeDateToHtml,
   userDefinedToHtml, maybeUserDefinedToHtml,
-  spTable,
+  spTable, smallMutedText,
   setPageMessage, getPageMessage,
   saveLastUrl, getLastUrl, getLastUrls
   ) where
@@ -283,7 +283,8 @@ getPage viewblock = case viewblock of
     lasturl    <- getLastUrl
     withSessionCookie $ bootstrapPage favIcon cssIncludes jsIncludes
       spiceyTitle spiceyHomeBrand routemenu (rightTopMenu login)
-      0 []  [h1 [htxt spiceyTitle]]
+      0 []
+      [h1 [htxt "Masala: ", smallMutedText "The Repository of Curry Packages"]]
       (messageLine msg lasturl : viewblock)
       spiceyFooter
  where
@@ -389,6 +390,10 @@ maybeUserDefinedToHtml ud = textstyle "type_string" (maybe "" show ud)
 --- Standard table in Spicey.
 spTable :: HTML h => [[[h]]] -> h
 spTable items = table items  `addClass` "table table-hover table-condensed"
+
+--- A small muted text (used in the title):
+smallMutedText :: HTML h => String -> h
+smallMutedText s = htmlStruct "small" [("class","text-muted")] [htxt s]
 
 --------------------------------------------------------------------------
 -- The page messages are implemented by a session store.
