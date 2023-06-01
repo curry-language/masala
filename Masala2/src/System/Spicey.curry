@@ -9,7 +9,7 @@ module System.Spicey (
   redirectController,
   nextController, nextControllerForData,
   confirmDeletionPage,
-  transactionController,
+  transactionController, transactionControllerWith,
   getControllerURL,getControllerParams, showControllerURL,
   getPage, wDateType, wBoolean, wUncheckMaybe, wFloat,
   displayError, displayUrlError, cancelOperation,
@@ -130,10 +130,16 @@ confirmDeletionPage _ question = do
 --- @param controller - the controller executed in case of success
 transactionController :: IO (SQLResult _) -> Controller -> Controller
 transactionController trans controller = do
-  transResult <- trans
-  either (\error -> displayError (show error))
-         (\_     -> controller)
-         transResult
+  trans >>= either (\error -> displayError (show error)) (const controller)
+
+--- A controller to execute a transaction and proceed, if the transaction
+--- succeeds, with a given controller applied to the transaction result.
+--- Otherwise, the transaction error is shown.
+--- @param trans - the transaction to be executed
+--- @param controller - the controller executed in case of success
+transactionControllerWith :: IO (SQLResult a) -> (a -> Controller) -> Controller
+transactionControllerWith trans controller =
+  trans >>= either (\error -> displayError (show error)) controller
 
 --- If we are in a process, execute the next process depending on
 --- the provided information passed in the second argument,

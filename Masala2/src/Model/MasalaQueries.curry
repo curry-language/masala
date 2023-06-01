@@ -12,7 +12,8 @@ import Database.CDBI.ER
 import Masala2
 
 -----------------------------------------------------------------------
--- Checks whether the given email is available, i.e., not already used.
+-- Checks whether the given user login name is available, i.e.,
+-- not already used.
 checkUserNameAvailable :: String -> IO Bool
 checkUserNameAvailable name = fmap null $ runQ
   ``sql* Select *

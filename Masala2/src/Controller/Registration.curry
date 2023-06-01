@@ -57,18 +57,19 @@ registrationForm =
         let check = usernameAvailable && emailSyntax && emailAvailable && passwordFine
 
         if check
-          then transactionController
-                 (runT (registrationT (loginName, publicName, email, cryptpasswd)))
-                 (nextInProcessOr (redirectController "?") Nothing)
+          then transactionControllerWith
+                 (runT
+                    (registrationT (loginName, publicName, email, cryptpasswd)))
+                 (\user -> nextInProcessOr (redirectController (showRoute user))
+                                           Nothing)
           else displayError "Wrong data"))
    (\sinfo ->
      renderWUI sinfo "Register new User" "Register" "?Registration" ())
 
 --- Transaction to persist a new User entity to the database.
-registrationT :: RegistrationInput -> DBAction ()
+registrationT :: RegistrationInput -> DBAction User
 registrationT (loginName,publicName,email,cryptpasswd) =
     newUser loginName publicName email "" "Invalid" cryptpasswd "" Nothing
-    >> return ()
 
 checkIfUsernameAvailable :: Connection -> String -> IO Bool
 checkIfUsernameAvailable connection username = do
