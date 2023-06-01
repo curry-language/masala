@@ -1,4 +1,4 @@
-{-# OPTIONS_CYMAKE -F --pgmF=currypp --optF=foreigncode #-}
+{-# OPTIONS_FRONTEND -F --pgmF=currypp --optF=foreigncode #-}
 
 --- Some SQL queries useful for the implementation of Masala.
 
@@ -10,6 +10,21 @@ import Data.Maybe ( listToMaybe )
 import Database.CDBI.ER
 
 import Masala2
+
+-----------------------------------------------------------------------
+-- Checks whether the given email is available, i.e., not already used.
+checkUserNameAvailable :: String -> IO Bool
+checkUserNameAvailable name = fmap null $ runQ
+  ``sql* Select *
+         From User as u
+         Where u.LoginName = { name };''
+
+-- Checks whether the given email is available, i.e., not already used.
+checkEmailAvailable :: String -> IO Bool
+checkEmailAvailable email = fmap null $ runQ
+  ``sql* Select *
+         From User as u
+         Where u.Email = { email };''
 
 -----------------------------------------------------------------------
 -- Gets the version of a package with a given name and version string.

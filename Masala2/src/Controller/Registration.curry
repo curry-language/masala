@@ -5,6 +5,7 @@ import HTML.Base
 import HTML.Session
 import HTML.WUI
 import Masala2
+import MasalaQueries
 import Config.EntityRoutes
 import Config.UserProcesses
 import System.SessionInfo
@@ -48,26 +49,24 @@ registrationForm =
    (\_ (loginName, publicName, email, uncryptpasswd) ->
      checkAuthorization (userOperationAllowed NewEntity)
       (\_ -> do
-        connection <- connectSQLite sqliteDBFile
-
         cryptpasswd <- getUserHash loginName uncryptpasswd
-        usernameAvailable <- checkIfUsernameAvailable connection loginName
+        usernameAvailable <- checkUserNameAvailable loginName
         let emailSyntax = checkEmailSyntax email
-        emailAvailable <- checkIfEmailAvailable connection email
+        emailAvailable <- checkEmailAvailable email
         let passwordFine = checkIfPasswordFine uncryptpasswd
         let check = usernameAvailable && emailSyntax && emailAvailable && passwordFine
 
-        disconnect connection
-
-        transactionController (runT (registrationT check (loginName, publicName, email, cryptpasswd)))
-         (nextInProcessOr (redirectController "?Registration") Nothing)))
+        if check
+          then transactionController
+                 (runT (registrationT (loginName, publicName, email, cryptpasswd)))
+                 (nextInProcessOr (redirectController "?") Nothing)
+          else displayError "Wrong data"))
    (\sinfo ->
      renderWUI sinfo "Register new User" "Register" "?Registration" ())
 
 --- Transaction to persist a new User entity to the database.
-registrationT :: Bool -> RegistrationInput -> DBAction ()
-registrationT False _ = return ()
-registrationT True (loginName,publicName,email,cryptpasswd) =
+registrationT :: RegistrationInput -> DBAction ()
+registrationT (loginName,publicName,email,cryptpasswd) =
     newUser loginName publicName email "" "Invalid" cryptpasswd "" Nothing
     >> return ()
 
