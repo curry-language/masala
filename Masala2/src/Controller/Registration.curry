@@ -4,8 +4,8 @@ import Data.Time
 import HTML.Base
 import HTML.Session
 import HTML.WUI
-import Masala2
-import MasalaQueries
+import Model.Masala2
+import Model.Queries
 import Config.EntityRoutes
 import Config.UserProcesses
 import System.SessionInfo
@@ -57,11 +57,13 @@ registrationForm =
         let check = usernameAvailable && emailSyntax && emailAvailable && passwordFine
 
         if check
-          then transactionControllerWith
+          then transactionController
                  (runT
                     (registrationT (loginName, publicName, email, cryptpasswd)))
-                 (\user -> nextInProcessOr (redirectController (showRoute user))
-                                           Nothing)
+                 (\user -> do
+                    setPageMessage "New user added"
+                    nextInProcessOr (redirectController (showRoute user))
+                                    Nothing)
           else displayError "Wrong data"))
    (\sinfo ->
      renderWUI sinfo "Register new User" "Register" "?Registration" ())

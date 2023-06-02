@@ -6,7 +6,7 @@ import Data.Time
 import HTML.Base
 import HTML.Session
 import HTML.WUI
-import Masala2
+import Model.Masala2
 import Config.EntityRoutes
 import Config.UserProcesses
 import System.SessionInfo
@@ -56,8 +56,10 @@ newValidationTokenForm =
      checkAuthorization (validationTokenOperationAllowed NewEntity)
       (\_ ->
         transactionController (runT (createValidationTokenT entity))
-         (nextInProcessOr (redirectController "?ValidationToken/list")
-           Nothing)))
+         (\newentity ->
+           do setPageMessage "New ValidationToken created"
+              nextInProcessOr (redirectController (showRoute newentity))
+               Nothing)))
    (\(sinfo,_) ->
      renderWUI sinfo "Create new ValidationToken" "Create"
       "?ValidationToken/list"
@@ -69,10 +71,11 @@ newValidationTokenStore
 newValidationTokenStore = sessionStore "newValidationTokenStore"
 
 --- Transaction to persist a new ValidationToken entity to the database.
-createValidationTokenT :: NewValidationToken -> DBAction ()
+createValidationTokenT :: NewValidationToken -> DBAction ValidationToken
 createValidationTokenT (token,validSince,user) =
-  newValidationTokenWithUserValidatingKey token validSince (userKey user)
-   >>= (\_ -> return ())
+  do newentity <- newValidationTokenWithUserValidatingKey token validSince
+                   (userKey user)
+     return newentity
 
 --- Shows a form to edit the given ValidationToken entity.
 editValidationTokenController :: ValidationToken -> Controller
@@ -102,8 +105,11 @@ editValidationTokenForm =
       (validationTokenOperationAllowed (UpdateEntity validationTokenToEdit))
       (\_ ->
         transactionController (runT (updateValidationTokenT entity))
-         (nextInProcessOr (redirectController "?ValidationToken/list")
-           Nothing)))
+         (const
+           (do setPageMessage "ValidationToken updated"
+               nextInProcessOr
+                (redirectController (showRoute validationTokenToEdit))
+                Nothing))))
    (\(sinfo,_,_,_) ->
      renderWUI sinfo "Edit ValidationToken" "Change" "?ValidationToken/list"
       ())
@@ -140,7 +146,9 @@ destroyValidationTokenController validationToken =
    (validationTokenOperationAllowed (DeleteEntity validationToken))
    $ (\_ ->
      transactionController (runT (deleteValidationTokenT validationToken))
-      (redirectController "?ValidationToken/list"))
+      (const
+        (do setPageMessage "ValidationToken deleted"
+            redirectController "?ValidationToken/list")))
 
 --- Transaction to delete a given ValidationToken entity.
 deleteValidationTokenT :: ValidationToken -> DBAction ()

@@ -4,7 +4,7 @@ import Data.Time
 import HTML.Base
 import HTML.Session
 import HTML.WUI
-import Masala2
+import Model.Masala2
 import Config.EntityRoutes
 import Config.UserProcesses
 import System.SessionInfo
@@ -65,7 +65,10 @@ newUserForm =
      checkAuthorization (userOperationAllowed NewEntity)
       (\_ ->
         transactionController (runT (createUserT entity))
-         (nextInProcessOr (redirectController "?User/list") Nothing)))
+         (\newentity ->
+           do setPageMessage "New User created"
+              nextInProcessOr (redirectController (showRoute newentity))
+               Nothing)))
    (\(sinfo,_,_) ->
      renderWUI sinfo "Create new User" "Create" "?User/list" ())
 
@@ -75,14 +78,15 @@ newUserStore
 newUserStore = sessionStore "newUserStore"
 
 --- Transaction to persist a new User entity to the database.
-createUserT :: NewUser -> DBAction ()
+createUserT :: NewUser -> DBAction User
 createUserT
     (loginName,publicName,email,publicEmail,role,password,token,lastLogin
     ,maintainerpackages,watchingpackages) =
-  newUser loginName publicName email publicEmail role password token lastLogin
-   >>= (\newentity ->
+  do newentity <- newUser loginName publicName email publicEmail role password
+                  token lastLogin
      addMaintainer maintainerpackages newentity
-      >> (addWatching watchingpackages newentity >> return ()))
+     addWatching watchingpackages newentity
+     return newentity
 
 --- Shows a form to edit the given User entity.
 editUserController :: User -> Controller
@@ -111,7 +115,10 @@ editUserForm =
      checkAuthorization (userOperationAllowed (UpdateEntity userToEdit))
       (\_ ->
         transactionController (runT (updateUserT entity))
-         (nextInProcessOr (redirectController "?User/list") Nothing)))
+         (const
+           (do setPageMessage "User updated"
+               nextInProcessOr (redirectController (showRoute userToEdit))
+                Nothing))))
    (\(sinfo,_,_,_) -> renderWUI sinfo "Edit User" "Change" "?User/list" ())
 
 --- The data stored for executing the edit WUI form.
@@ -124,15 +131,13 @@ editUserStore = sessionStore "editUserStore"
 --- to the database.
 updateUserT :: (User,[Package],[Package]) -> DBAction ()
 updateUserT (user,packagesMaintainer,packagesWatching) =
-  updateUser user
-   >> ((getMaintainerUserPackages user
-         >>= (\oldMaintainerPackages ->
-           removeMaintainer oldMaintainerPackages user))
-        >> ((getWatchingUserPackages user
-              >>= (\oldWatchingPackages ->
-                removeWatching oldWatchingPackages user))
-             >> (addMaintainer packagesMaintainer user
-                  >> addWatching packagesWatching user)))
+  do updateUser user
+     oldMaintainerPackages <- getMaintainerUserPackages user
+     removeMaintainer oldMaintainerPackages user
+     oldWatchingPackages <- getWatchingUserPackages user
+     removeWatching oldWatchingPackages user
+     addMaintainer packagesMaintainer user
+     addWatching packagesWatching user
 
 --- Deletes a given User entity (after asking for confirmation)
 --- and proceeds with the list controller.
@@ -150,18 +155,18 @@ destroyUserController user =
   checkAuthorization (userOperationAllowed (DeleteEntity user))
    $ (\_ ->
      transactionController (runT (deleteUserT user))
-      (redirectController "?User/list"))
+      (const
+        (do setPageMessage "User deleted"
+            redirectController "?User/list")))
 
 --- Transaction to delete a given User entity.
 deleteUserT :: User -> DBAction ()
 deleteUserT user =
-  (getMaintainerUserPackages user
-    >>= (\oldMaintainerPackages ->
-      removeMaintainer oldMaintainerPackages user))
-   >> ((getWatchingUserPackages user
-         >>= (\oldWatchingPackages ->
-           removeWatching oldWatchingPackages user))
-        >> deleteUser user)
+  do oldMaintainerPackages <- getMaintainerUserPackages user
+     removeMaintainer oldMaintainerPackages user
+     oldWatchingPackages <- getWatchingUserPackages user
+     removeWatching oldWatchingPackages user
+     deleteUser user
 
 --- Lists all User entities with buttons to show, delete,
 --- or edit an entity.

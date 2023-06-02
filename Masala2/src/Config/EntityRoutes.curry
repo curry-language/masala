@@ -1,7 +1,7 @@
 module Config.EntityRoutes () where
 
 import System.Spicey
-import Masala2
+import Model.Masala2
 
 instance EntityController User where
   controllerOnKey s = applyControllerOn (readUserKey s) (runJustT . getUser)

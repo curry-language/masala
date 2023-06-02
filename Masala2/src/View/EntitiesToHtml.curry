@@ -4,7 +4,7 @@ import Data.Time
 import HTML.Base
 import HTML.WUI
 import System.Spicey
-import Masala2
+import Model.Masala2
 
 --- The list view of a User entity in HTML format.
 --- This view is used in a row of a table of all entities.
