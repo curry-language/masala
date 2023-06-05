@@ -11,6 +11,32 @@ import Database.CDBI.ER
 
 import Masala2
 
+import Data.Time
+
+-----------------------------------------------------------------------
+-- Checks whether the given user login name is available, i.e.,
+-- not already used.
+checkValidationTokenAvailable :: String -> IO Bool
+checkValidationTokenAvailable token = fmap null $ runQ
+  ``sql* Select *
+         From ValidationToken as vt
+         Where vt.Token = { token };''
+
+addValidationToken :: String -> ClockTime -> UserID -> IO ()
+addValidationToken token time user = runQ
+  ``sql* Insert into ValidationToken (Token, ValidSince, UserValidatingKey)
+         Values ({ token }, { time }, { user });''
+
+getValidationTokenWithToken :: String -> IO (Maybe ValidationToken)
+getValidationTokenWithToken token = fmap listToMaybe $ runQ
+  ``sql* Select *
+         From ValidationToken as vt
+         Where vt.Token = { token };''
+
+deleteValidationTokenWithToken :: String -> IO ()
+deleteValidationTokenWithToken token = runQ
+  ``sql* Delete From ValidationToken Where Token = { token };''
+
 -----------------------------------------------------------------------
 -- Checks whether the given user login name is available, i.e.,
 -- not already used.
@@ -26,6 +52,17 @@ checkEmailAvailable email = fmap null $ runQ
   ``sql* Select *
          From User as u
          Where u.Email = { email };''
+
+--addUser :: String -> String -> String -> String -> IO ()
+--addUser loginName publicName email password = runQ
+--  ``sql* Insert into User (LoginName, PublicName, Email, PublicEmail, Role, Password, Token)
+--         Values ({ loginName }, { publicName }, { email }, { "" }, { "Invalid" }, { password }, { "" });''
+
+validateUser :: UserID -> IO ()
+validateUser user = runQ
+  ``sql* Update User
+         Set Role = { "Not Trusted" }
+         Where Key = { user };''
 
 -----------------------------------------------------------------------
 -- Gets the version of a package with a given name and version string.
