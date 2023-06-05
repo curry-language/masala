@@ -11,6 +11,7 @@ data ControllerReference = ProcessListController
                          | CurryModuleController
                          | ValidationTokenController
                          | RegistrationController
+                         | ValidationController
 
 data UrlMatch = Exact String
               | Prefix String String
@@ -48,5 +49,8 @@ getRoutes =
       ,( "Registration"
        , Exact "Registration"
        , RegistrationController)
+      ,( "Validation"
+       , Exact "Validation"
+       , ValidationController)
       ,(maybe "Login" (const "Logout") login,Exact "login",LoginController)
       ,("default",Always,PackageController)]
