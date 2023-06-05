@@ -18,6 +18,7 @@ import View.EntitiesToHtml
 import View.User
 import View.Registration
 import Database.CDBI.Connection
+import Crypto.Hash
 
 type RegistrationInput =
     ( String -- LoginName
@@ -57,12 +58,32 @@ registrationForm =
         let check = usernameAvailable && emailSyntax && emailAvailable && passwordFine
 
         if check
-          then transactionControllerWith
+          then do
+            time <- getClockTime
+            token <- generateValidationToken
+            connection <- connectSQLite sqliteDBFile
+            userResult <- runDBAction (newUser loginName publicName email "" "Invalid" cryptpasswd "" Nothing) connection
+            case userResult of 
+              Left err -> do 
+                disconnect connection
+                displayError "Controller.Registration: Adding new user did not work, although input data was correct."
+              Right user -> do 
+                tokenResult <- runDBAction (newValidationTokenWithUserValidatingKey token time (userKey user)) connection
+                disconnect connection
+                case tokenResult of 
+                  Left err -> displayError "Controller.Registration: Adding new token did not work, although token should be free."
+                  Right validationToken -> displayError ("ValidationToken: " ++ token)
+                --addValidationToken token time (userKey user)
+                --validationToken <- getValidationTokenWithToken token
+                 
+            {-
+            transactionControllerWith
                  (runT
                     (registrationT (loginName, publicName, email, cryptpasswd)))
                  (\user -> nextInProcessOr (redirectController (showRoute user))
                                            Nothing)
-          else displayError "Wrong data"))
+                                          -}
+          else displayRegistrationError usernameAvailable emailSyntax emailAvailable passwordFine))
    (\sinfo ->
      renderWUI sinfo "Register new User" "Register" "?Registration" ())
 
@@ -95,4 +116,35 @@ checkIfEmailAvailable connection email = do
     notEmail email user = userEmail user /= email
 
 checkIfPasswordFine :: String -> Bool
-checkIfPasswordFine uncryptpasswd = True
+checkIfPasswordFine = checkPasswordLength
+
+checkPasswordLength :: String -> Bool
+checkPasswordLength uncryptpasswd = length uncryptpasswd >= 8
+
+displayRegistrationError :: Bool -> Bool -> Bool -> Bool -> Controller
+displayRegistrationError usernameAvailable emailSyntax emailAvailable passwordFine =
+  let err1 = errorUsernameAvailable usernameAvailable
+      err2 = errorEmailSyntax emailSyntax
+      err3 = errorEmailAvailable emailAvailable
+      err4 = errorPasswordFine passwordFine
+  in displayError (err1 ++ err2 ++ err3 ++ err4)
+  where
+    errorUsernameAvailable True = ""
+    errorUsernameAvailable False = "The given username is not available, please choose another one.\n"
+
+    errorEmailSyntax True = ""
+    errorEmailSyntax False = "The given email address is not a correct email address, please make sure to give a correct email address.\n"
+
+    errorEmailAvailable True = ""
+    errorEmailAvailable False = "The given email address is already used, please choose another one.\n"
+
+    errorPasswordFine True = ""
+    errorPasswordFine False = "The password must be at least 8 symbols long.\n"
+
+generateValidationToken :: IO String
+generateValidationToken = do
+  token <- randomString 32
+  available <- checkValidationTokenAvailable token
+  if available
+    then return token
+    else generateValidationToken
