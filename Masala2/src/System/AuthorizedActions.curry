@@ -3,7 +3,7 @@ module System.AuthorizedActions where
 import System.Authentication ( getSessionLogin )
 import System.Authorization
 import System.SessionInfo
-import Masala2
+import Model.Masala2
 
 ----------------------------------------------------------------------------
 --- Grants access for the administrator.

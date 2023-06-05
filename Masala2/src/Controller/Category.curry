@@ -7,8 +7,8 @@ import Data.Time
 import HTML.Base
 import HTML.Session
 import HTML.WUI
-import Masala2
-import MasalaQueries
+import Model.Masala2
+import Model.Queries
 import Config.EntityRoutes
 import Config.UserProcesses
 import System.SessionInfo
@@ -54,7 +54,10 @@ newCategoryForm =
      checkAuthorization (categoryOperationAllowed NewEntity)
       (\_ ->
         transactionController (runT (createCategoryT entity))
-         (nextInProcessOr (redirectController "?Category/list") Nothing)))
+         (\newentity ->
+           do setPageMessage "New Category created"
+              nextInProcessOr (redirectController (showRoute newentity))
+               Nothing)))
    (\sinfo ->
      renderWUI sinfo "Create new Category" "Create" "?Category/list" ())
 
@@ -63,9 +66,8 @@ newCategoryStore :: SessionStore (UserSessionInfo,WuiStore NewCategory)
 newCategoryStore = sessionStore "newCategoryStore"
 
 --- Transaction to persist a new Category entity to the database.
-createCategoryT :: NewCategory -> DBAction ()
-createCategoryT (name,description) =
-  newCategory name description >>= \_ -> return ()
+createCategoryT :: NewCategory -> DBAction Category
+createCategoryT (name,description) = newCategory name description
 
 {-
 --- Shows a form to edit the given Category entity.
@@ -92,7 +94,10 @@ editCategoryForm =
       (categoryOperationAllowed (UpdateEntity categoryToEdit))
       (\_ ->
         transactionController (runT (updateCategoryT entity))
-         (nextInProcessOr (redirectController "?Category/list") Nothing)))
+         (const
+           (do setPageMessage "Category updated"
+               nextInProcessOr (redirectController (showRoute categoryToEdit))
+                Nothing))))
    (\(sinfo,_,_) ->
      renderWUI sinfo "Edit Category" "Change" "?Category/list" ())
 
@@ -106,11 +111,10 @@ editCategoryStore = sessionStore "editCategoryStore"
 --- to the database.
 updateCategoryT :: (Category,[Version]) -> DBAction ()
 updateCategoryT (category,versionsCategorizes) =
-  updateCategory category
-   >> ((getCategoryVersions category
-         >>= (\oldCategorizesVersions ->
-           removeCategorizes oldCategorizesVersions category))
-        >> addCategorizes versionsCategorizes category)
+  do updateCategory category
+     oldCategorizesVersions <- getCategoryVersions category
+     removeCategorizes oldCategorizesVersions category
+     addCategorizes versionsCategorizes category
 -}
 ------------------------------------------------------------------------------
 --- Shows a form to edit the description of the given Category entity.
@@ -134,7 +138,10 @@ editCategoryDescForm =
       (categoryOperationAllowed (UpdateEntity newcat))
       (\_ ->
         transactionController (runT (updateCategoryDescT newcat))
-         (nextInProcessOr (redirectController (showRoute newcat)) Nothing)))
+         (const
+           (do setPageMessage "Category updated"
+               nextInProcessOr (redirectController (showRoute newcat))
+                Nothing))))
    (\(sinfo,cat) ->
      renderWUI sinfo "Edit Category" "Change" (showRoute cat) ())
 
@@ -165,15 +172,16 @@ destroyCategoryController category =
   checkAuthorization (categoryOperationAllowed (DeleteEntity category))
    $ (\_ ->
      transactionController (runT (deleteCategoryT category))
-      (redirectController "?Category/list"))
+      (const
+        (do setPageMessage "Category deleted"
+            redirectController "?Category/list")))
 
 --- Transaction to delete a given Category entity.
 deleteCategoryT :: Category -> DBAction ()
 deleteCategoryT category =
-  (getCategoryVersions category
-    >>= (\oldCategorizesVersions ->
-      removeCategorizes oldCategorizesVersions category))
-   >> deleteCategory category
+  do oldCategorizesVersions <- getCategoryVersions category
+     removeCategorizes oldCategorizesVersions category
+     deleteCategory category
 
 --- Lists all Category entities with buttons to show, delete,
 --- or edit an entity.

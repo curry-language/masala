@@ -2,14 +2,14 @@
 
 --- Some SQL queries useful for the implementation of Masala.
 
-module MasalaQueries where
+module Model.Queries where
 
 import Data.List  ( nub )
 import Data.Maybe ( listToMaybe )
 
 import Database.CDBI.ER
 
-import Masala2
+import Model.Masala2
 
 import Data.Time
 

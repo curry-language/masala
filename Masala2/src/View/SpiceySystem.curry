@@ -41,7 +41,7 @@ loginView (currlogin,lurl) =
     if null loginname
       then return ()
       else do loginToSession loginname
-              setPageMessage ("Logged in as: "++loginname)
+              setPageMessage ("Logged in as: " ++ loginname)
     nextInProcessOr (redirectController lasturl) Nothing >>= getPage
 
   logoutHandler _ = do
@@ -56,14 +56,14 @@ processListView procs =
    ulist (map processColumn (zip (processNames procs) [1..]))]
  where
    processColumn (pname, id) =
-     [href ("?spiceyProcesses/"++show id) [htxt pname]]
+     [href ("?spiceyProcesses/" ++ show id) [htxt pname]]
 
 -----------------------------------------------------------------------------
 --- A view for all URLs of a session.
 historyView :: [String] -> [BaseHtml]
 historyView urls =
   [h1 [htxt "History"],
-   ulist (map (\url -> [href ("?"++url) [htxt url]])
+   ulist (map (\url -> [href ("?" ++ url) [htxt url]])
               (filter (not . null) urls))]
 
 -----------------------------------------------------------------------------

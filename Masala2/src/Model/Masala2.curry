@@ -5,7 +5,7 @@
 --- and contains definitions for all entities and relations
 --- specified in this model.
 
-module Masala2 where
+module Model.Masala2 where
 
 import qualified Data.Time
 import qualified Database.CDBI.ER

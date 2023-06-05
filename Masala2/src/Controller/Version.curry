@@ -6,8 +6,8 @@ import Data.Time
 import HTML.Base
 import HTML.Session
 import HTML.WUI
-import Masala2
-import MasalaQueries
+import Model.Masala2
+import Model.Queries
 import Config.EntityRoutes
 import Config.UserProcesses
 import System.SessionInfo
@@ -90,7 +90,10 @@ newVersionForm =
      checkAuthorization (versionOperationAllowed NewEntity)
       (\_ ->
         transactionController (runT (createVersionT entity))
-         (nextInProcessOr (redirectController "?Version/list") Nothing)))
+         (\newentity ->
+           do setPageMessage "New Version created"
+              nextInProcessOr (redirectController (showRoute newentity))
+               Nothing)))
    (\(sinfo,_,_,_,_) ->
      renderWUI sinfo "Create new Version" "Create" "?Version/list" ())
 
@@ -101,21 +104,16 @@ newVersionStore
 newVersionStore = sessionStore "newVersionStore"
 
 --- Transaction to persist a new Version entity to the database.
-createVersionT :: NewVersion -> DBAction ()
+createVersionT :: NewVersion -> DBAction Version
 createVersionT
     (version,published,tested,description,jobStatus,downloads,uploadDate
     ,deprecated,user,package,dependingpackages,curryModules) =
-  newVersionWithPackageVersioningKeyWithUserUploadKey version published tested
-   description
-   jobStatus
-   downloads
-   uploadDate
-   deprecated
-   (packageKey package)
-   (userKey user)
-   >>= (\newentity ->
+  do newentity <- newVersionWithPackageVersioningKeyWithUserUploadKey version
+                  published tested description jobStatus downloads uploadDate
+                  deprecated (packageKey package) (userKey user)
      addDepending dependingpackages newentity
-      >> (addExporting curryModules newentity >> return ()))
+     addExporting curryModules newentity
+     return newentity
 
 --- Shows a form to edit the given Version entity.
 editVersionController :: Version -> Controller
@@ -168,7 +166,10 @@ editVersionForm =
      checkAuthorization (versionOperationAllowed (UpdateEntity versionToEdit))
       (\_ ->
         transactionController (runT (updateVersionT entity))
-         (nextInProcessOr (redirectController "?Version/list") Nothing)))
+         (const
+           (do setPageMessage "Version updated"
+               nextInProcessOr (redirectController (showRoute versionToEdit))
+                Nothing))))
    (\(sinfo,_,_,_,_,_,_,_) ->
      renderWUI sinfo "Edit Version" "Change" "?Version/list" ())
 
@@ -189,15 +190,13 @@ editVersionStore = sessionStore "editVersionStore"
 --- to the database.
 updateVersionT :: (Version,[Package],[CurryModule]) -> DBAction ()
 updateVersionT (version,packagesDepending,curryModulesExporting) =
-  updateVersion version
-   >> ((getVersionPackages version
-         >>= (\oldDependingPackages ->
-           removeDepending oldDependingPackages version))
-        >> ((getVersionCurryModules version
-              >>= (\oldExportingCurryModules ->
-                removeExporting oldExportingCurryModules version))
-             >> (addDepending packagesDepending version
-                  >> addExporting curryModulesExporting version)))
+  do updateVersion version
+     oldDependingPackages <- getVersionPackages version
+     removeDepending oldDependingPackages version
+     oldExportingCurryModules <- getVersionCurryModules version
+     removeExporting oldExportingCurryModules version
+     addDepending packagesDepending version
+     addExporting curryModulesExporting version
 
 --- A controller to toggle the deprecated status of the given Version entity.
 toggleDeprecatedVersionController :: Version -> Controller
@@ -205,7 +204,9 @@ toggleDeprecatedVersionController vers =
   checkAuthorization (versionOperationAllowed (UpdateEntity vers)) $ \_ -> do
     let newvers = setVersionDeprecated vers (not (versionDeprecated vers))
     transactionController (runT (updateVersion newvers))
-      (nextInProcessOr (redirectController (showRoute vers)) Nothing)
+      (const $ do
+         setPageMessage "Deprecated status changed"
+         nextInProcessOr (redirectController (showRoute vers)) Nothing)
 
 --- A controller to toggle the published status of the given Version entity.
 togglePublishedVersionController :: Version -> Controller
@@ -213,7 +214,9 @@ togglePublishedVersionController vers =
   checkAuthorization (versionOperationAllowed (UpdateEntity vers)) $ \_ -> do
     let newvers = setVersionPublished vers (not (versionPublished vers))
     transactionController (runT (updateVersion newvers))
-      (nextInProcessOr (redirectController (showRoute vers)) Nothing)
+      (const $ do
+         setPageMessage "Published status changed"
+         nextInProcessOr (redirectController (showRoute vers)) Nothing)
 
 --- Deletes a given Version entity (after asking for confirmation)
 --- and proceeds with the list controller.
@@ -231,18 +234,18 @@ destroyVersionController version =
   checkAuthorization (versionOperationAllowed (DeleteEntity version))
    $ (\_ ->
      transactionController (runT (deleteVersionT version))
-      (redirectController "?Version/list"))
+      (const
+        (do setPageMessage "Version deleted"
+            redirectController "?Version/list")))
 
 --- Transaction to delete a given Version entity.
 deleteVersionT :: Version -> DBAction ()
 deleteVersionT version =
-  (getVersionPackages version
-    >>= (\oldDependingPackages ->
-      removeDepending oldDependingPackages version))
-   >> ((getVersionCurryModules version
-         >>= (\oldExportingCurryModules ->
-           removeExporting oldExportingCurryModules version))
-        >> deleteVersion version)
+  do oldDependingPackages <- getVersionPackages version
+     removeDepending oldDependingPackages version
+     oldExportingCurryModules <- getVersionCurryModules version
+     removeExporting oldExportingCurryModules version
+     deleteVersion version
 
 --- Lists all Version entities with buttons to show, delete,
 --- or edit an entity.

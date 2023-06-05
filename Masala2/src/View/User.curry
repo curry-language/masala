@@ -7,7 +7,7 @@ import Data.Time
 import HTML.Base
 import HTML.Styles.Bootstrap4
 import HTML.WUI
-import Masala2
+import Model.Masala2
 import Config.EntityRoutes
 import System.SessionInfo
 import System.Spicey

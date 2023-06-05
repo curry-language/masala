@@ -5,7 +5,7 @@ import Data.Time
 import HTML.Base
 import HTML.Session
 import HTML.WUI
-import Masala2
+import Model.Masala2
 import Config.EntityRoutes
 import Config.UserProcesses
 import System.SessionInfo
@@ -50,7 +50,10 @@ newCurryModuleForm =
      checkAuthorization (curryModuleOperationAllowed NewEntity)
       (\_ ->
         transactionController (runT (createCurryModuleT entity))
-         (nextInProcessOr (redirectController "?CurryModule/list") Nothing)))
+         (\newentity ->
+           do setPageMessage "New CurryModule created"
+              nextInProcessOr (redirectController (showRoute newentity))
+               Nothing)))
    (\sinfo ->
      renderWUI sinfo "Create new CurryModule" "Create" "?CurryModule/list" ())
 
@@ -59,8 +62,10 @@ newCurryModuleStore :: SessionStore (UserSessionInfo,WuiStore NewCurryModule)
 newCurryModuleStore = sessionStore "newCurryModuleStore"
 
 --- Transaction to persist a new CurryModule entity to the database.
-createCurryModuleT :: NewCurryModule -> DBAction ()
-createCurryModuleT name = newCurryModule name >>= (\_ -> return ())
+createCurryModuleT :: NewCurryModule -> DBAction CurryModule
+createCurryModuleT name =
+  do newentity <- newCurryModule name
+     return newentity
 
 --- Shows a form to edit the given CurryModule entity.
 editCurryModuleController :: CurryModule -> Controller
@@ -85,7 +90,11 @@ editCurryModuleForm =
       (curryModuleOperationAllowed (UpdateEntity curryModuleToEdit))
       (\_ ->
         transactionController (runT (updateCurryModuleT entity))
-         (nextInProcessOr (redirectController "?CurryModule/list") Nothing)))
+         (const
+           (do setPageMessage "CurryModule updated"
+               nextInProcessOr
+                (redirectController (showRoute curryModuleToEdit))
+                Nothing))))
    (\(sinfo,_) ->
      renderWUI sinfo "Edit CurryModule" "Change" "?CurryModule/list" ())
 
@@ -116,7 +125,9 @@ destroyCurryModuleController curryModule =
   checkAuthorization (curryModuleOperationAllowed (DeleteEntity curryModule))
    $ (\_ ->
      transactionController (runT (deleteCurryModuleT curryModule))
-      (redirectController "?CurryModule/list"))
+      (const
+        (do setPageMessage "CurryModule deleted"
+            redirectController "?CurryModule/list")))
 
 --- Transaction to delete a given CurryModule entity.
 deleteCurryModuleT :: CurryModule -> DBAction ()

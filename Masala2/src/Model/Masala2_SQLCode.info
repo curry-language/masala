@@ -1,4 +1,4 @@
-PInfo "/home/mh/home/curry/masala2/repository/Masala2/Masala2.db" "Masala2"
+PInfo "/home/mh/home/curry/masala2/repository/Masala2/Masala2.db" "Model.Masala2"
  [(("ValidationToken","validates","User"),NtoOne "Validating")
  ,(("User","validatedBy","ValidationToken"),OnetoN "Validating")
  ,(("Category","categorizes","Version"),MtoN "Categorizes")

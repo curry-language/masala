@@ -7,8 +7,8 @@ import Data.Time
 import HTML.Base
 import HTML.Session
 import HTML.WUI
-import Masala2
-import MasalaQueries
+import Model.Masala2
+import Model.Queries
 import Config.EntityRoutes
 import Config.UserProcesses
 import Controller.Version   ( showVersionController )
@@ -65,7 +65,10 @@ newPackageForm =
      checkAuthorization (packageOperationAllowed NewEntity)
       (\_ ->
         transactionController (runT (createPackageT entity))
-         (nextInProcessOr (redirectController "?Package/list") Nothing)))
+         (\newentity ->
+           do setPageMessage "New Package created"
+              nextInProcessOr (redirectController (showRoute newentity))
+               Nothing)))
    (\sinfo ->
      renderWUI sinfo "Create new Package" "Create" "?Package/list" ())
 
@@ -74,9 +77,10 @@ newPackageStore :: SessionStore (UserSessionInfo,WuiStore NewPackage)
 newPackageStore = sessionStore "newPackageStore"
 
 --- Transaction to persist a new Package entity to the database.
-createPackageT :: NewPackage -> DBAction ()
+createPackageT :: NewPackage -> DBAction Package
 createPackageT (name,abandoned) =
-  newPackage name abandoned >>= (\_ -> return ())
+  do newentity <- newPackage name abandoned
+     return newentity
 
 --- Shows a form to edit the given Package entity.
 editPackageController :: Package -> Controller
@@ -96,7 +100,10 @@ editPackageForm =
      checkAuthorization (packageOperationAllowed (UpdateEntity packageToEdit))
       (\_ ->
         transactionController (runT (updatePackageT entity))
-         (nextInProcessOr (redirectController "?Package/list") Nothing)))
+         (const
+           (do setPageMessage "Package updated"
+               nextInProcessOr (redirectController (showRoute packageToEdit))
+                Nothing))))
    (\(sinfo,_) -> renderWUI sinfo "Edit Package" "Change" "?Package/list" ())
 
 --- The data stored for executing the edit WUI form.
@@ -114,7 +121,9 @@ toggleAbandonedPackageController pkg =
   checkAuthorization (packageOperationAllowed (UpdateEntity pkg)) $ \_ -> do
     let newpkg = setPackageAbandoned pkg (not (packageAbandoned pkg))
     transactionController (runT (updatePackage newpkg))
-      (nextInProcessOr (redirectController (showRoute pkg)) Nothing)
+      (const $ do
+         setPageMessage "Abandoned status changed"
+         nextInProcessOr (redirectController (showRoute pkg)) Nothing)
 
 --- Deletes a given Package entity (after asking for confirmation)
 --- and proceeds with the list controller.
@@ -132,7 +141,9 @@ destroyPackageController package =
   checkAuthorization (packageOperationAllowed (DeleteEntity package))
    $ (\_ ->
      transactionController (runT (deletePackageT package))
-      (redirectController "?Package/list"))
+      (const
+        (do setPageMessage "Package deleted"
+            redirectController "?Package/list")))
 
 --- Transaction to delete a given Package entity.
 deletePackageT :: Package -> DBAction ()

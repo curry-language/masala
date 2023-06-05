@@ -4,8 +4,8 @@ import Data.Time
 import HTML.Base
 import HTML.Session
 import HTML.WUI
-import Masala2
-import MasalaQueries
+import Model.Masala2
+import Model.Queries
 import Config.EntityRoutes
 import Config.UserProcesses
 import System.SessionInfo

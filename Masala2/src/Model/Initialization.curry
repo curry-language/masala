@@ -1,6 +1,6 @@
 module Initialization where
 
-import Masala2
+import Model.Masala2
 
 import Text.CSV
 import System.Environment
