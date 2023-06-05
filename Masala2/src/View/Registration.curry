@@ -15,5 +15,16 @@ import View.EntitiesToHtml
 --- The WUI specification for the registration input.
 wRegistration :: WuiSpec (String, String, String, String)
 wRegistration =
-  withRendering (w4Tuple wRequiredString wRequiredString wRequiredString wRequiredString)
+  withRendering (w4Tuple wRequiredString wRequiredString wRequiredString wPassword)
     (renderLabels RegistrationLabelList)
+
+wPassword :: WuiSpec String
+wPassword = wRequiredString
+  `withCondition` checkIfPasswordFine
+  `withError` "Password not ok"
+
+checkIfPasswordFine :: String -> Bool
+checkIfPasswordFine = checkPasswordLength
+
+checkPasswordLength :: String -> Bool
+checkPasswordLength uncryptpasswd = length uncryptpasswd >= 8
