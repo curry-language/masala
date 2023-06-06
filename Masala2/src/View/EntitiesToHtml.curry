@@ -2,7 +2,9 @@ module View.EntitiesToHtml where
 
 import Data.Time
 import HTML.Base
+import HTML.Styles.Bootstrap4
 import HTML.WUI
+import Config.EntityRoutes
 import System.Spicey
 import Model.Masala2
 
@@ -10,7 +12,7 @@ import Model.Masala2
 --- This view is used in a row of a table of all entities.
 userToListView :: HTML h => User -> [[h]]
 userToListView user =
-  [[stringToHtml (userLoginName user)]
+  [[hrefPrimBadge (showRoute user) [stringToHtml (userLoginName user)]]
   ,[stringToHtml (userPublicName user)]
   ,[stringToHtml (userEmail user)]
   ,[stringToHtml (userPublicEmail user)]
@@ -27,7 +29,7 @@ userToShortView user = userPublicName user
 --- The detailed view of a User entity in HTML format.
 --- It also takes associated entities for every associated entity type.
 userToDetailsView :: HTML h => User -> [Package] -> [Package] -> [h]
-userToDetailsView user maintainerpackages watchingpackages =
+userToDetailsView user maintainerPackages watchingPackages =
   [spTable
     (map (\(label,value) -> [label,value]) (zip userLabelList detailedView))]
   where
@@ -40,8 +42,8 @@ userToDetailsView user maintainerpackages watchingpackages =
       ,[stringToHtml (userPassword user)]
       ,[stringToHtml (userToken user)]
       ,[maybeDateToHtml (userLastLogin user)]
-      ,[htxt (unwords (map packageToShortView maintainerpackages))]
-      ,[htxt (unwords (map packageToShortView watchingpackages))]]
+      ,[htxt (unwords (map packageToShortView maintainerPackages))]
+      ,[htxt (unwords (map packageToShortView watchingPackages))]]
 
 --- The labels of a User entity, as used in HTML tables.
 userLabelList :: HTML h => [[h]]
@@ -61,7 +63,7 @@ userLabelList =
 --- This view is used in a row of a table of all entities.
 packageToListView :: HTML h => Package -> [[h]]
 packageToListView package =
-  [[stringToHtml (packageName package)]
+  [[hrefPrimBadge (showRoute package) [stringToHtml (packageName package)]]
   ,[boolToHtml (packageAbandoned package)]]
 
 --- The short view of a Package entity as a string.
@@ -123,7 +125,11 @@ versionToShortView version = versionVersion version
 versionToDetailsView
   :: HTML h => Version -> User -> Package -> [Package] -> [CurryModule] -> [h]
 versionToDetailsView
-    version relatedUser relatedPackage packages curryModules =
+    version
+    relatedUser
+    relatedPackage
+    dependingPackages
+    exportingCurryModules =
   [spTable
     (map (\(label,value) -> [label,value])
       (zip versionLabelList detailedView))]
@@ -139,8 +145,8 @@ versionToDetailsView
       ,[boolToHtml (versionDeprecated version)]
       ,[htxt (userToShortView relatedUser)]
       ,[htxt (packageToShortView relatedPackage)]
-      ,[htxt (unwords (map packageToShortView packages))]
-      ,[htxt (unwords (map curryModuleToShortView curryModules))]]
+      ,[htxt (unwords (map packageToShortView dependingPackages))]
+      ,[htxt (unwords (map curryModuleToShortView exportingCurryModules))]]
 
 --- The labels of a Version entity, as used in HTML tables.
 versionLabelList :: HTML h => [[h]]
@@ -162,7 +168,7 @@ versionLabelList =
 --- This view is used in a row of a table of all entities.
 categoryToListView :: HTML h => Category -> [[h]]
 categoryToListView category =
-  [[stringToHtml (categoryName category)]
+  [[hrefPrimBadge (showRoute category) [stringToHtml (categoryName category)]]
   ,[stringToHtml (categoryDescription category)]]
 
 --- The short view of a Category entity as a string.
@@ -173,7 +179,7 @@ categoryToShortView category = categoryName category
 --- The detailed view of a Category entity in HTML format.
 --- It also takes associated entities for every associated entity type.
 categoryToDetailsView :: HTML h => Category -> [Version] -> [h]
-categoryToDetailsView category versions =
+categoryToDetailsView category categorizesVersions =
   [spTable
     (map (\(label,value) -> [label,value])
       (zip categoryLabelList detailedView))]
@@ -181,7 +187,7 @@ categoryToDetailsView category versions =
     detailedView =
       [[stringToHtml (categoryName category)]
       ,[stringToHtml (categoryDescription category)]
-      ,[htxt (unwords (map versionToShortView versions))]]
+      ,[htxt (unwords (map versionToShortView categorizesVersions))]]
 
 --- The labels of a Category entity, as used in HTML tables.
 categoryLabelList :: HTML h => [[h]]
@@ -194,7 +200,8 @@ categoryLabelList =
 --- This view is used in a row of a table of all entities.
 curryModuleToListView :: HTML h => CurryModule -> [[h]]
 curryModuleToListView curryModule =
-  [[stringToHtml (curryModuleName curryModule)]]
+  [[hrefPrimBadge (showRoute curryModule)
+     [stringToHtml (curryModuleName curryModule)]]]
 
 --- The short view of a CurryModule entity as a string.
 --- This view is used in menus and comments to refer to a CurryModule entity.
@@ -219,8 +226,9 @@ curryModuleLabelList =
 --- This view is used in a row of a table of all entities.
 validationTokenToListView :: HTML h => ValidationToken -> [[h]]
 validationTokenToListView validationToken =
-  [[stringToHtml (validationTokenToken validationToken)]
-  ,[dateToHtml (validationTokenValidSince validationToken)]]
+  [[hrefPrimBadge (showRoute validationToken)
+     [stringToHtml (validationTokenToken validationToken)]]
+  ,[timeToHtml (validationTokenValidSince validationToken)]]
 
 --- The short view of a ValidationToken entity as a string.
 --- This view is used in menus and comments to refer to a ValidationToken entity.
@@ -238,7 +246,7 @@ validationTokenToDetailsView validationToken relatedUser =
   where
     detailedView =
       [[stringToHtml (validationTokenToken validationToken)]
-      ,[dateToHtml (validationTokenValidSince validationToken)]
+      ,[timeToHtml (validationTokenValidSince validationToken)]
       ,[htxt (userToShortView relatedUser)]]
 
 --- The labels of a ValidationToken entity, as used in HTML tables.

@@ -10,6 +10,7 @@ import Model.Masala2
 import Model.Queries
 import Config.EntityRoutes
 import Config.UserProcesses
+import Controller.Category
 import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
@@ -227,8 +228,9 @@ deleteVersionController :: Version -> Controller
 deleteVersionController version =
   checkAuthorization (versionOperationAllowed (DeleteEntity version))
    $ (\sinfo ->
-     confirmDeletionPage sinfo
-      (concat ["Really delete entity \"",versionToShortView version,"\"?"]))
+     confirmDeletionPageWithCancelURL sinfo
+      (concat ["Really delete version \"",versionToShortView version,"\"?"])
+      (showRoute version))
 
 --- Deletes a given Version entity
 --- and proceeds with the list controller.
@@ -239,15 +241,19 @@ destroyVersionController version =
      transactionController (runT (deleteVersionT version))
       (const
         (do setPageMessage "Version deleted"
-            redirectController (listRoute version))))
+            redirectController (listRoute (failed::Package)))))
 
---- Transaction to delete a given Version entity.
+--- Transaction to delete a given Version entity together with its relations
+--- to dependencies, exported modules, and categaries.
 deleteVersionT :: Version -> DBAction ()
 deleteVersionT version =
   do oldDependingPackages <- getDependingVersionPackages version
      removeDepending oldDependingPackages version
      oldExportingCurryModules <- getExportingVersionCurryModules version
      removeExporting oldExportingCurryModules version
+     versioningPackage <- getVersioningPackage version
+     cats <- getPackageVersionCategories versioningPackage version
+     mapM_ (\cat -> removeCategorizes [version] cat) cats
      deleteVersion version
 
 --- Lists all Version entities with buttons to show, delete,
@@ -285,7 +291,7 @@ showVersionController version =
         allversions <- getPackageVersions package
         dependingPackages <- runJustT (getDependingVersionPackages version)
         exportingCurryModules <- runJustT (getExportingVersionCurryModules version)
-        cats <- getPackageVersionCategories package version
+        cats <- runQ $ getPackageVersionCategories package version
         maintainers <- getPackageMaintainers package
         return
          (showVersionView sinfo version package uploadUser maintainers cats

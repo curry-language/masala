@@ -166,8 +166,15 @@ showVersionView sinfo version package uploader maintainers cats allversions
   
   -- header row:
   headerRow = [htmlStruct "header" [("class","jumbotron")]
-                          [h1 [smallMutedText "Curry Package ",
-                               htxt $ packageName package]]]
+                 [h1 $ [smallMutedText "Curry Package ",
+                        htxt $ packageName package] ++
+                        (if isAdminSession sinfo
+                           then [nbsp,
+                                 hStruct "small"
+                                   [hrefWarnBadge (deleteRoute version)
+                                      [htxt $ "Delete version " ++
+                                              versionVersion version]]]
+                           else []) ]]
 
   sidemenu =
     [ulistWithClass "list-group" "list-group-item"

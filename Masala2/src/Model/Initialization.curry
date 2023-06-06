@@ -1,4 +1,4 @@
-module Initialization where
+module Model.Initialization where
 
 import Model.Masala2
 

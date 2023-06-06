@@ -1,6 +1,6 @@
 module Controller.Category
   ( mainCategoryController, newCategoryForm
-  , editCategoryDescForm )
+  , editCategoryDescForm, addCategorizes, removeCategorizes )
  where
 
 import Data.Time
