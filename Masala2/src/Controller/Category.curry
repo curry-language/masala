@@ -59,7 +59,8 @@ newCategoryForm =
               nextInProcessOr (redirectController (showRoute newentity))
                Nothing)))
    (\sinfo ->
-     renderWUI sinfo "Create new Category" "Create" "?Category/list" ())
+     let phantom = failed :: Category
+     in renderWUI sinfo "Create new Category" "Create" (listRoute phantom) ())
 
 --- The data stored for executing the "new entity" WUI form.
 newCategoryStore :: SessionStore (UserSessionInfo,WuiStore NewCategory)
@@ -98,8 +99,8 @@ editCategoryForm =
            (do setPageMessage "Category updated"
                nextInProcessOr (redirectController (showRoute categoryToEdit))
                 Nothing))))
-   (\(sinfo,_,_) ->
-     renderWUI sinfo "Edit Category" "Change" "?Category/list" ())
+   (\(sinfo,entity,_) ->
+     renderWUI sinfo "Edit Category" "Change" (listRoute entity) ())
 
 --- The data stored for executing the edit WUI form.
 editCategoryStore
@@ -174,12 +175,12 @@ destroyCategoryController category =
      transactionController (runT (deleteCategoryT category))
       (const
         (do setPageMessage "Category deleted"
-            redirectController "?Category/list")))
+            redirectController (listRoute category))))
 
 --- Transaction to delete a given Category entity.
 deleteCategoryT :: Category -> DBAction ()
 deleteCategoryT category =
-  do oldCategorizesVersions <- getCategoryVersions category
+  do oldCategorizesVersions <- getCategorizesCategoryVersions category
      removeCategorizes oldCategorizesVersions category
      deleteCategory category
 
@@ -205,16 +206,18 @@ showCategoryController :: Category -> Controller
 showCategoryController category =
   checkAuthorization (categoryOperationAllowed (ShowEntity category)) $
    \sinfo -> do
-     --categorizesVersions <- runJustT (getCategoryVersions category)
+     --categorizesVersions <- runJustT (getCategorizesCategoryVersions category)
      packages <- getPackagesOfCategory category
      return (showCategoryView sinfo category packages)
 
---- Associates given entities with the Category entity.
+--- Associates given entities with the Category entity
+--- with respect to the `Categorizes` relation.
 addCategorizes :: [Version] -> Category -> DBAction ()
 addCategorizes versions category =
   mapM_ (\t -> newCategorizes (categoryKey category) (versionKey t)) versions
 
---- Removes association to the given entities with the Category entity.
+--- Removes association to the given entities with the Category entity
+--- with respect to the `Categorizes` relation.
 removeCategorizes :: [Version] -> Category -> DBAction ()
 removeCategorizes versions category =
   mapM_ (\t -> deleteCategorizes (categoryKey category) (versionKey t))

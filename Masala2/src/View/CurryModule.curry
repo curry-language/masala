@@ -39,7 +39,7 @@ wCurryModuleType curryModule =
 showCurryModuleView :: UserSessionInfo -> CurryModule -> [BaseHtml]
 showCurryModuleView _ curryModule =
   curryModuleToDetailsView curryModule
-   ++ [hrefPrimSmButton "?CurryModule/list" [htxt "back to CurryModule list"]]
+   ++ [hrefPrimSmButton (listRoute curryModule) [htxt "To CurryModule list"]]
 
 --- Compares two CurryModule entities. This order is used in the list view.
 leqCurryModule :: CurryModule -> CurryModule -> Bool

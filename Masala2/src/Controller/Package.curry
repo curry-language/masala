@@ -70,7 +70,8 @@ newPackageForm =
               nextInProcessOr (redirectController (showRoute newentity))
                Nothing)))
    (\sinfo ->
-     renderWUI sinfo "Create new Package" "Create" "?Package/list" ())
+     let phantom = failed :: Package
+     in renderWUI sinfo "Create new Package" "Create" (listRoute phantom) ())
 
 --- The data stored for executing the "new entity" WUI form.
 newPackageStore :: SessionStore (UserSessionInfo,WuiStore NewPackage)
@@ -104,7 +105,8 @@ editPackageForm =
            (do setPageMessage "Package updated"
                nextInProcessOr (redirectController (showRoute packageToEdit))
                 Nothing))))
-   (\(sinfo,_) -> renderWUI sinfo "Edit Package" "Change" "?Package/list" ())
+   (\(sinfo,entity) ->
+     renderWUI sinfo "Edit Package" "Change" (listRoute entity) ())
 
 --- The data stored for executing the edit WUI form.
 editPackageStore :: SessionStore ((UserSessionInfo,Package),WuiStore Package)
@@ -143,7 +145,7 @@ destroyPackageController package =
      transactionController (runT (deletePackageT package))
       (const
         (do setPageMessage "Package deleted"
-            redirectController "?Package/list")))
+            redirectController (listRoute package))))
 
 --- Transaction to delete a given Package entity.
 deletePackageT :: Package -> DBAction ()

@@ -95,7 +95,8 @@ newVersionForm =
               nextInProcessOr (redirectController (showRoute newentity))
                Nothing)))
    (\(sinfo,_,_,_,_) ->
-     renderWUI sinfo "Create new Version" "Create" "?Version/list" ())
+     let phantom = failed :: Version
+     in renderWUI sinfo "Create new Version" "Create" (listRoute phantom) ())
 
 --- The data stored for executing the "new entity" WUI form.
 newVersionStore
@@ -126,9 +127,11 @@ editVersionController versionToEdit =
         allCurryModules <- runQ queryAllCurryModules
         uploadUser <- runJustT (getUploadUser versionToEdit)
         versioningPackage <- runJustT (getVersioningPackage versionToEdit)
-        dependingPackages <- runJustT (getVersionPackages versionToEdit)
+        dependingPackages <- runJustT
+                              (getDependingVersionPackages versionToEdit)
         exportingCurryModules <- runJustT
-                                  (getVersionCurryModules versionToEdit)
+                                  (getExportingVersionCurryModules
+                                    versionToEdit)
         setParWuiStore editVersionStore
          (sinfo
          ,versionToEdit
@@ -170,8 +173,8 @@ editVersionForm =
            (do setPageMessage "Version updated"
                nextInProcessOr (redirectController (showRoute versionToEdit))
                 Nothing))))
-   (\(sinfo,_,_,_,_,_,_,_) ->
-     renderWUI sinfo "Edit Version" "Change" "?Version/list" ())
+   (\(sinfo,entity,_,_,_,_,_,_) ->
+     renderWUI sinfo "Edit Version" "Change" (listRoute entity) ())
 
 --- The data stored for executing the edit WUI form.
 editVersionStore
@@ -191,9 +194,9 @@ editVersionStore = sessionStore "editVersionStore"
 updateVersionT :: (Version,[Package],[CurryModule]) -> DBAction ()
 updateVersionT (version,packagesDepending,curryModulesExporting) =
   do updateVersion version
-     oldDependingPackages <- getVersionPackages version
+     oldDependingPackages <- getDependingVersionPackages version
      removeDepending oldDependingPackages version
-     oldExportingCurryModules <- getVersionCurryModules version
+     oldExportingCurryModules <- getExportingVersionCurryModules version
      removeExporting oldExportingCurryModules version
      addDepending packagesDepending version
      addExporting curryModulesExporting version
@@ -236,14 +239,14 @@ destroyVersionController version =
      transactionController (runT (deleteVersionT version))
       (const
         (do setPageMessage "Version deleted"
-            redirectController "?Version/list")))
+            redirectController (listRoute version))))
 
 --- Transaction to delete a given Version entity.
 deleteVersionT :: Version -> DBAction ()
 deleteVersionT version =
-  do oldDependingPackages <- getVersionPackages version
+  do oldDependingPackages <- getDependingVersionPackages version
      removeDepending oldDependingPackages version
-     oldExportingCurryModules <- getVersionCurryModules version
+     oldExportingCurryModules <- getExportingVersionCurryModules version
      removeExporting oldExportingCurryModules version
      deleteVersion version
 
@@ -264,8 +267,9 @@ showStandardVersionController version =
    $ (\sinfo ->
      do uploadUser <- runJustT (getUploadUser version)
         versioningPackage <- runJustT (getVersioningPackage version)
-        dependingPackages <- runJustT (getVersionPackages version)
-        exportingCurryModules <- runJustT (getVersionCurryModules version)
+        dependingPackages <- runJustT (getDependingVersionPackages version)
+        exportingCurryModules <- runJustT
+                                  (getExportingVersionCurryModules version)
         return
          (showStandardVersionView sinfo version uploadUser versioningPackage
            dependingPackages
@@ -279,31 +283,35 @@ showVersionController version =
      do uploadUser <- runJustT (getUploadUser version)
         package <- runJustT (getVersioningPackage version)
         allversions <- getPackageVersions package
-        dependingPackages <- runJustT (getVersionPackages version)
-        exportingCurryModules <- runJustT (getVersionCurryModules version)
+        dependingPackages <- runJustT (getDependingVersionPackages version)
+        exportingCurryModules <- runJustT (getExportingVersionCurryModules version)
         cats <- getPackageVersionCategories package version
         maintainers <- getPackageMaintainers package
         return
          (showVersionView sinfo version package uploadUser maintainers cats
             allversions dependingPackages exportingCurryModules))
 
---- Associates given entities with the Version entity.
+--- Associates given entities with the Version entity
+--- with respect to the `Depending` relation.
 addDepending :: [Package] -> Version -> DBAction ()
 addDepending packages version =
   mapM_ (\t -> newDepending (versionKey version) (packageKey t)) packages
 
---- Associates given entities with the Version entity.
+--- Associates given entities with the Version entity
+--- with respect to the `Exporting` relation.
 addExporting :: [CurryModule] -> Version -> DBAction ()
 addExporting curryModules version =
   mapM_ (\t -> newExporting (versionKey version) (curryModuleKey t))
    curryModules
 
---- Removes association to the given entities with the Version entity.
+--- Removes association to the given entities with the Version entity
+--- with respect to the `Depending` relation.
 removeDepending :: [Package] -> Version -> DBAction ()
 removeDepending packages version =
   mapM_ (\t -> deleteDepending (versionKey version) (packageKey t)) packages
 
---- Removes association to the given entities with the Version entity.
+--- Removes association to the given entities with the Version entity
+--- with respect to the `Exporting` relation.
 removeExporting :: [CurryModule] -> Version -> DBAction ()
 removeExporting curryModules version =
   mapM_ (\t -> deleteExporting (versionKey version) (curryModuleKey t))

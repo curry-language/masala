@@ -22,24 +22,24 @@ getControllerReference :: String -> IO (Maybe ControllerReference)
 getControllerReference url = getRoutes >>= return . findControllerReference
   where
     findControllerReference :: [Route] -> Maybe ControllerReference
-    findControllerReference ((_, matcher, fktref):restroutes) =
+    findControllerReference ((_, matcher, fktref) : restroutes) =
       case matcher of
         Exact string -> if (url == string)
-                        then Just fktref
-                        else findControllerReference restroutes
+                          then Just fktref
+                          else findControllerReference restroutes
         Prefix pre _ -> if (url == pre)
-                        then Just fktref
-                        else findControllerReference restroutes
+                          then Just fktref
+                          else findControllerReference restroutes
         Matcher fkt  -> if (fkt url)
-                        then Just fktref
-                        else findControllerReference restroutes
+                          then Just fktref
+                          else findControllerReference restroutes
         Always       -> Just fktref
     findControllerReference [] = Nothing -- no controller found for url
 
 --- Generates the menu for all route entries put on the top of
 --- each page. As a default, all routes specified with URL matcher
---- `Exact` in the module RouteData, except for "login",
---- are taken as menu entries.
+--- `Exact` in the module `Config.RoutesData`, except for "login",
+--- and `Prefix`, are taken as menu entries.
 getRouteMenu :: IO [[BaseHtml]]
 getRouteMenu = do
   routes <- getRoutes

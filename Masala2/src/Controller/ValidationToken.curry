@@ -13,6 +13,7 @@ import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
 import System.Spicey
+import System.PreludeHelpers
 import View.EntitiesToHtml
 import View.ValidationToken
 import Database.CDBI.Connection
@@ -40,9 +41,14 @@ newValidationTokenController =
    $ (\sinfo ->
      do allUsers <- runQ queryAllUsers
         ctime <- getClockTime
-        setParWuiStore newValidationTokenStore (sinfo,allUsers)
-         ("",ctime,head allUsers)
-        return [formElem newValidationTokenForm])
+        if null allUsers
+           then return
+                 [h2
+                   [htxt
+                     "Some related entities are required but not yet undefined"]]
+           else do setParWuiStore newValidationTokenStore (sinfo,allUsers)
+                    ("",ctime,head allUsers)
+                   return [formElem newValidationTokenForm])
 
 --- A WUI form to create a new ValidationToken entity.
 --- The default values for the fields are stored in 'newValidationTokenStore'.
@@ -61,9 +67,10 @@ newValidationTokenForm =
               nextInProcessOr (redirectController (showRoute newentity))
                Nothing)))
    (\(sinfo,_) ->
-     renderWUI sinfo "Create new ValidationToken" "Create"
-      "?ValidationToken/list"
-      ())
+     let phantom = failed :: ValidationToken
+     in renderWUI sinfo "Create new ValidationToken" "Create"
+         (listRoute phantom)
+         ())
 
 --- The data stored for executing the "new entity" WUI form.
 newValidationTokenStore
@@ -110,9 +117,8 @@ editValidationTokenForm =
                nextInProcessOr
                 (redirectController (showRoute validationTokenToEdit))
                 Nothing))))
-   (\(sinfo,_,_,_) ->
-     renderWUI sinfo "Edit ValidationToken" "Change" "?ValidationToken/list"
-      ())
+   (\(sinfo,entity,_,_) ->
+     renderWUI sinfo "Edit ValidationToken" "Change" (listRoute entity) ())
 
 --- The data stored for executing the edit WUI form.
 editValidationTokenStore
@@ -148,7 +154,7 @@ destroyValidationTokenController validationToken =
      transactionController (runT (deleteValidationTokenT validationToken))
       (const
         (do setPageMessage "ValidationToken deleted"
-            redirectController "?ValidationToken/list")))
+            redirectController (listRoute validationToken))))
 
 --- Transaction to delete a given ValidationToken entity.
 deleteValidationTokenT :: ValidationToken -> DBAction ()

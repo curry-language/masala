@@ -70,7 +70,8 @@ newUserForm =
               nextInProcessOr (redirectController (showRoute newentity))
                Nothing)))
    (\(sinfo,_,_) ->
-     renderWUI sinfo "Create new User" "Create" "?User/list" ())
+     let phantom = failed :: User
+     in renderWUI sinfo "Create new User" "Create" (listRoute phantom) ())
 
 --- The data stored for executing the "new entity" WUI form.
 newUserStore
@@ -119,7 +120,8 @@ editUserForm =
            (do setPageMessage "User updated"
                nextInProcessOr (redirectController (showRoute userToEdit))
                 Nothing))))
-   (\(sinfo,_,_,_) -> renderWUI sinfo "Edit User" "Change" "?User/list" ())
+   (\(sinfo,entity,_,_) ->
+     renderWUI sinfo "Edit User" "Change" (listRoute entity) ())
 
 --- The data stored for executing the edit WUI form.
 editUserStore
@@ -157,7 +159,7 @@ destroyUserController user =
      transactionController (runT (deleteUserT user))
       (const
         (do setPageMessage "User deleted"
-            redirectController "?User/list")))
+            redirectController (listRoute user))))
 
 --- Transaction to delete a given User entity.
 deleteUserT :: User -> DBAction ()
@@ -187,22 +189,26 @@ showUserController user =
         return
          (showUserView sinfo user maintainerPackages watchingPackages))
 
---- Associates given entities with the User entity.
+--- Associates given entities with the User entity
+--- with respect to the `Maintainer` relation.
 addMaintainer :: [Package] -> User -> DBAction ()
 addMaintainer packages user =
   mapM_ (\t -> newMaintainer (userKey user) (packageKey t)) packages
 
---- Associates given entities with the User entity.
+--- Associates given entities with the User entity
+--- with respect to the `Watching` relation.
 addWatching :: [Package] -> User -> DBAction ()
 addWatching packages user =
   mapM_ (\t -> newWatching (userKey user) (packageKey t)) packages
 
---- Removes association to the given entities with the User entity.
+--- Removes association to the given entities with the User entity
+--- with respect to the `Maintainer` relation.
 removeMaintainer :: [Package] -> User -> DBAction ()
 removeMaintainer packages user =
   mapM_ (\t -> deleteMaintainer (userKey user) (packageKey t)) packages
 
---- Removes association to the given entities with the User entity.
+--- Removes association to the given entities with the User entity
+--- with respect to the `Watching` relation.
 removeWatching :: [Package] -> User -> DBAction ()
 removeWatching packages user =
   mapM_ (\t -> deleteWatching (userKey user) (packageKey t)) packages

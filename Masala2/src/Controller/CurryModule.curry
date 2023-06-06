@@ -12,6 +12,7 @@ import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
 import System.Spicey
+import System.PreludeHelpers
 import View.EntitiesToHtml
 import View.CurryModule
 import Database.CDBI.Connection
@@ -55,7 +56,9 @@ newCurryModuleForm =
               nextInProcessOr (redirectController (showRoute newentity))
                Nothing)))
    (\sinfo ->
-     renderWUI sinfo "Create new CurryModule" "Create" "?CurryModule/list" ())
+     let phantom = failed :: CurryModule
+     in renderWUI sinfo "Create new CurryModule" "Create" (listRoute phantom)
+         ())
 
 --- The data stored for executing the "new entity" WUI form.
 newCurryModuleStore :: SessionStore (UserSessionInfo,WuiStore NewCurryModule)
@@ -95,8 +98,8 @@ editCurryModuleForm =
                nextInProcessOr
                 (redirectController (showRoute curryModuleToEdit))
                 Nothing))))
-   (\(sinfo,_) ->
-     renderWUI sinfo "Edit CurryModule" "Change" "?CurryModule/list" ())
+   (\(sinfo,entity) ->
+     renderWUI sinfo "Edit CurryModule" "Change" (listRoute entity) ())
 
 --- The data stored for executing the edit WUI form.
 editCurryModuleStore
@@ -127,7 +130,7 @@ destroyCurryModuleController curryModule =
      transactionController (runT (deleteCurryModuleT curryModule))
       (const
         (do setPageMessage "CurryModule deleted"
-            redirectController "?CurryModule/list")))
+            redirectController (listRoute curryModule))))
 
 --- Transaction to delete a given CurryModule entity.
 deleteCurryModuleT :: CurryModule -> DBAction ()
@@ -146,4 +149,4 @@ listCurryModuleController =
 showCurryModuleController :: CurryModule -> Controller
 showCurryModuleController curryModule =
   checkAuthorization (curryModuleOperationAllowed (ShowEntity curryModule))
-   $ (\sinfo -> do return (showCurryModuleView sinfo curryModule))
+   $ (\sinfo -> return (showCurryModuleView sinfo curryModule))

@@ -57,8 +57,8 @@ tuple2User
   -> (User,[Package],[Package])
 tuple2User
     userToUpdate
-    (loginName,publicName,email,publicEmail,role,password,token,lastLogin,maintainerpackages,
-     watchingpackages) =
+    (loginName,publicName,email,publicEmail,role,password,token,lastLogin
+    ,maintainerPackages,watchingPackages) =
   (setUserLoginName
     (setUserPublicName
       (setUserEmail
@@ -72,8 +72,8 @@ tuple2User
         email)
       publicName)
     loginName
-  ,maintainerpackages
-  ,watchingpackages)
+  ,maintainerPackages
+  ,watchingPackages)
 
 --- Transformation from entity type User to a tuple
 --- which can be used in WUI specifications.
@@ -89,7 +89,7 @@ user2Tuple
      ,Maybe ClockTime
      ,[Package]
      ,[Package])
-user2Tuple (user,maintainerpackages,watchingpackages) =
+user2Tuple (user,maintainerPackages,watchingPackages) =
   (userLoginName user
   ,userPublicName user
   ,userEmail user
@@ -98,8 +98,8 @@ user2Tuple (user,maintainerpackages,watchingpackages) =
   ,userPassword user
   ,userToken user
   ,userLastLogin user
-  ,maintainerpackages
-  ,watchingpackages)
+  ,maintainerPackages
+  ,watchingPackages)
 
 --- WUI Type for editing or creating User entities.
 --- Includes fields for associated entities.
@@ -107,14 +107,14 @@ wUserType
   :: User -> [Package] -> [Package] -> WuiSpec (User,[Package],[Package])
 wUserType user maintainerPackageList watchingPackageList =
   transformWSpec (tuple2User user,user2Tuple)
-                 (wUser maintainerPackageList watchingPackageList)
+   (wUser maintainerPackageList watchingPackageList)
 
 --- Supplies a view to show the details of a User.
 showUserView
   :: UserSessionInfo -> User -> [Package] -> [Package] -> [BaseHtml]
-showUserView _ user maintainerpackages watchingpackages =
-  userToDetailsView user maintainerpackages watchingpackages
-   ++ [hrefPrimSmButton "?User/list" [htxt "back to User list"]]
+showUserView _ user maintainerPackages watchingPackages =
+  userToDetailsView user maintainerPackages watchingPackages
+   ++ [hrefPrimSmButton (listRoute user) [htxt "To User list"]]
 
 --- Compares two User entities. This order is used in the list view.
 leqUser :: User -> User -> Bool

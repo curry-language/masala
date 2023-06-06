@@ -4,7 +4,8 @@
 ------------------------------------------------------------------------------
 
 module System.Spicey (
-  Controller, EntityController(..), showRoute, editRoute, deleteRoute,
+  Controller, EntityController(..),
+  showRoute, editRoute, deleteRoute, listRoute,
   applyControllerOn, redirectController, nextInProcessOr,
   transactionController,
   confirmDeletionPage,
@@ -21,7 +22,8 @@ module System.Spicey (
   saveLastUrl, getLastUrl, getLastUrls
   ) where
 
-import Data.Char        ( isSpace, isDigit )
+import Data.Char           ( isSpace, isDigit )
+import Data.List           ( split )
 
 import Data.Time
 import System.FilePath     ( (</>) )
@@ -58,6 +60,8 @@ type Controller = IO ViewBlock
 --- * the application of a controller to some entity identified by a key string
 --- * an operation to construct a URL route for an entity w.r.t. to a route
 ---   string
+--- The instances for all entitiy types are defined in the module
+--- `Config.EntityRoutes`.
 class EntityController a where
   controllerOnKey :: String -> (a -> Controller) -> Controller
 
@@ -75,6 +79,14 @@ editRoute = entityRoute "edit"
 --- Returns the URL route to delete a given entity.
 deleteRoute :: EntityController a => a -> String
 deleteRoute = entityRoute "delete"
+
+--- Returns the URL route to list all entities of the type of the given entity.
+--- The given entity is not evaluated but only used to resolve the
+--- overloaded type instance.
+listRoute :: EntityController a => a -> String
+listRoute a = let xs = split (=='/') (showRoute a)
+              in case xs of []  -> "?" -- should not occur
+                            x:_ -> x ++ "/list"
 
 ------------------------------------------------------------------------------
 -- Auxiliaries for controllers.

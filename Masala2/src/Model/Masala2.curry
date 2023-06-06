@@ -176,8 +176,9 @@ deleteCategorizes k1 k2 =
 
 --- Gets the associated `Category` entities for a given `Version` entity
 --- w.r.t. the `Categorizes` relation.
-getCategoryVersions :: Category -> Database.CDBI.Connection.DBAction [Version]
-getCategoryVersions en =
+getCategorizesCategoryVersions
+  :: Category -> Database.CDBI.Connection.DBAction [Version]
+getCategorizesCategoryVersions en =
   Database.CDBI.ER.getEntriesWithColVal categorizes_CDBI_Description
    categorizesColumnCategoryCategorizesKey
    (categoryID (categoryKey en))
@@ -368,8 +369,9 @@ deleteDepending k1 k2 =
 
 --- Gets the associated `Version` entities for a given `Package` entity
 --- w.r.t. the `Depending` relation.
-getVersionPackages :: Version -> Database.CDBI.Connection.DBAction [Package]
-getVersionPackages en =
+getDependingVersionPackages
+  :: Version -> Database.CDBI.Connection.DBAction [Package]
+getDependingVersionPackages en =
   Database.CDBI.ER.getEntriesWithColVal depending_CDBI_Description
    dependingColumnVersionDependingKey
    (versionID (versionKey en))
@@ -470,9 +472,9 @@ deleteExporting k1 k2 =
 
 --- Gets the associated `Version` entities for a given `CurryModule` entity
 --- w.r.t. the `Exporting` relation.
-getVersionCurryModules
+getExportingVersionCurryModules
   :: Version -> Database.CDBI.Connection.DBAction [CurryModule]
-getVersionCurryModules en =
+getExportingVersionCurryModules en =
   Database.CDBI.ER.getEntriesWithColVal exporting_CDBI_Description
    exportingColumnVersionExportingKey
    (versionID (versionKey en))

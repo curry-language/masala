@@ -55,8 +55,8 @@ showValidationTokenView
   :: UserSessionInfo -> ValidationToken -> User -> [BaseHtml]
 showValidationTokenView _ validationToken relatedUser =
   validationTokenToDetailsView validationToken relatedUser
-   ++ [hrefPrimSmButton "?ValidationToken/list"
-        [htxt "back to ValidationToken list"]]
+   ++ [hrefPrimSmButton (listRoute validationToken)
+        [htxt "To ValidationToken list"]]
 
 --- Compares two ValidationToken entities. This order is used in the list view.
 leqValidationToken :: ValidationToken -> ValidationToken -> Bool
