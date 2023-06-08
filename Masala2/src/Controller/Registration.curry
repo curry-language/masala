@@ -25,6 +25,7 @@ type RegistrationInput =
     , String -- PublicName
     , String -- Email
     , String -- Password
+    , String -- Password (Repetition)
     )
 
 --- Shows a form to register a new User.
@@ -32,7 +33,7 @@ registrationController :: Controller
 registrationController =
   checkAuthorization (userOperationAllowed NewEntity)
    $ (\sinfo ->
-     do setParWuiStore registrationStore sinfo ("","","","")
+     do setParWuiStore registrationStore sinfo ("","","","","")
         return [formElem registrationForm])
 
 --- The data stored for executing the "new entity" WUI form.
@@ -47,18 +48,27 @@ registrationForm
 registrationForm =
   pwui2FormDef "Controller.Registration.registrationForm" registrationStore
    (\_ -> wRegistration)
-   (\_ (loginName, publicName, email, uncryptpasswd) ->
+   (\_ (loginName, publicName, email, uncryptpasswd, debug) ->
      checkAuthorization (userOperationAllowed NewEntity)
       (\_ -> do
         cryptpasswd <- getUserHash loginName uncryptpasswd
         usernameAvailable <- checkUserNameAvailable loginName
-        let emailSyntax = checkEmailSyntax email
         emailAvailable <- checkEmailAvailable email
-        let passwordFine = checkIfPasswordFine uncryptpasswd
-        let check = usernameAvailable && emailSyntax && emailAvailable && passwordFine
+        let check = usernameAvailable && emailAvailable
+        let debugPassword = ", Password1: " ++ uncryptpasswd ++ ", Password2: " ++ debug
 
         if check
           then do
+            userResult <- registerUser loginName publicName email cryptpasswd
+            case userResult of 
+              Left err -> displayError "Controller.Registration: Adding new user did not work, although input data was correct."
+              Right user -> do
+                time <- getClockTime
+                tokenResult <- generateValidationToken time (userKey user)
+                case tokenResult of 
+                  Left err -> displayError "Controller.Registration: Adding new token did not work, although token should be free."
+                  Right token -> displayError ("ValidationToken: " ++ validationTokenToken token ++ debugPassword)
+            {-
             time <- getClockTime
             token <- generateValidationToken
             connection <- connectSQLite sqliteDBFile
@@ -75,6 +85,7 @@ registrationForm =
                   Right validationToken -> displayError ("ValidationToken: " ++ token)
                 --addValidationToken token time (userKey user)
                 --validationToken <- getValidationTokenWithToken token
+            -}
                  
             {-
             transactionControllerWith
@@ -83,10 +94,41 @@ registrationForm =
                  (\user -> nextInProcessOr (redirectController (showRoute user))
                                            Nothing)
                                           -}
-          else displayRegistrationError usernameAvailable emailSyntax emailAvailable passwordFine))
+          else displayRegistrationError usernameAvailable emailAvailable))
    (\sinfo ->
      renderWUI sinfo "Register new User" "Register" "?Registration" ())
 
+registerUser :: String -> String -> String -> String -> IO (SQLResult User)
+registerUser loginName publicName email cryptpasswd =
+  runT (newUser loginName publicName email "" "Invalid" cryptpasswd "" Nothing)
+
+displayRegistrationError :: Bool -> Bool -> Controller
+displayRegistrationError usernameAvailable emailAvailable =
+  let err1 = errorUsernameAvailable usernameAvailable
+      err3 = errorEmailAvailable emailAvailable
+  in displayError (err1 ++ err3)
+  where
+    errorUsernameAvailable True = ""
+    errorUsernameAvailable False = "The given username is not available, please choose another one.\n"
+
+    errorEmailSyntax True = ""
+    errorEmailSyntax False = "The given email address is not a correct email address, please make sure to give a correct email address.\n"
+
+    errorEmailAvailable True = ""
+    errorEmailAvailable False = "The given email address is already used, please choose another one.\n"
+
+    errorPasswordFine True = ""
+    errorPasswordFine False = "The password must be at least 8 symbols long.\n"
+
+generateValidationToken :: ClockTime -> UserID -> IO (SQLResult ValidationToken)
+generateValidationToken time user = do
+  token <- randomString 32
+  available <- checkValidationTokenAvailable token
+  if available
+    then runT (newValidationTokenWithUserValidatingKey token time user)
+    else generateValidationToken time user
+
+{-
 --- Transaction to persist a new User entity to the database.
 registrationT :: RegistrationInput -> DBAction User
 registrationT (loginName,publicName,email,cryptpasswd) =
@@ -120,31 +162,4 @@ checkIfPasswordFine = checkPasswordLength
 
 checkPasswordLength :: String -> Bool
 checkPasswordLength uncryptpasswd = length uncryptpasswd >= 8
-
-displayRegistrationError :: Bool -> Bool -> Bool -> Bool -> Controller
-displayRegistrationError usernameAvailable emailSyntax emailAvailable passwordFine =
-  let err1 = errorUsernameAvailable usernameAvailable
-      err2 = errorEmailSyntax emailSyntax
-      err3 = errorEmailAvailable emailAvailable
-      err4 = errorPasswordFine passwordFine
-  in displayError (err1 ++ err2 ++ err3 ++ err4)
-  where
-    errorUsernameAvailable True = ""
-    errorUsernameAvailable False = "The given username is not available, please choose another one.\n"
-
-    errorEmailSyntax True = ""
-    errorEmailSyntax False = "The given email address is not a correct email address, please make sure to give a correct email address.\n"
-
-    errorEmailAvailable True = ""
-    errorEmailAvailable False = "The given email address is already used, please choose another one.\n"
-
-    errorPasswordFine True = ""
-    errorPasswordFine False = "The password must be at least 8 symbols long.\n"
-
-generateValidationToken :: IO String
-generateValidationToken = do
-  token <- randomString 32
-  available <- checkValidationTokenAvailable token
-  if available
-    then return token
-    else generateValidationToken
+-}

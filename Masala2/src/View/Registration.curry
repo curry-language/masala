@@ -13,11 +13,24 @@ import System.Spicey
 import View.EntitiesToHtml
 
 --- The WUI specification for the registration input.
-wRegistration :: WuiSpec (String, String, String, String)
+wRegistration :: WuiSpec (String, String, String, String, String)
 wRegistration =
   withRendering
-    (w4Tuple wRequiredString wRequiredString wRequiredString wMasalaPassword)
-    (renderLabels RegistrationLabelList)
+    wRegistrationSpec
+    (renderLabels registrationLabelList)
+
+wRegistrationSpec :: WuiSpec (String, String, String, String, String)
+wRegistrationSpec = w5Tuple wRequiredString wRequiredString wMasalaEmail wMasalaPassword wMasalaPassword
+  `withCondition` checkIfPasswordsEqual -- (\_ -> False)
+  `withError` "The passwords must be equal"
+
+wMasalaEmail :: WuiSpec String
+wMasalaEmail = wRequiredString
+  `withCondition` checkEmailSyntax
+  `withError` "The email must be a correct email address"
+
+checkEmailSyntax :: String -> Bool
+checkEmailSyntax _ = True
 
 wMasalaPassword :: WuiSpec String
 wMasalaPassword = wPassword
@@ -29,3 +42,6 @@ checkIfPasswordFine = checkPasswordLength
 
 checkPasswordLength :: String -> Bool
 checkPasswordLength uncryptpasswd = length uncryptpasswd >= 8
+
+checkIfPasswordsEqual :: (String, String, String, String, String) -> Bool
+checkIfPasswordsEqual (_, _, _, password1, password2) = password1 == password2
