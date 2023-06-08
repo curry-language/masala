@@ -92,8 +92,8 @@ getPackageVersions pkg = fmap (map snd) $ runQ
 
 -----------------------------------------------------------------------
 -- Gets the categories of a given package version.
-getPackageVersionCategories :: Package -> Version -> IO [Category]
-getPackageVersionCategories pkg vers = fmap (map (\(_,_,c) -> c)) $ runQ
+getPackageVersionCategories :: Package -> Version -> DBAction [Category]
+getPackageVersionCategories pkg vers = fmap (map (\(_,_,c) -> c)) $
   ``sql* Select *
          From Package as p, Version as v, Category as c
          Where p.Name = { packageName pkg } And

@@ -8,14 +8,14 @@ module System.Spicey (
   showRoute, editRoute, deleteRoute, listRoute,
   applyControllerOn, redirectController, nextInProcessOr,
   transactionController,
-  confirmDeletionPage,
+  confirmDeletionPage, confirmDeletionPageWithCancelURL,
   getControllerURL,getControllerParams, showControllerURL,
   getPage, wDateType, wBoolean, wUncheckMaybe, wFloat,
   displayError, displayUrlError, cancelOperation,
   renderWUI, renderLabels,
   stringToHtml, maybeStringToHtml,
   intToHtml,maybeIntToHtml, floatToHtml, maybeFloatToHtml,
-  boolToHtml, maybeBoolToHtml, dateToHtml, maybeDateToHtml,
+  boolToHtml, maybeBoolToHtml, dateToHtml, maybeDateToHtml, timeToHtml,
   userDefinedToHtml, maybeUserDefinedToHtml,
   spTable, smallMutedText,
   setPageMessage, getPageMessage,
@@ -126,9 +126,8 @@ nextInProcessOr controller arg = do
 --- specified in the controller URL (of the form "entity/delete/key/...").
 --- The yes/no answers are references derived from the controller URL
 --- where the second argument is replaced by "destroy"/"show".
+--- @param sinfo - information about the current user session
 --- @param question - a question asked
---- @param yescontroller - the controller used if the answer is "yes"
---- @param nocontroller  - the controller used if the answer is "no"
 confirmDeletionPage :: UserSessionInfo -> String -> Controller
 confirmDeletionPage _ question = do
   (entity,ctrlargs) <- getControllerURL
@@ -139,6 +138,20 @@ confirmDeletionPage _ question = do
                              [htxt "Yes"],
             nbsp,
             hrefScndSmButton (showControllerURL entity ["list"]) [htxt "No"]]]
+    _ -> displayUrlError
+
+
+confirmDeletionPageWithCancelURL :: UserSessionInfo -> String -> String
+                                 -> Controller
+confirmDeletionPageWithCancelURL _ question cancelurl = do
+  (entity,ctrlargs) <- getControllerURL
+  case ctrlargs of
+    (_:args) -> return $
+      [h3 [htxt question],
+       par [hrefPrimSmButton (showControllerURL entity ("destroy":args))
+                             [htxt "Yes"],
+            nbsp,
+            hrefScndSmButton cancelurl [htxt "No"]]]
     _ -> displayUrlError
 
 
@@ -374,6 +387,9 @@ dateToHtml ct = textstyle "type_calendartime" (toDayString (toUTCTime ct))
 maybeDateToHtml :: HTML h => Maybe ClockTime -> h
 maybeDateToHtml ct =
   textstyle "type_calendartime" (maybe "" (toDayString . toUTCTime) ct)
+
+timeToHtml :: HTML h => ClockTime -> h
+timeToHtml = textstyle "type_calendartime"  . calendarTimeToString . toUTCTime
 
 userDefinedToHtml :: (Show a, HTML h) => a -> h
 userDefinedToHtml ud = textstyle "type_string" (show ud)

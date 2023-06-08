@@ -8,6 +8,7 @@ import Model.Masala2
 import Model.Queries
 import Config.EntityRoutes
 import Config.UserProcesses
+import Controller.Mail
 import System.SessionInfo
 import System.Authentication
 import System.Authorization
@@ -82,7 +83,8 @@ registrationForm =
                 disconnect connection
                 case tokenResult of 
                   Left err -> displayError "Controller.Registration: Adding new token did not work, although token should be free."
-                  Right validationToken -> displayError ("ValidationToken: " ++ token)
+                  Right validationToken ->
+                    sendValidationMail email token
                 --addValidationToken token time (userKey user)
                 --validationToken <- getValidationTokenWithToken token
             -}

@@ -12,6 +12,7 @@ module System.Authentication (
   getSessionLogin, loginToSession, logoutFromSession
  ) where
 
+import Config.Masala ( systemHashKey )
 import System.SessionInfo
 import Crypto.Hash
 
@@ -22,8 +23,7 @@ import Crypto.Hash
 --- hash string should be stored for the user instead of the password.
 getUserHash :: String -> String -> IO String
 getUserHash username userpassword = do
-  let systemkey = "3spicey5" -- change this key for every spicey instance
-  getHash (username++userpassword++systemkey)
+  getHash (username ++ userpassword ++ systemHashKey)
 
 --- Returns a random password (a hexadecimal string) of a particular length.
 --- @param length - length of the desired password

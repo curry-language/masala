@@ -171,7 +171,8 @@ allPackagesController =
 --- Shows a Package entity.
 showPackageController :: Package -> Controller
 showPackageController package =
-  checkAuthorization (packageOperationAllowed (ShowEntity package)) $ \_ ->
-    do versions <- getPackageVersions package
-       --return (showPackageView sinfo versions package)
-       showVersionController (last (sortBy leqVersion versions))
+  checkAuthorization (packageOperationAllowed (ShowEntity package)) $ \_ -> do
+    versions <- getPackageVersions package
+    if null versions
+      then displayError "Package has no versions!"
+      else showVersionController (last (sortBy leqVersion versions))
