@@ -8,6 +8,7 @@ import Model.Masala2
 import Model.Queries
 import Config.EntityRoutes
 import Config.UserProcesses
+import Config.Roles
 import Controller.Mail
 import System.SessionInfo
 import System.Authentication
@@ -68,7 +69,7 @@ registrationForm =
                 tokenResult <- generateValidationToken time (userKey user)
                 case tokenResult of 
                   Left err -> displayError "Controller.Registration: Adding new token did not work, although token should be free."
-                  Right token -> displayError ("ValidationToken: " ++ validationTokenToken token ++ debugPassword)
+                  Right token -> sendValidationMail email (validationTokenToken token)
             {-
             time <- getClockTime
             token <- generateValidationToken
@@ -102,7 +103,7 @@ registrationForm =
 
 registerUser :: String -> String -> String -> String -> IO (SQLResult User)
 registerUser loginName publicName email cryptpasswd =
-  runT (newUser loginName publicName email "" "Invalid" cryptpasswd "" Nothing)
+  runT (newUser loginName publicName email "" roleInvalid cryptpasswd "" Nothing)
 
 displayRegistrationError :: Bool -> Bool -> Controller
 displayRegistrationError usernameAvailable emailAvailable =
