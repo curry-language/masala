@@ -43,5 +43,4 @@ validateUser user = do
     where
         validateUserAction key = do 
             oldUser <- getUser key
-            newUser <- setUserRole oldUser roleNotTrusted
-            updateUser newUser
+            updateUser (setUserRole oldUser roleNotTrusted)
