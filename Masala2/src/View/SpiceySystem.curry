@@ -25,20 +25,22 @@ loginView :: (Maybe String, String) -> [HtmlExp]
 loginView (currlogin,lurl) =
   case currlogin of
    Nothing -> [h3 [htxt "Login as:"],
-               textField loginfield "", nbsp,
+               htxt "Login name:", nbsp, textField loginfield "", nbsp,
+               htxt "Password:", nbsp, password passwdfield, nbsp,
                primSmButton "Login" loginHandler]
    Just _  -> [h3 [htxt "Really logout?"],
                primSmButton "Logout" logoutHandler, nbsp,
                hrefScndSmButton lasturl [htxt "Cancel"]]
  where
-  loginfield free
+  loginfield,passwdfield free
 
   lasturl = '?' : lurl
 
   loginHandler env = do
     let loginname = env loginfield
+        passwdtxt = env passwdfield
     -- In the real system, you should also verify a password here.
-    if null loginname
+    if null loginname -- runQ to get User from login name and password
       then return ()
       else do loginToSession loginname
               setPageMessage ("Logged in as: " ++ loginname)

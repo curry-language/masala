@@ -53,10 +53,15 @@ checkEmailAvailable email = fmap null $ runQ
          From User as u
          Where u.Email = { email };''
 
---addUser :: String -> String -> String -> String -> IO ()
---addUser loginName publicName email password = runQ
---  ``sql* Insert into User (LoginName, PublicName, Email, PublicEmail, Role, Password, Token)
---         Values ({ loginName }, { publicName }, { email }, { "" }, { "Invalid" }, { password }, { "" });''
+{-
+-- Requires currypp of 07/06/2023 or newer:
+addUser :: String -> String -> String -> String -> DBAction ()
+addUser loginName publicName email password =
+  ``sql* Insert into User (LoginName, PublicName, Email, PublicEmail, Role,
+                           Password, Token)
+         Values ({ loginName }, { publicName }, { email }, "", "Invalid",
+                 { password },  "" );''
+-}
 
 validateUser :: UserID -> IO ()
 validateUser user = runQ
