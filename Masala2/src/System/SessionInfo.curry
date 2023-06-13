@@ -11,11 +11,12 @@
 
 module System.SessionInfo (
   UserSessionInfo(..), userLoginOfSession, setUserLoginOfSession, 
-  getUserSessionInfo, updateUserSessionInfo, isAdminSession
+  getUserSessionInfo, updateUserSessionInfo, isAdminSession, loggedInAsUserSession
  ) where
 
 import HTML.Base    ( fromFormReader )
 import HTML.Session
+import Model.Masala2 (User, userLoginName)
 
 --------------------------------------------------------------------------
 --- The data associated to a user session.
@@ -57,5 +58,9 @@ updateUserSessionInfo = modifySessionData userSessionInfo emptySessionInfo
 isAdminSession :: UserSessionInfo -> Bool
 isAdminSession sinfo =
   maybe False (== "admin") (userLoginOfSession sinfo)
+
+loggedInAsUserSession :: User -> UserSessionInfo -> Bool
+loggedInAsUserSession user sinfo =
+  maybe False (== userLoginName user) (userLoginOfSession sinfo)
 
 --------------------------------------------------------------------------

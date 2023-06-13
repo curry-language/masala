@@ -27,8 +27,15 @@ userOperationAllowed at sinfo =
   case at of
     ListEntities -> isLoggedIn
     NewEntity    -> return AccessGranted
-    ShowEntity _ -> return AccessGranted
+    ShowEntity user -> adminOrLoggedInAsUser user sinfo
+    UpdateEntity user -> adminOrLoggedInAsUser user sinfo
     _            -> checkAdmin sinfo
+
+adminOrLoggedInAsUser :: User -> UserSessionInfo -> IO AccessResult
+adminOrLoggedInAsUser user sinfo =
+  return $ if isAdminSession sinfo || loggedInAsUserSession user sinfo 
+              then AccessGranted
+              else AccessDenied "Operation not allowed!"
 
 --- Checks whether the application of an operation to a Package
 --- entity is allowed.
