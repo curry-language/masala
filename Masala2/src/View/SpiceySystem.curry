@@ -16,6 +16,7 @@ import Config.UserProcesses
 import System.Processes
 import System.Spicey
 import System.Authentication
+import Model.Queries
 
 -----------------------------------------------------------------------------
 --- Generates a form for login/logout.
@@ -40,15 +41,17 @@ loginView (currlogin,lurl) =
     let loginname = env loginfield
         passwdtxt = env passwdfield
     -- In the real system, you should also verify a password here.
-    if null loginname -- runQ to get User from login name and password
-      then return ()
-      else do loginToSession loginname
+    cryptpasswd <- getUserHash loginname passwdtxt
+    loginSuccess <- checkLoginData loginname cryptpasswd
+    if loginSuccess
+      then do loginToSession loginname
               setPageMessage ("Logged in as: " ++ loginname)
-    nextInProcessOr (redirectController lasturl) Nothing >>= getPage
+      else return ()
+    nextInProcessOr (redirectController "?") Nothing >>= getPage
 
   logoutHandler _ = do
     logoutFromSession >> setPageMessage "Logged out"
-    nextInProcessOr (redirectController lasturl) Nothing >>= getPage
+    nextInProcessOr (redirectController "?") Nothing >>= getPage
 
 -----------------------------------------------------------------------------
 --- A view for all processes contained in a given process specification.

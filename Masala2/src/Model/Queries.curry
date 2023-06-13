@@ -53,6 +53,12 @@ checkEmailAvailable email = fmap null $ runQ
          From User as u
          Where u.Email = { email };''
 
+checkLoginData :: String -> String -> IO Bool
+checkLoginData loginName password = fmap (not . null) $ runQ
+  ``sql* Select *
+         From User as u
+         Where u.LoginName = { loginName } And u.Password = { password };''
+
 {-
 -- Requires currypp of 07/06/2023 or newer:
 addUser :: String -> String -> String -> String -> DBAction ()
@@ -63,11 +69,13 @@ addUser loginName publicName email password =
                  { password },  "" );''
 -}
 
+{-
 validateUser :: UserID -> IO ()
 validateUser user = runQ
   ``sql* Update User
          Set Role = { "Not Trusted" }
          Where Key = { user };''
+-}
 
 -----------------------------------------------------------------------
 -- Gets the version of a package with a given name and version string.
