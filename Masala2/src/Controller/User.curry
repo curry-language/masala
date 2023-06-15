@@ -111,7 +111,7 @@ editUserForm
 editUserForm =
   pwui2FormDef "Controller.User.editUserForm" editUserStore
    (\(_,user,possibleMaintainerPackages,possibleWatchingPackages) ->
-     wUserType user possibleMaintainerPackages possibleWatchingPackages)
+     wUserTypeEdit user possibleMaintainerPackages possibleWatchingPackages)
    (\_ entity@(userToEdit,_,_) ->
      checkAuthorization (userOperationAllowed (UpdateEntity userToEdit))
       (\_ ->

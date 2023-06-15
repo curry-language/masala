@@ -1,5 +1,7 @@
 module View.User
-  ( wUser, tuple2User, user2Tuple, wUserType, showUserView, listUserView )
+  ( wUser, tuple2User, user2Tuple, wUserType
+  , wUserEdit, tuple2UserEdit, user2TupleEdit, wUserTypeEdit
+  , showUserView, listUserView )
 where
 
 import Data.List
@@ -18,28 +20,59 @@ import View.EntitiesToHtml
 wUser
   :: [Package]
   -> [Package]
-  -> WuiSpec (String
-             ,String
-             ,String
-             ,String
-             ,String
-             ,String
-             ,String
-             ,Maybe ClockTime
-             ,[Package]
-             ,[Package])
+  -> WuiSpec (String -- LoginName
+             ,String -- PublicName
+             ,String -- Email
+             ,String -- PublicEmail
+             ,String -- Role
+             ,String -- Password
+             ,String -- Token
+             ,Maybe ClockTime -- LastLogin
+             ,[Package] -- Maintains
+             ,[Package] -- Watching
+             )
 wUser maintainerPackageList watchingPackageList =
   withRendering
-   (w10Tuple wRequiredString wRequiredString wRequiredString wString
-     wRequiredString
-     wRequiredString
-     wString
-     (wUncheckMaybe (toClockTime (CalendarTime 2018 1 1 0 0 0 0)) wDateType)
-     (wMultiCheckSelect (\package -> [htxt (packageToShortView package)])
-       maintainerPackageList)
-     (wMultiCheckSelect (\package -> [htxt (packageToShortView package)])
-       watchingPackageList))
+   (w10Tuple
+    (wConstant stringToHtml) -- LoginName
+    wRequiredString -- PublicName
+    (wConstant stringToHtml) -- Email
+    wString -- PublicEmail
+    wHidden -- Role
+    wHidden -- Password
+    wHidden -- Token
+    wHidden -- LastLogin
+    --(wUncheckMaybe (toClockTime (CalendarTime 2018 1 1 0 0 0 0)) wDateType) -- LastLogin
+    (wMultiCheckSelect (\package -> [htxt (packageToShortView package)])
+      maintainerPackageList) -- Maintains
+    (wMultiCheckSelect (\package -> [htxt (packageToShortView package)])
+      watchingPackageList) -- Watching
+   )
    (renderLabels userLabelList)
+
+wUserEdit
+  :: [Package]
+  -> [Package]
+  -> WuiSpec ( String
+             , String
+             , String
+             , String
+             , [Package]
+             , [Package]
+             )
+wUserEdit maintainerPackageList watchingPackageList = 
+  withRendering
+    (w6Tuple
+      (wConstant stringToHtml)  -- LoginName
+      wRequiredString           -- PublicName
+      (wConstant stringToHtml)  -- Email
+      wString                   -- PublicEmail
+      (wMultiCheckSelect (\package -> [htxt (packageToShortView package)])
+        maintainerPackageList) -- Maintains
+      (wMultiCheckSelect (\package -> [htxt (packageToShortView package)])
+        watchingPackageList) -- Watching
+    )
+    (renderLabels userEditLabelList)
 
 --- Transformation from data of a WUI form to entity type User.
 tuple2User
@@ -75,6 +108,30 @@ tuple2User
   ,maintainerPackages
   ,watchingPackages)
 
+tuple2UserEdit
+  :: User
+  -> (String
+     ,String
+     ,String
+     ,String
+     ,[Package]
+     ,[Package])
+  -> (User,[Package],[Package])
+tuple2UserEdit
+    userToUpdate
+    (loginName,publicName,email,publicEmail,maintainerPackages,watchingPackages) =
+  (setUserLoginName
+    (setUserPublicName
+      (setUserEmail
+        (setUserPublicEmail
+          userToUpdate
+          publicEmail)
+        email)
+      publicName)
+    loginName
+  ,maintainerPackages
+  ,watchingPackages)
+
 --- Transformation from entity type User to a tuple
 --- which can be used in WUI specifications.
 user2Tuple
@@ -101,6 +158,22 @@ user2Tuple (user,maintainerPackages,watchingPackages) =
   ,maintainerPackages
   ,watchingPackages)
 
+user2TupleEdit
+  :: (User,[Package],[Package])
+  -> (String
+     ,String
+     ,String
+     ,String
+     ,[Package]
+     ,[Package])
+user2TupleEdit (user,maintainerPackages,watchingPackages) =
+  (userLoginName user
+  ,userPublicName user
+  ,userEmail user
+  ,userPublicEmail user
+  ,maintainerPackages
+  ,watchingPackages)
+
 --- WUI Type for editing or creating User entities.
 --- Includes fields for associated entities.
 wUserType
@@ -108,6 +181,12 @@ wUserType
 wUserType user maintainerPackageList watchingPackageList =
   transformWSpec (tuple2User user,user2Tuple)
    (wUser maintainerPackageList watchingPackageList)
+
+wUserTypeEdit
+  :: User -> [Package] -> [Package] -> WuiSpec (User,[Package],[Package])
+wUserTypeEdit user maintainerPackageList watchingPackageList =
+  transformWSpec (tuple2UserEdit user,user2TupleEdit)
+    (wUserEdit maintainerPackageList watchingPackageList)
 
 --- Supplies a view to show the details of a User.
 showUserView

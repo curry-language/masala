@@ -59,6 +59,15 @@ userLabelList =
   ,[textstyle "spicey_label spicey_label_for_type_relation" "Maintains Packages"]
   ,[textstyle "spicey_label spicey_label_for_type_relation" "Watching Packages"]]
 
+userEditLabelList :: HTML h => [[h]]
+userEditLabelList =
+  [[textstyle "spicey_label spicey_label_for_type_string" "LoginName"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "PublicName"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Email"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "PublicEmail"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Maintains Packages"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Watching Packages"]]
+
 --- The list view of a Package entity in HTML format.
 --- This view is used in a row of a table of all entities.
 packageToListView :: HTML h => Package -> [[h]]
