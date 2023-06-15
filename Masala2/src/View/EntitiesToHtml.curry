@@ -45,6 +45,19 @@ userToDetailsView user maintainerPackages watchingPackages =
       ,[htxt (unwords (map packageToShortView maintainerPackages))]
       ,[htxt (unwords (map packageToShortView watchingPackages))]]
 
+userToDetailsViewLess :: HTML h => User -> [Package] -> [Package] -> [h]
+userToDetailsViewLess user maintainerPackages watchingPackages =
+  [spTable
+    (map (\(label,value) -> [label,value]) (zip userEditLabelList detailedView))]
+  where 
+    detailedView =
+      [[stringToHtml (userLoginName user)]
+      ,[stringToHtml (userPublicName user)]
+      ,[stringToHtml (userEmail user)]
+      ,[stringToHtml (userPublicEmail user)]
+      ,[htxt (unwords (map packageToShortView maintainerPackages))]
+      ,[htxt (unwords (map packageToShortView watchingPackages))]]
+
 --- The labels of a User entity, as used in HTML tables.
 userLabelList :: HTML h => [[h]]
 userLabelList =
@@ -67,6 +80,12 @@ userEditLabelList =
   ,[textstyle "spicey_label spicey_label_for_type_string" "PublicEmail"]
   ,[textstyle "spicey_label spicey_label_for_type_relation" "Maintains Packages"]
   ,[textstyle "spicey_label spicey_label_for_type_relation" "Watching Packages"]]
+
+passwordEditLabelList :: HTML h => [[h]]
+passwordEditLabelList =
+  [[textstyle "spicey_label spicey_label_for_type_string" "Old Password"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "New Password"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "New Password (again)"]]
 
 --- The list view of a Package entity in HTML format.
 --- This view is used in a row of a table of all entities.

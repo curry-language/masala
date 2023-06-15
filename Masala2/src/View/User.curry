@@ -1,6 +1,7 @@
 module View.User
   ( wUser, tuple2User, user2Tuple, wUserType
   , wUserEdit, tuple2UserEdit, user2TupleEdit, wUserTypeEdit
+  , wPasswordTypeEdit
   , showUserView, listUserView )
 where
 
@@ -188,11 +189,35 @@ wUserTypeEdit user maintainerPackageList watchingPackageList =
   transformWSpec (tuple2UserEdit user,user2TupleEdit)
     (wUserEdit maintainerPackageList watchingPackageList)
 
+wPasswordEdit :: String -> WuiSpec (String,String,String)
+wPasswordEdit oldPasswd =
+  withRendering
+      (wTriple
+        wPassword
+        wPassword
+        wPassword
+        --(withCondition wPassword (== oldPasswd))
+        --(withCondition wPassword (== x))
+        --(withCondition wPassword (== x))
+      )
+      (renderLabels passwordEditLabelList)
+    --where
+      --x free
+
+wPasswordTypeEdit
+  :: User -> WuiSpec User
+wPasswordTypeEdit user =
+  transformWSpec (\(_,newPasswd,_) -> setUserPassword user newPasswd, \_ -> ("", "", ""))
+    (wPasswordEdit (userPassword user))
+  
+
 --- Supplies a view to show the details of a User.
 showUserView
   :: UserSessionInfo -> User -> [Package] -> [Package] -> [BaseHtml]
 showUserView _ user maintainerPackages watchingPackages =
-  userToDetailsView user maintainerPackages watchingPackages
+  --userToDetailsView user maintainerPackages watchingPackages
+  userToDetailsViewLess user maintainerPackages watchingPackages
+   ++ [hrefPrimSmButton (editRoute user ++ "/Password") [htxt "Change Password"]]
    ++ [hrefPrimSmButton (listRoute user) [htxt "To User list"]]
 
 --- Compares two User entities. This order is used in the list view.

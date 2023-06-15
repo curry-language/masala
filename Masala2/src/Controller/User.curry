@@ -1,4 +1,4 @@
-module Controller.User ( mainUserController, newUserForm, editUserForm ) where
+module Controller.User ( mainUserController, newUserForm, editUserForm, editPasswordForm ) where
 
 import Data.Time
 import HTML.Base
@@ -37,6 +37,7 @@ mainUserController =
        ["new"] -> newUserController
        ["show",s] -> controllerOnKey s showUserController
        ["edit",s] -> controllerOnKey s editUserController
+       ["edit",s,"Password"] -> controllerOnKey s editPasswordController
        ["delete",s] -> controllerOnKey s deleteUserController
        ["destroy",s] -> controllerOnKey s destroyUserController
        _ -> displayUrlError
@@ -128,6 +129,43 @@ editUserStore
   :: SessionStore ((UserSessionInfo,User,[Package],[Package])
                   ,WuiStore (User,[Package],[Package]))
 editUserStore = sessionStore "editUserStore"
+
+--- Shows a form to edit the password of the given User entity.
+editPasswordController :: User -> Controller
+editPasswordController userToEdit =
+  checkAuthorization (userOperationAllowed (UpdateEntity userToEdit))
+   $ (\sinfo ->
+     do setParWuiStore editPasswordStore
+         (sinfo,userToEdit)
+         (userToEdit)
+        return [formElem editPasswordForm])
+
+--- A WUI form to edit the password of a User entity.
+--- The default values for the fields are stored in 'editUserStore'.
+editPasswordForm
+  :: HtmlFormDef ((UserSessionInfo,User)
+                 ,WuiStore User)
+editPasswordForm =
+  pwui2FormDef "Controller.User.editPasswordForm" editPasswordStore
+   (\(_,user) ->
+     wPasswordTypeEdit user)
+   (\_ userToEdit ->
+     checkAuthorization (userOperationAllowed (UpdateEntity userToEdit))
+      (\_ ->
+        transactionController (runT (updateUser userToEdit))
+         (const
+           (do setPageMessage "Password updated"
+               nextInProcessOr (redirectController (showRoute userToEdit))
+                Nothing))))
+   (\(sinfo,entity) ->
+     renderWUI sinfo "Edit Password" "Change" (listRoute entity) ())
+
+--- The data stored for executing the edit WUI form.
+-- old password, new password, new password (again)
+editPasswordStore
+  :: SessionStore ((UserSessionInfo,User)
+                  ,WuiStore User)
+editPasswordStore = sessionStore "editPasswordStore"
 
 --- Transaction to persist modifications of a given User entity
 --- to the database.
