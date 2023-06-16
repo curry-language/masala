@@ -1,7 +1,7 @@
 module View.User
   ( wUser, tuple2User, user2Tuple, wUserType
   , wUserEdit, tuple2UserEdit, user2TupleEdit, wUserTypeEdit
-  , wPasswordTypeEdit
+  , wPasswordEdit
   , showUserView, listUserView )
 where
 
@@ -189,27 +189,37 @@ wUserTypeEdit user maintainerPackageList watchingPackageList =
   transformWSpec (tuple2UserEdit user,user2TupleEdit)
     (wUserEdit maintainerPackageList watchingPackageList)
 
-wPasswordEdit :: String -> WuiSpec (String,String,String)
-wPasswordEdit oldPasswd =
+wPasswordEdit :: WuiSpec (User,String,String,String)
+wPasswordEdit =
   withRendering
-      (wTriple
-        wPassword
-        wPassword
-        wPassword
-        --(withCondition wPassword (== oldPasswd))
+      ((w4Tuple
+        wHidden
+        wMasalaPassword
+        wMasalaPassword
+        wMasalaPassword
+        --wPassword
         --(withCondition wPassword (== x))
         --(withCondition wPassword (== x))
       )
-      (renderLabels passwordEditLabelList)
+      `withCondition` checkIfPasswordsEqual -- (\_ -> False)
+      `withError` "The passwords must be equal")
+      (renderLabels ([textstyle "spicey_label spicey_label_for_type_string" ""]:passwordEditLabelList))
     --where
-      --x free
+      --x free  
 
-wPasswordTypeEdit
-  :: User -> WuiSpec User
-wPasswordTypeEdit user =
-  transformWSpec (\(_,newPasswd,_) -> setUserPassword user newPasswd, \_ -> ("", "", ""))
-    (wPasswordEdit (userPassword user))
-  
+wMasalaPassword :: WuiSpec String
+wMasalaPassword = wPassword
+  `withCondition` checkIfPasswordFine
+  `withError` "The password must be at least 8 symbols long"
+
+checkIfPasswordFine :: String -> Bool
+checkIfPasswordFine = checkPasswordLength
+
+checkPasswordLength :: String -> Bool
+checkPasswordLength uncryptpasswd = length uncryptpasswd >= 8
+
+checkIfPasswordsEqual :: (User, String, String, String) -> Bool
+checkIfPasswordsEqual (_, _, password1, password2) = password1 == password2
 
 --- Supplies a view to show the details of a User.
 showUserView

@@ -8,6 +8,7 @@ import Model.Masala2
 import Config.EntityRoutes
 import Config.UserProcesses
 import System.SessionInfo
+import System.Authentication
 import System.Authorization
 import System.AuthorizedActions
 import System.Spicey
@@ -137,34 +138,42 @@ editPasswordController userToEdit =
    $ (\sinfo ->
      do setParWuiStore editPasswordStore
          (sinfo,userToEdit)
-         (userToEdit)
+         (userToEdit,"","","")
         return [formElem editPasswordForm])
 
 --- A WUI form to edit the password of a User entity.
 --- The default values for the fields are stored in 'editUserStore'.
 editPasswordForm
-  :: HtmlFormDef ((UserSessionInfo,User)
-                 ,WuiStore User)
+  :: HtmlFormDef ((UserSessionInfo,User),WuiStore (User,String,String,String))
 editPasswordForm =
   pwui2FormDef "Controller.User.editPasswordForm" editPasswordStore
-   (\(_,user) ->
-     wPasswordTypeEdit user)
-   (\_ userToEdit ->
-     checkAuthorization (userOperationAllowed (UpdateEntity userToEdit))
-      (\_ ->
-        transactionController (runT (updateUser userToEdit))
-         (const
-           (do setPageMessage "Password updated"
-               nextInProcessOr (redirectController (showRoute userToEdit))
-                Nothing))))
-   (\(sinfo,entity) ->
-     renderWUI sinfo "Edit Password" "Change" (listRoute entity) ())
+   (\(_, _) ->
+     wPasswordEdit)
+   (\_ (user,oldPasswd,newPasswd,_) ->
+     checkAuthorization (userOperationAllowed (UpdateEntity user))
+      (\_ -> do
+              let loginName = userLoginName user
+              cryptedOldPasswd <- getUserHash loginName oldPasswd
+              cryptedNewPasswd <- getUserHash loginName newPasswd
+              let correctOldPassword = cryptedOldPasswd == userPassword user
+              if correctOldPassword 
+                then do
+                  let user' = setUserPassword user cryptedNewPasswd
+                  transactionController (runT (updateUser user'))
+                    (const
+                      (do setPageMessage "Password updated"
+                          nextInProcessOr (redirectController (showRoute user))
+                            Nothing))
+                else displayError "Old password is not correct."
+      )
+    )
+   (\(sinfo,user) ->
+     renderWUI sinfo "Edit Password" "Change" (showRoute user) ())
 
 --- The data stored for executing the edit WUI form.
 -- old password, new password, new password (again)
 editPasswordStore
-  :: SessionStore ((UserSessionInfo,User)
-                  ,WuiStore User)
+  :: SessionStore ((UserSessionInfo,User),WuiStore (User,String,String,String))
 editPasswordStore = sessionStore "editPasswordStore"
 
 --- Transaction to persist modifications of a given User entity
