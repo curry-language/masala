@@ -28,7 +28,8 @@ type Route = (String,UrlMatch,ControllerReference)
 getRoutes :: IO [Route]
 getRoutes =
   do login <- getSessionLogin
-     return
+     admin <- isAdmin
+     return $
       --[("Processes",Exact "spiceyProcesses",ProcessListController)
       [("Packages",Prefix "Package" "list",PackageController)
       ,("New Package",Prefix "Package" "new",PackageController)
@@ -37,16 +38,17 @@ getRoutes =
       ,("Categories",Prefix "Category" "list",CategoryController)
       ,("New Category",Prefix "Category" "new",CategoryController)
       ,("List CurryModule",Prefix "CurryModule" "list",CurryModuleController)
-      ,("New CurryModule",Prefix "CurryModule" "new",CurryModuleController)
-      ,("List User",Prefix "User" "list",UserController)
-      ,("New User",Prefix "User" "new",UserController)
-      ,("List ValidationToken"
-       ,Prefix "ValidationToken" "list"
-       ,ValidationTokenController)
-      ,("New ValidationToken"
-       ,Prefix "ValidationToken" "new"
-       ,ValidationTokenController)
-      ,( "Registration"
+      ,("New CurryModule",Prefix "CurryModule" "new",CurryModuleController) ] ++
+      (if admin
+         then [("List User",Prefix "User" "list",UserController)
+              ,("New User",Prefix "User" "new",UserController)
+              ,("List ValidationToken"
+               ,Prefix "ValidationToken" "list" ,ValidationTokenController)
+              ,("New ValidationToken"
+               ,Prefix "ValidationToken" "new"
+               ,ValidationTokenController)]
+         else []) ++
+      [( "Registration"
        , Exact "Registration"
        , RegistrationController)
       ,( "Validation"

@@ -9,7 +9,8 @@
 
 module System.Authentication (
   getUserHash, randomPassword,
-  getSessionLogin, loginToSession, logoutFromSession
+  getSessionLogin, loginToSession, logoutFromSession,
+  isAdmin
  ) where
 
 import Config.Masala ( systemHashKey )

@@ -25,7 +25,7 @@ isLoggedIn =
 userOperationAllowed :: AccessType User -> UserSessionInfo -> IO AccessResult
 userOperationAllowed at sinfo =
   case at of
-    ListEntities -> isLoggedIn
+    ListEntities -> checkAdmin sinfo
     NewEntity    -> return AccessGranted
     ShowEntity user -> adminOrLoggedInAsUser user sinfo
     UpdateEntity user -> adminOrLoggedInAsUser user sinfo
@@ -81,10 +81,6 @@ curryModuleOperationAllowed at sinfo =
 --- entity is allowed.
 validationTokenOperationAllowed
   :: AccessType ValidationToken -> UserSessionInfo -> IO AccessResult
-validationTokenOperationAllowed at _ =
+validationTokenOperationAllowed at sinfo =
   case at of
-    ListEntities -> return AccessGranted
-    NewEntity -> return AccessGranted
-    ShowEntity _ -> return AccessGranted
-    DeleteEntity _ -> return AccessGranted
-    UpdateEntity _ -> return AccessGranted
+    _            -> checkAdmin sinfo

@@ -55,7 +55,7 @@ getRouteMenu = do
       Prefix s1 s2 -> if (s1,s2) `elem`
                          map (\e -> (e,"new"))
                              [ "CurryModule", "Version", "Package", "Category"
-                             , "User"] ++
+                             , "User", "ValidationToken" ] ++
                          map (\e -> (e,"list")) ["CurryModule", "Version"]
                         then getLinks restroutes
                         else [hrefNav ("?"++s1++"/"++s2) [htxt name]] :
