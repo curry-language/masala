@@ -289,7 +289,7 @@ getPage viewblock = case viewblock of
   _ -> do
     routemenu  <- getRouteMenu
     msg        <- getPageMessage
-    login      <- getSessionLogin
+    login      <- getSessionLoginName
     lasturl    <- getLastUrl
     withSessionCookie $ bootstrapPage favIcon cssIncludes jsIncludes
       spiceyTitle spiceyHomeBrand routemenu (rightTopMenu login)

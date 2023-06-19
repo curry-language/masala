@@ -25,7 +25,7 @@ import View.SpiceySystem
 --- Controller for login/logout.
 loginController :: Controller
 loginController = do
-  login <- getSessionLogin
+  login <- getSessionLoginName
   lasturl <- getLastUrl
   putSessionData loginViewData (login, lasturl)
   return [formElem loginFormDef]

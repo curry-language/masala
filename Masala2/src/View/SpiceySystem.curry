@@ -44,8 +44,10 @@ loginView (currlogin,lurl) =
     cryptpasswd <- getUserHash loginname passwdtxt
     loginSuccess <- checkLoginData loginname cryptpasswd
     if loginSuccess
-      then do loginToSession loginname
-              setPageMessage ("Logged in as: " ++ loginname)
+      then do role <- getRoleOfUser loginname
+              loginToSession loginname role
+              setPageMessage $
+                "Logged in as: " ++ loginname ++ " / role: " ++ role
       else return ()
     nextInProcessOr (redirectController "?") Nothing >>= getPage
 

@@ -22,8 +22,9 @@ import Model.Masala2 (User, userLoginName)
 --- The data associated to a user session.
 --- It contains formation about the login status of a user.
 --- The argument of the session data is `Nothing` if the user is not logged in.
---- Otherwise, it is `Maybe ln` where `ln` is the login name of the user.
-data UserSessionInfo = SD (Maybe String)
+--- Otherwise, it is `Maybe (ln,r)` where `ln` is the login name of the user
+--- and `r` is the role of the user.
+data UserSessionInfo = SD (Maybe (String,String))
   deriving (Read,Show)
 
 --- The initial (empty) session data
@@ -31,11 +32,12 @@ emptySessionInfo :: UserSessionInfo
 emptySessionInfo = SD Nothing
 
 --- Extracts the login status from the user session data.
-userLoginOfSession :: UserSessionInfo -> Maybe String
+userLoginOfSession :: UserSessionInfo -> Maybe (String,String)
 userLoginOfSession (SD login) = login
 
 --- Sets the login status of the user session data.
-setUserLoginOfSession :: Maybe String -> UserSessionInfo -> UserSessionInfo
+setUserLoginOfSession :: Maybe (String,String)
+                      -> UserSessionInfo -> UserSessionInfo
 setUserLoginOfSession login (SD _) = SD login
 
 --------------------------------------------------------------------------
@@ -54,13 +56,13 @@ updateUserSessionInfo = modifySessionData userSessionInfo emptySessionInfo
 
 --------------------------------------------------------------------------
 --- Is the current session an administrator session?
--- TODO: improve when user roles are implemented!
 isAdminSession :: UserSessionInfo -> Bool
 isAdminSession sinfo =
-  maybe False (== "admin") (userLoginOfSession sinfo)
+  --maybe False (== "admin") (userLoginOfSession sinfo)
+  maybe False ((== "Admin") . snd) (userLoginOfSession sinfo)
 
 loggedInAsUserSession :: User -> UserSessionInfo -> Bool
 loggedInAsUserSession user sinfo =
-  maybe False (== userLoginName user) (userLoginOfSession sinfo)
+  maybe False ((== userLoginName user) . snd) (userLoginOfSession sinfo)
 
 --------------------------------------------------------------------------

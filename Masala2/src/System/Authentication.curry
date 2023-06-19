@@ -9,7 +9,7 @@
 
 module System.Authentication (
   getUserHash, randomPassword,
-  getSessionLogin, loginToSession, logoutFromSession,
+  getSessionLogin, getSessionLoginName, loginToSession, logoutFromSession,
   isAdmin
  ) where
 
@@ -36,16 +36,21 @@ randomPassword = randomString
 --------------------------------------------------------------------------
 -- Operations for storing logins in the current session.
 
+--- Gets the login info of the current session
+--- (or the Nothing if there is no login).
+getSessionLogin :: IO (Maybe (String,String))
+getSessionLogin = fmap userLoginOfSession getUserSessionInfo
+
 --- Gets the login name of the current session
 --- (or the Nothing if there is no login).
-getSessionLogin :: IO (Maybe String)
-getSessionLogin = fmap userLoginOfSession getUserSessionInfo
+getSessionLoginName :: IO (Maybe String)
+getSessionLoginName = fmap (maybe Nothing (Just . fst)) getSessionLogin
 
 --- Stores a login name in the current session.
 --- The authentication has to be done before!
-loginToSession :: String -> IO ()
-loginToSession loginname =
-  updateUserSessionInfo (setUserLoginOfSession (Just loginname))
+loginToSession :: String -> String -> IO ()
+loginToSession loginname role =
+  updateUserSessionInfo (setUserLoginOfSession (Just (loginname, role)))
 
 --- removes the login name from the current session.
 logoutFromSession :: IO ()
@@ -53,7 +58,6 @@ logoutFromSession = updateUserSessionInfo (setUserLoginOfSession Nothing)
 
 --------------------------------------------------------------------------
 -- Returns true if admin is logged in.
--- TODO: improve when user roles are implemented!
 isAdmin :: IO Bool
 isAdmin = getUserSessionInfo >>= return . isAdminSession
 

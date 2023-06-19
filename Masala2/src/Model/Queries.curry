@@ -59,6 +59,13 @@ checkLoginData loginName password = fmap (not . null) $ runQ
          From User as u
          Where u.LoginName = { loginName } And u.Password = { password };''
 
+-- Gets the role of a user with a given login name.
+getRoleOfUser :: String -> IO String
+getRoleOfUser loginName = fmap (\rs -> if null rs then "" else head rs) $ runQ
+  ``sql* Select u.Role
+         From User as u
+         Where u.LoginName = { loginName };''
+
 {-
 -- Requires currypp of 07/06/2023 or newer:
 addUser :: String -> String -> String -> String -> DBAction ()
