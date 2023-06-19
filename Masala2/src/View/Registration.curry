@@ -1,5 +1,5 @@
 module View.Registration
-  ( wRegistration ) where
+  ( wRegistration, wMasalaPassword, wPasswords ) where
 
 import Data.List
 import Data.Time
@@ -19,10 +19,29 @@ wRegistration =
     wRegistrationSpec
     (renderLabels registrationLabelList)
 
-wRegistrationSpec :: WuiSpec (String, String, String, String, String)
-wRegistrationSpec = w5Tuple wRequiredString wRequiredString wMasalaEmail wMasalaPassword wMasalaPassword
+{-
+wRegistrationSpec' :: WuiSpec (String, String, String, String, String)
+wRegistrationSpec' = w5Tuple wRequiredString wRequiredString wMasalaEmail wMasalaPassword wMasalaPassword
   `withCondition` checkIfPasswordsEqual -- (\_ -> False)
   `withError` "The passwords must be equal"
+-}
+
+wRegistrationSpec :: WuiSpec (String, String, String, String, String)
+wRegistrationSpec =
+  transformWSpec (\ ((a,b,c),(d,e)) -> (a,b,c,d,e),
+                  \ (a,b,c,d,e) -> ((a,b,c),(d,e)))
+    (wJoinTuple wLoginNameEmail wPasswords)
+
+wLoginNameEmail :: WuiSpec (String, String, String)
+wLoginNameEmail = wTriple wRequiredString wRequiredString wMasalaEmail
+
+wPasswords :: WuiSpec (String, String)
+wPasswords = wPair wMasalaPassword wMasalaPassword
+  `withCondition` (\ (p1,p2) -> p1 == p2)
+  `withError` "The passwords must be equal"
+  `withRendering`
+    (\hes -> inline (intersperse (textstyle "spicey_label" "Repeat password:")
+                                 hes))
 
 wMasalaEmail :: WuiSpec String
 wMasalaEmail = wRequiredString
@@ -30,7 +49,7 @@ wMasalaEmail = wRequiredString
   `withError` "The email must be a correct email address"
 
 checkEmailSyntax :: String -> Bool
-checkEmailSyntax _ = True
+checkEmailSyntax s = '@' `elem` s
 
 wMasalaPassword :: WuiSpec String
 wMasalaPassword = wPassword

@@ -15,6 +15,7 @@ import Config.EntityRoutes
 import System.SessionInfo
 import System.Spicey
 import View.EntitiesToHtml
+import View.Registration
 
 --- The WUI specification for the entity type User.
 --- It also includes fields for associated entities.
@@ -192,34 +193,10 @@ wUserTypeEdit user maintainerPackageList watchingPackageList =
 wPasswordEdit :: WuiSpec (User,String,String,String)
 wPasswordEdit =
   withRendering
-      ((w4Tuple
-        wHidden
-        wMasalaPassword
-        wMasalaPassword
-        wMasalaPassword
-        --wPassword
-        --(withCondition wPassword (== x))
-        --(withCondition wPassword (== x))
-      )
-      `withCondition` checkIfPasswordsEqual -- (\_ -> False)
-      `withError` "The passwords must be equal")
-      (renderLabels ([textstyle "spicey_label spicey_label_for_type_string" ""]:passwordEditLabelList))
-    --where
-      --x free  
-
-wMasalaPassword :: WuiSpec String
-wMasalaPassword = wPassword
-  `withCondition` checkIfPasswordFine
-  `withError` "The password must be at least 8 symbols long"
-
-checkIfPasswordFine :: String -> Bool
-checkIfPasswordFine = checkPasswordLength
-
-checkPasswordLength :: String -> Bool
-checkPasswordLength uncryptpasswd = length uncryptpasswd >= 8
-
-checkIfPasswordsEqual :: (User, String, String, String) -> Bool
-checkIfPasswordsEqual (_, _, password1, password2) = password1 == password2
+      (transformWSpec (\ ((a,b),(c,d)) -> (a,b,c,d),
+                       \ (a,b,c,d) -> ((a,b),(c,d)))
+          (wJoinTuple (wPair wHidden wMasalaPassword) wPasswords))
+      (renderLabels passwordEditLabelList)
 
 --- Supplies a view to show the details of a User.
 showUserView

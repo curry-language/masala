@@ -83,9 +83,10 @@ userEditLabelList =
 
 passwordEditLabelList :: HTML h => [[h]]
 passwordEditLabelList =
-  [[textstyle "spicey_label spicey_label_for_type_string" "Old Password"]
-  ,[textstyle "spicey_label spicey_label_for_type_string" "New Password"]
-  ,[textstyle "spicey_label spicey_label_for_type_string" "New Password (again)"]]
+  [[textstyle "spicey_label" ""]
+  ,[textstyle "spicey_label" "Old Password"]
+  ,[textstyle "spicey_label" "New Password"]
+  ,[textstyle "spicey_label" "New Password (again)"]]
 
 --- The list view of a Package entity in HTML format.
 --- This view is used in a row of a table of all entities.
@@ -287,9 +288,9 @@ validationTokenLabelList =
 --- The labels of a CurryModule entity, as used in HTML tables.
 registrationLabelList :: HTML h => [[h]]
 registrationLabelList =
-  [ [textstyle "spicey_label spicey_label_for_type_string" "Login name"]
-  , [textstyle "spicey_label spicey_label_for_type_string" "Public name"]
-  , [textstyle "spicey_label spicey_label_for_type_string" "Email"]
-  , [textstyle "spicey_label spicey_label_for_type_string" "Password"]
-  , [textstyle "spicey_label spicey_label_for_type_string" "Password (repeat)"]
+  [ [textstyle "spicey_label" "Login name"]
+  , [textstyle "spicey_label" "Public name"]
+  , [textstyle "spicey_label" "Email"]
+  , [textstyle "spicey_label" "Password"]
+  , [textstyle "spicey_label" "Password (repeat)"]
   ]
