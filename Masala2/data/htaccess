@@ -1,7 +1,6 @@
 AuthType Basic
 AuthName Spicey
 AuthUserFile /dev/null
-AuthGroupFile /dev/null
 
 <Limit GET>
 <IfVersion < 2.3>

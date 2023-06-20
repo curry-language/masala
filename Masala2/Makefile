@@ -78,10 +78,12 @@ deploy: checkdeploy
 	cp -r public/* $(WEBSERVERDIR)
 	chmod -R go+rX $(WEBSERVERDIR)
 	mkdir -p $(DATADIR)
+	cp data/htaccess $(DATADIR)/.htaccess
 	chmod 700 $(DATADIR)
 	# recreate directory for storing local session data:
 	/bin/rm -rf $(WEBSERVERDIR)/sessiondata
 	mkdir -p $(WEBSERVERDIR)/sessiondata
+	cp data/htaccess $(WEBSERVERDIR)/sessiondata/.htaccess
 	chmod 700 $(WEBSERVERDIR)/sessiondata
 
 $(WEBSERVERDIR)/spicey.cgi: src/*.curry src/*/*.curry
