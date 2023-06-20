@@ -13,6 +13,8 @@ import Model.Masala2
 
 import Data.Time
 
+import Config.Roles
+
 -----------------------------------------------------------------------
 -- Checks whether the given user login name is available, i.e.,
 -- not already used.
@@ -57,7 +59,7 @@ checkLoginData :: String -> String -> IO Bool
 checkLoginData loginName password = fmap (not . null) $ runQ
   ``sql* Select *
          From User as u
-         Where u.LoginName = { loginName } And u.Password = { password };''
+         Where u.LoginName = { loginName } And u.Password = { password } And u.Role != { roleInvalid };''
 
 -- Gets the role of a user with a given login name.
 getRoleOfUser :: String -> IO String
