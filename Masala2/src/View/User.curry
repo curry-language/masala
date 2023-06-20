@@ -192,11 +192,10 @@ wUserTypeEdit user maintainerPackageList watchingPackageList =
 
 wPasswordEdit :: WuiSpec (User,String,String,String)
 wPasswordEdit =
-  withRendering
-      (transformWSpec (\ ((a,b),(c,d)) -> (a,b,c,d),
-                       \ (a,b,c,d) -> ((a,b),(c,d)))
-          (wJoinTuple (wPair wHidden wMasalaPassword) wPasswords))
-      (renderLabels passwordEditLabelList)
+  w4Tuple wHidden wMasalaPassword wMasalaPassword wMasalaPassword
+    `withCondition` (\ (_,_,newp1,newp2) -> newp1 == newp2)
+    `withError` "The new passwords must be equal"
+    `withRendering` (renderLabels passwordEditLabelList)
 
 --- Supplies a view to show the details of a User.
 showUserView

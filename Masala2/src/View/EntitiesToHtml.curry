@@ -85,7 +85,7 @@ passwordEditLabelList :: HTML h => [[h]]
 passwordEditLabelList =
   [[textstyle "spicey_label" ""]
   ,[textstyle "spicey_label" "Old Password"]
-  ,[textstyle "spicey_label" "New Password"]
+  ,[textstyle "spicey_label" "New Password (at least 8 characters)"]
   ,[textstyle "spicey_label" "New Password (again)"]]
 
 --- The list view of a Package entity in HTML format.
@@ -291,6 +291,6 @@ registrationLabelList =
   [ [textstyle "spicey_label" "Login name"]
   , [textstyle "spicey_label" "Public name"]
   , [textstyle "spicey_label" "Email"]
-  , [textstyle "spicey_label" "Password"]
+  , [textstyle "spicey_label" "Password (at least 8 characters)"]
   , [textstyle "spicey_label" "Password (repeat)"]
   ]
