@@ -1,4 +1,4 @@
-module Controller.User ( mainUserController, newUserForm, editUserForm, editPasswordForm ) where
+module Controller.User ( mainUserController, newUserForm, editUserForm, editUserFormAdmin, editPasswordForm ) where
 
 import Data.Time
 import HTML.Base
@@ -99,6 +99,61 @@ editUserController :: User -> Controller
 editUserController userToEdit =
   checkAuthorization (userOperationAllowed (UpdateEntity userToEdit))
    $ (\sinfo ->
+     do setParWuiStore editUserStore
+         (sinfo,userToEdit)
+         userToEdit
+        if isAdminSession sinfo
+          then return [formElem editUserFormAdmin]
+          else return [formElem editUserForm])
+
+--- A WUI form to edit a User entity.
+--- The default values for the fields are stored in 'editUserStore'.
+editUserForm
+  :: HtmlFormDef ((UserSessionInfo,User)
+                 ,WuiStore User)
+editUserForm =
+  pwui2FormDef "Controller.User.editUserForm" editUserStore
+   (\(_,user) -> wUserEditType user)
+   (\_ userToEdit ->
+     checkAuthorization (userOperationAllowed (UpdateEntity userToEdit))
+      (\_ ->
+        transactionController (runT (updateUser userToEdit))
+         (const
+           (do setPageMessage "User updated"
+               nextInProcessOr (redirectController (showRoute userToEdit))
+                Nothing))))
+   (\(sinfo,entity) ->
+     renderWUI sinfo "Edit User" "Change" (listRoute entity) ())
+
+editUserFormAdmin
+  :: HtmlFormDef ((UserSessionInfo,User)
+                 ,WuiStore User)
+editUserFormAdmin =
+  pwui2FormDef "Controller.User.editUserFormAdmin" editUserStore
+   (\(_,user) -> wUserEditTypeAdmin user)
+   (\_ userToEdit ->
+     checkAuthorization (userOperationAllowed (UpdateEntity userToEdit))
+      (\_ ->
+        transactionController (runT (updateUser userToEdit))
+         (const
+           (do setPageMessage "User updated"
+               nextInProcessOr (redirectController (showRoute userToEdit))
+                Nothing))))
+   (\(sinfo,entity) ->
+     renderWUI sinfo "Edit User" "Change" (listRoute entity) ())
+
+--- The data stored for executing the edit WUI form.
+editUserStore
+  :: SessionStore ((UserSessionInfo,User)
+                  ,WuiStore User)
+editUserStore = sessionStore "editUserStore"
+
+{-        
+--- Shows a form to edit the given User entity.
+editUserController :: User -> Controller
+editUserController userToEdit =
+  checkAuthorization (userOperationAllowed (UpdateEntity userToEdit))
+   $ (\sinfo ->
      do allPackages <- runQ queryAllPackages
         --allPackages <- runQ queryAllPackages
         maintainerPackages <- runJustT (getMaintainerUserPackages userToEdit)
@@ -133,6 +188,7 @@ editUserStore
   :: SessionStore ((UserSessionInfo,User,[Package],[Package])
                   ,WuiStore (User,[Package],[Package]))
 editUserStore = sessionStore "editUserStore"
+-}
 
 --- Shows a form to edit the password of the given User entity.
 editPasswordController :: User -> Controller

@@ -1,6 +1,7 @@
 module View.User
-  ( wUser, tuple2User, user2Tuple, wUserType
-  , wUserEdit, tuple2UserEdit, user2TupleEdit, wUserTypeEdit
+  ( wUser, tuple2User, user2Tuple
+  , wUserEdit, tuple2UserEdit, user2TupleEdit, wUserEditType
+  , wUserEditAdmin, tuple2UserEditAdmin, user2TupleEditAdmin, wUserEditTypeAdmin
   , wPasswordEdit
   , showUserView, showUserViewAdmin, listUserView )
 where
@@ -12,6 +13,7 @@ import HTML.Styles.Bootstrap4
 import HTML.WUI
 import Model.Masala2
 import Config.EntityRoutes
+import Config.Roles
 import System.SessionInfo
 import System.Spicey
 import View.EntitiesToHtml
@@ -19,6 +21,47 @@ import View.Registration
 
 --- The WUI specification for the entity type User.
 --- It also includes fields for associated entities.
+wUserEdit
+  :: WuiSpec (String -- LoginName
+             ,String -- PublicName
+             ,String -- Email
+             ,String -- PublicEmail
+             )
+wUserEdit =
+  withRendering
+   (w4Tuple
+    (wConstant stringToHtml) -- LoginName
+    wRequiredString -- PublicName
+    (wConstant stringToHtml) -- Email
+    wString -- PublicEmail
+   )
+   (renderLabels userLabelList)
+
+wUserEditAdmin
+  :: String -- Current Role
+  -> WuiSpec (String -- LoginName
+             ,String -- PublicName
+             ,String -- Email
+             ,String -- PublicEmail
+             ,String -- Role
+             )
+wUserEditAdmin role =
+  withRendering
+   (w5Tuple
+    (wConstant stringToHtml) -- LoginName
+    (wConstant stringToHtml) -- PublicName
+    (wConstant stringToHtml) -- Email
+    (wConstant stringToHtml) -- PublicEmail
+    (wSelect id roles) -- Role
+   )
+   (renderLabels userLabelListAdmin)
+  where
+    roles = if role == roleAdmin
+              then [roleAdmin]
+              else if role == roleInvalid
+                then [roleInvalid]
+                else [roleNotTrusted, roleTrusted]
+
 wUser
   :: [Package]
   -> [Package]
@@ -51,7 +94,7 @@ wUser maintainerPackageList watchingPackageList =
       watchingPackageList) -- Watching
    )
    (renderLabels userLabelList)
-
+{-
 wUserEdit
   :: [Package]
   -> [Package]
@@ -75,6 +118,8 @@ wUserEdit maintainerPackageList watchingPackageList =
         watchingPackageList) -- Watching
     )
     (renderLabels userEditLabelList)
+-}
+
 
 --- Transformation from data of a WUI form to entity type User.
 tuple2User
@@ -110,6 +155,7 @@ tuple2User
   ,maintainerPackages
   ,watchingPackages)
 
+{-
 tuple2UserEdit
   :: User
   -> (String
@@ -133,6 +179,7 @@ tuple2UserEdit
     loginName
   ,maintainerPackages
   ,watchingPackages)
+-}
 
 --- Transformation from entity type User to a tuple
 --- which can be used in WUI specifications.
@@ -160,6 +207,7 @@ user2Tuple (user,maintainerPackages,watchingPackages) =
   ,maintainerPackages
   ,watchingPackages)
 
+{-
 user2TupleEdit
   :: (User,[Package],[Package])
   -> (String
@@ -175,9 +223,60 @@ user2TupleEdit (user,maintainerPackages,watchingPackages) =
   ,userPublicEmail user
   ,maintainerPackages
   ,watchingPackages)
+-}
+
+tuple2UserEdit
+  :: User
+  -> (String, String, String, String)
+  -> User
+tuple2UserEdit user (_, publicName, _, publicEmail) =
+  setUserPublicEmail 
+    (setUserPublicName user publicName)
+    publicEmail
+
+tuple2UserEditAdmin
+  :: User
+  -> (String, String, String, String, String)
+  -> User
+tuple2UserEditAdmin user (_, publicName, _, publicEmail, role) =
+  setUserRole 
+    (setUserPublicEmail 
+      (setUserPublicName user publicName)
+      publicEmail)
+    role
+
+user2TupleEdit
+  :: User
+  -> (String, String, String, String)
+user2TupleEdit user =
+  (userLoginName user
+  ,userPublicName user
+  ,userEmail user
+  ,userPublicEmail user)
+
+user2TupleEditAdmin
+  :: User
+  -> (String, String, String, String, String)
+user2TupleEditAdmin user =
+  (userLoginName user
+  ,userPublicName user
+  ,userEmail user
+  ,userPublicEmail user
+  ,userRole user)
 
 --- WUI Type for editing or creating User entities.
 --- Includes fields for associated entities.
+wUserEditType :: User -> WuiSpec User
+wUserEditType user =
+  transformWSpec (tuple2UserEdit user, user2TupleEdit) wUserEdit
+
+wUserEditTypeAdmin :: User -> WuiSpec User
+wUserEditTypeAdmin user =
+  transformWSpec
+    (tuple2UserEditAdmin user, user2TupleEditAdmin)
+    (wUserEditAdmin (userRole user))
+
+{-
 wUserType
   :: User -> [Package] -> [Package] -> WuiSpec (User,[Package],[Package])
 wUserType user maintainerPackageList watchingPackageList =
@@ -189,6 +288,7 @@ wUserTypeEdit
 wUserTypeEdit user maintainerPackageList watchingPackageList =
   transformWSpec (tuple2UserEdit user,user2TupleEdit)
     (wUserEdit maintainerPackageList watchingPackageList)
+-}
 
 wPasswordEdit :: WuiSpec (User,String,String,String)
 wPasswordEdit =

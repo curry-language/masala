@@ -71,6 +71,7 @@ userToDetailsView user maintainerPackages watchingPackages =
       ,[htxt (unwords (map packageToShortView watchingPackages))]]
 -}
 
+{-
 userToDetailsViewLess :: HTML h => User -> [Package] -> [Package] -> [h]
 userToDetailsViewLess user maintainerPackages watchingPackages =
   [spTable
@@ -83,8 +84,25 @@ userToDetailsViewLess user maintainerPackages watchingPackages =
       ,[stringToHtml (userPublicEmail user)]
       ,[htxt (unwords (map packageToShortView maintainerPackages))]
       ,[htxt (unwords (map packageToShortView watchingPackages))]]
+-}
 
 --- The labels of a User entity, as used in HTML tables.
+userLabelList :: HTML h => [[h]]
+userLabelList =
+  [[textstyle "spicey_label spicey_label_for_type_string" "LoginName"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "PublicName"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Email"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "PublicEmail"]]
+
+userLabelListAdmin :: HTML h => [[h]]
+userLabelListAdmin =
+  [[textstyle "spicey_label spicey_label_for_type_string" "LoginName"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "PublicName"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Email"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "PublicEmail"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Role"]]
+
+{-
 userLabelList :: HTML h => [[h]]
 userLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "LoginName"]
@@ -106,6 +124,7 @@ userEditLabelList =
   ,[textstyle "spicey_label spicey_label_for_type_string" "PublicEmail"]
   ,[textstyle "spicey_label spicey_label_for_type_relation" "Maintains Packages"]
   ,[textstyle "spicey_label spicey_label_for_type_relation" "Watching Packages"]]
+-}
 
 passwordEditLabelList :: HTML h => [[h]]
 passwordEditLabelList =
