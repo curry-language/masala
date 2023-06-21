@@ -7,6 +7,8 @@ import HTML.WUI
 import Model.Masala2
 import Config.EntityRoutes
 import Config.UserProcesses
+import Config.Roles
+import Model.Queries
 import System.SessionInfo
 import System.Authentication
 import System.Authorization
@@ -37,6 +39,7 @@ mainUserController =
        ["list"] -> listUserController
        ["new"] -> newUserController
        ["show",s] -> controllerOnKey s showUserController
+       ["profile"] -> showProfileController
        ["edit",s] -> controllerOnKey s editUserController
        ["edit",s,"Password"] -> controllerOnKey s editPasswordController
        ["delete",s] -> controllerOnKey s deleteUserController
@@ -231,10 +234,33 @@ showUserController :: User -> Controller
 showUserController user =
   checkAuthorization (userOperationAllowed (ShowEntity user))
    $ (\sinfo ->
+      if isAdminSession sinfo
+        then return
+          (showUserViewAdmin sinfo user)
+        else return 
+          (showUserView sinfo user)
+        )
+
+showProfileController :: Controller
+showProfileController = do
+  loginInfo <- getSessionLogin
+  case loginInfo of 
+    Nothing -> displayUrlError
+    Just (loginName, role) -> do
+      maybeuser <- getUserByName loginName
+      case maybeuser of 
+        Nothing -> displayError ("User " ++ loginName ++ " does not exist")
+        Just user -> showUserController user
+{-
+showUserController :: User -> Controller
+showUserController user =
+  checkAuthorization (userOperationAllowed (ShowEntity user))
+   $ (\sinfo ->
      do maintainerPackages <- runJustT (getMaintainerUserPackages user)
         watchingPackages <- runJustT (getWatchingUserPackages user)
         return
          (showUserView sinfo user maintainerPackages watchingPackages))
+-}
 
 --- Associates given entities with the User entity
 --- with respect to the `Maintainer` relation.

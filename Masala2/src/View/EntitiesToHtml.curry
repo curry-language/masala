@@ -28,6 +28,31 @@ userToShortView user = userPublicName user
 
 --- The detailed view of a User entity in HTML format.
 --- It also takes associated entities for every associated entity type.
+userToDetailsView :: HTML h => User -> [h]
+userToDetailsView user =
+  [spTable
+    (map (\(label,value) -> [label,value]) (zip userLabelList detailedView))]
+  where
+    detailedView =
+      [[stringToHtml (userLoginName user)]
+      ,[stringToHtml (userPublicName user)]
+      ,[stringToHtml (userEmail user)]
+      ,[stringToHtml (userPublicEmail user)]]
+
+--- The detailed view of a User entity in HTML format.
+--- It also takes associated entities for every associated entity type.
+userToDetailsViewAdmin :: HTML h => User -> [h]
+userToDetailsViewAdmin user =
+  [spTable
+    (map (\(label,value) -> [label,value]) (zip userLabelList detailedView))]
+  where
+    detailedView =
+      [[stringToHtml (userLoginName user)]
+      ,[stringToHtml (userPublicName user)]
+      ,[stringToHtml (userEmail user)]
+      ,[stringToHtml (userPublicEmail user)]
+      ,[stringToHtml (userRole user)]]
+{-
 userToDetailsView :: HTML h => User -> [Package] -> [Package] -> [h]
 userToDetailsView user maintainerPackages watchingPackages =
   [spTable
@@ -44,6 +69,7 @@ userToDetailsView user maintainerPackages watchingPackages =
       ,[maybeDateToHtml (userLastLogin user)]
       ,[htxt (unwords (map packageToShortView maintainerPackages))]
       ,[htxt (unwords (map packageToShortView watchingPackages))]]
+-}
 
 userToDetailsViewLess :: HTML h => User -> [Package] -> [Package] -> [h]
 userToDetailsViewLess user maintainerPackages watchingPackages =

@@ -1,5 +1,6 @@
 module Config.RoutesData where
 
+import Model.Queries
 import System.Authentication
 
 data ControllerReference = ProcessListController
@@ -54,5 +55,13 @@ getRoutes =
       ,( "Validation"
        , Exact "Validation"
        , ValidationController)
-      ,(maybe "Login" (const "Logout") login,Exact "login",LoginController)
+      ] ++
+      case login of 
+         Nothing -> []
+         Just (loginName, role) -> 
+                        [(loginName
+                        ,Prefix "User" "profile"
+                        ,UserController)]
+      ++
+      [(maybe "Login" (const "Logout") login,Exact "login",LoginController)
       ,("default",Always,PackageController)]

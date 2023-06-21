@@ -63,6 +63,6 @@ isAdminSession sinfo =
 
 loggedInAsUserSession :: User -> UserSessionInfo -> Bool
 loggedInAsUserSession user sinfo =
-  maybe False ((== userLoginName user) . snd) (userLoginOfSession sinfo)
+  maybe False ((== userLoginName user) . fst) (userLoginOfSession sinfo)
 
 --------------------------------------------------------------------------

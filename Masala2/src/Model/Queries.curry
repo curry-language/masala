@@ -68,6 +68,12 @@ getRoleOfUser loginName = fmap (\rs -> if null rs then "" else head rs) $ runQ
          From User as u
          Where u.LoginName = { loginName };''
 
+getUserByName :: String -> IO (Maybe User)
+getUserByName loginName = fmap listToMaybe $ runQ
+  ``sql* Select *
+         From User as u
+         Where u.LoginName = { loginName };''
+
 {-
 -- Requires currypp of 07/06/2023 or newer:
 addUser :: String -> String -> String -> String -> DBAction ()

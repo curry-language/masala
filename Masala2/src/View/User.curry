@@ -2,7 +2,7 @@ module View.User
   ( wUser, tuple2User, user2Tuple, wUserType
   , wUserEdit, tuple2UserEdit, user2TupleEdit, wUserTypeEdit
   , wPasswordEdit
-  , showUserView, listUserView )
+  , showUserView, showUserViewAdmin, listUserView )
 where
 
 import Data.List
@@ -199,12 +199,28 @@ wPasswordEdit =
 
 --- Supplies a view to show the details of a User.
 showUserView
+  :: UserSessionInfo -> User -> [BaseHtml]
+showUserView _ user =
+  userToDetailsView user
+   ++ [hrefPrimSmButton (editRoute user) [htxt "Change data"]]
+   ++ [hrefPrimSmButton (editRoute user ++ "/Password") [htxt "Change Password"]]
+
+--- Supplies a view to show the details of a User for the admin.
+showUserViewAdmin
+  :: UserSessionInfo -> User -> [BaseHtml]
+showUserViewAdmin _ user =
+  userToDetailsViewAdmin user
+   ++ [hrefPrimSmButton (editRoute user) [htxt "Change data"]]
+
+{-
+showUserView
   :: UserSessionInfo -> User -> [Package] -> [Package] -> [BaseHtml]
 showUserView _ user maintainerPackages watchingPackages =
   --userToDetailsView user maintainerPackages watchingPackages
   userToDetailsViewLess user maintainerPackages watchingPackages
    ++ [hrefPrimSmButton (editRoute user ++ "/Password") [htxt "Change Password"]]
    ++ [hrefPrimSmButton (listRoute user) [htxt "To User list"]]
+-}
 
 --- Compares two User entities. This order is used in the list view.
 leqUser :: User -> User -> Bool
