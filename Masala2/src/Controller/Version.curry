@@ -293,9 +293,15 @@ showVersionController version =
         exportingCurryModules <- runJustT (getExportingVersionCurryModules version)
         cats <- runQ $ getPackageVersionCategories package version
         maintainers <- getPackageMaintainers package
+        currentUser <- case userLoginOfSession sinfo of 
+          Nothing -> return Nothing
+          Just (loginName, _) -> getUserByName loginName
+        watchesPackage <- case currentUser of 
+          Nothing -> return False
+          Just user -> checkUserWatches user package
         return
          (showVersionView sinfo version package uploadUser maintainers cats
-            allversions dependingPackages exportingCurryModules))
+            allversions dependingPackages exportingCurryModules watchesPackage currentUser))
 
 --- Associates given entities with the Version entity
 --- with respect to the `Depending` relation.

@@ -46,6 +46,7 @@ mainUserController =
        ["edit",s,"Password"] -> controllerOnKey s editPasswordController
        ["delete",s] -> controllerOnKey s deleteUserController
        ["destroy",s] -> controllerOnKey s destroyUserController
+       ["togglewatching",s,pkg] -> controllerOnKey s (toggleWatchingUserController pkg)
        _ -> displayUrlError
 
 --- Shows a form to create a new User entity.
@@ -323,6 +324,28 @@ showPackagesController listName user = do
           "Watching" -> return $ allPackagesView sinfo "Watched Packages" packages
           _ -> displayUrlError
       )
+
+toggleWatchingUserController :: String -> User -> Controller
+toggleWatchingUserController pkg user = do 
+  checkAuthorization (userOperationAllowed (UpdateEntity user))
+    $ (\sinfo -> do
+      case readPackageKey pkg of 
+        Nothing -> displayError "Package does not exist!"
+        Just pkgKey -> do
+          packageResult <- runT $ getPackage pkgKey
+          case packageResult of 
+            Left err -> displayError "Some error occured while getting package"
+            Right package -> do
+              watchesPackage <- checkUserWatches user package
+              case watchesPackage of 
+                False -> do 
+                  runT $ newWatching (userKey user) pkgKey
+                  setPageMessage "Now watching package"
+                True -> do
+                  runT $ deleteWatching (userKey user) pkgKey
+                  setPageMessage "Not watching package anymore"
+              redirectController (showRoute package)
+    )
 {-
 showUserController :: User -> Controller
 showUserController user =

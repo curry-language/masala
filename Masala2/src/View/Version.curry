@@ -152,9 +152,9 @@ showStandardVersionView _ version relatedUser relatedPackage packages
 showVersionView
   :: UserSessionInfo
   -> Version -> Package -> User -> [User] -> [Category] -> [Version]
-  -> [Package] -> [CurryModule] -> [BaseHtml]
+  -> [Package] -> [CurryModule] -> Bool -> Maybe User -> [BaseHtml]
 showVersionView sinfo version package uploader maintainers cats allversions
-                deppackages exportedmods =
+                deppackages exportedmods watchesPackage currentUser =
   [blockstyle "container-fluid"
      ([blockstyle "row"
         ([blockstyle (bsCols 4)
@@ -189,6 +189,15 @@ showVersionView sinfo version package uploader maintainers cats allversions
 
   contents =
     [ par [htxt $ versionDescription version] ] ++
+    ( case currentUser of 
+        Nothing -> []
+        Just currentUser' ->
+          [blockstyle "badge badge-secondary"
+                  [ bold [htxt $ "Watched: "], htxt $ show watchesPackage
+                  , nbsp
+                  , hrefWarnBadge (entityRoute "togglewatching" currentUser' ++ "/" ++ showPackageKey package)
+                            [htxt $ if watchesPackage then "Stop watching" else "Start watching"]]]
+    ) ++
     (if isAdminSession sinfo
        then [blockstyle "badge badge-secondary"
               [ bold [htxt $ "Abandoned: "], htxt $ show pkgAbandoned
