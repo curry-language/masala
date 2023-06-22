@@ -16,6 +16,7 @@ import System.AuthorizedActions
 import System.Spicey
 import System.PreludeHelpers
 import View.EntitiesToHtml
+import View.Package (allPackagesView)
 import View.User
 import Database.CDBI.Connection
 
@@ -39,6 +40,7 @@ mainUserController =
        ["list"] -> listUserController
        ["new"] -> newUserController
        ["show",s] -> controllerOnKey s showUserController
+       ["show",s,listName] -> controllerOnKey s (showPackagesController listName)
        ["profile"] -> showProfileController
        ["edit",s] -> controllerOnKey s editUserController
        ["edit",s,"Password"] -> controllerOnKey s editPasswordController
@@ -307,6 +309,20 @@ showProfileController = do
       case maybeuser of 
         Nothing -> displayError ("User " ++ loginName ++ " does not exist")
         Just user -> showUserController user
+
+showPackagesController :: String -> User -> Controller
+showPackagesController listName user = do
+  checkAuthorization (userOperationAllowed (ShowEntity user))
+    $ (\sinfo -> do
+        packages <- case listName of
+          "Maintaining" -> runQ (getMaintainerUserPackages user)
+          "Watching" -> runQ (getWatchingUserPackages user)
+          _ -> return []
+        case listName of 
+          "Maintaining" -> return $ allPackagesView sinfo "Maintained Packages" packages
+          "Watching" -> return $ allPackagesView sinfo "Watched Packages" packages
+          _ -> displayUrlError
+      )
 {-
 showUserController :: User -> Controller
 showUserController user =

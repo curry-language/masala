@@ -304,6 +304,8 @@ showUserView _ user =
   userToDetailsView user
    ++ [hrefPrimSmButton (editRoute user) [htxt "Change data"]]
    ++ [hrefPrimSmButton (editRoute user ++ "/Password") [htxt "Change Password"]]
+   ++ [hrefPrimSmButton (showRoute user ++ "/Maintaining") [htxt "Maintained Packages"]]
+   ++ [hrefPrimSmButton (showRoute user ++ "/Watching") [htxt "Watched Packages"]]
 
 --- Supplies a view to show the details of a User for the admin.
 showUserViewAdmin
@@ -311,6 +313,8 @@ showUserViewAdmin
 showUserViewAdmin _ user =
   userToDetailsViewAdmin user
    ++ [hrefPrimSmButton (editRoute user) [htxt "Change data"]]
+   ++ [hrefPrimSmButton (showRoute user ++ "/Maintaining") [htxt "Maintained Packages"]]
+   ++ [hrefPrimSmButton (showRoute user ++ "/Watching") [htxt "Watched Packages"]]
 
 {-
 showUserView

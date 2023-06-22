@@ -71,9 +71,9 @@ listPackageView sinfo packages =
                ,[hrefPrimBadge (deleteRoute package) [htxt "Delete"]]])
 
 --- A view for a given list of Package entities.
-allPackagesView :: UserSessionInfo -> [Package] -> [BaseHtml]
-allPackagesView _ packages =
-  [ h1 [htxt "Index of all packages"]
+allPackagesView :: UserSessionInfo -> String -> [Package] -> [BaseHtml]
+allPackagesView _ title packages =
+  [ h1 [htxt title]
   , par (intersperse nbsp (map listPackage (sortBy leqPackage packages)))]
   where
     listPackage package =
