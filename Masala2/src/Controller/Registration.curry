@@ -50,14 +50,13 @@ registrationForm
 registrationForm =
   pwui2FormDef "Controller.Registration.registrationForm" registrationStore
    (\_ -> wRegistration)
-   (\_ (loginName, publicName, email, uncryptpasswd, debug) ->
+   (\_ (loginName, publicName, email, uncryptpasswd, _) ->
      checkAuthorization (userOperationAllowed NewEntity)
       (\_ -> do
         cryptpasswd <- getUserHash loginName uncryptpasswd
         usernameAvailable <- checkUserNameAvailable loginName
         emailAvailable <- checkEmailAvailable email
         let check = usernameAvailable && emailAvailable
-        let debugPassword = ", Password1: " ++ uncryptpasswd ++ ", Password2: " ++ debug
 
         if check
           then do

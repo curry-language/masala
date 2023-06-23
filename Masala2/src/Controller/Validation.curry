@@ -34,7 +34,9 @@ validationController = do
                     validationResult <- validateUser (validationTokenUserValidatingKey validationToken)
                     case validationResult of 
                         Left err -> displayError "Validation failed"
-                        Right _ -> displayError "User is validated."
+                        Right _ -> do
+                            setPageMessage "Successfully validated"
+                            redirectController "?"
         _ -> displayUrlError
 
 validateUser :: UserID -> IO (SQLResult ())
