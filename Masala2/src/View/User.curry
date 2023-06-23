@@ -346,7 +346,7 @@ leqUser x1 x2 =
 listUserView :: UserSessionInfo -> [User] -> [BaseHtml]
 listUserView sinfo users =
   [h1 [htxt "User list"]
-  ,spTable ([take 8 userLabelList] ++ map listUser (sortBy leqUser users))]
+  ,spTable ([take 8 userLabelListAdmin] ++ map listUser (sortBy leqUser users))]
   where
     listUser user =
       userToListView user

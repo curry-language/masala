@@ -17,9 +17,10 @@ userToListView user =
   ,[stringToHtml (userEmail user)]
   ,[stringToHtml (userPublicEmail user)]
   ,[stringToHtml (userRole user)]
-  ,[stringToHtml (userPassword user)]
-  ,[stringToHtml (userToken user)]
-  ,[maybeDateToHtml (userLastLogin user)]]
+  --,[stringToHtml (userPassword user)]
+  --,[stringToHtml (userToken user)]
+  --,[maybeDateToHtml (userLastLogin user)]
+  ]
 
 --- The short view of a User entity as a string.
 --- This view is used in menus and comments to refer to a User entity.
@@ -44,7 +45,7 @@ userToDetailsView user =
 userToDetailsViewAdmin :: HTML h => User -> [h]
 userToDetailsViewAdmin user =
   [spTable
-    (map (\(label,value) -> [label,value]) (zip userLabelList detailedView))]
+    (map (\(label,value) -> [label,value]) (zip userLabelListAdmin detailedView))]
   where
     detailedView =
       [[stringToHtml (userLoginName user)]
