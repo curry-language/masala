@@ -80,6 +80,12 @@ checkUserWatches user package = fmap (not . null) $ runQ
          From Watching as w
          Where w.UserWatchingKey = { userKey user } And w.PackageWatchingKey = { packageKey package };''
 
+checkUserMaintains :: User -> Package -> IO Bool
+checkUserMaintains user package = fmap (not . null) $ runQ
+  ``sql* Select *
+         From Maintainer as m
+         Where m.UserMaintainerKey = { userKey user } And m.PackageMaintainerKey = { packageKey package };''
+
 {-
 -- Requires currypp of 07/06/2023 or newer:
 addUser :: String -> String -> String -> String -> DBAction ()
