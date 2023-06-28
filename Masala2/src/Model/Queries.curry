@@ -74,6 +74,12 @@ getUserByName loginName = fmap listToMaybe $ runQ
          From User as u
          Where u.LoginName = { loginName };''
 
+getUserByNameOrEmail :: String -> IO (Maybe User)
+getUserByNameOrEmail login = fmap listToMaybe $ runQ
+  ``sql* Select *
+         From User as u
+         Where u.LoginName = { login } Or u.Email = { login };''
+
 checkUserWatches :: User -> Package -> IO Bool
 checkUserWatches user package = fmap (not . null) $ runQ
   ``sql* Select *
@@ -85,6 +91,12 @@ checkUserMaintains user package = fmap (not . null) $ runQ
   ``sql* Select *
          From Maintainer as m
          Where m.UserMaintainerKey = { userKey user } And m.PackageMaintainerKey = { packageKey package };''
+
+getUserValidationToken :: User -> IO (Maybe ValidationToken)
+getUserValidationToken user = fmap listToMaybe $ runQ
+  ``sql* Select *
+         From ValidationToken as vt
+         Where vt.UserValidatingKey = { userKey user };''
 
 {-
 -- Requires currypp of 07/06/2023 or newer:

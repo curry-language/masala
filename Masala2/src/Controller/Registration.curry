@@ -1,4 +1,4 @@
-module Controller.Registration ( registrationController, registrationForm ) where
+module Controller.Registration ( registrationController, registrationForm, generateValidationToken ) where
 
 import Data.Time
 import HTML.Base

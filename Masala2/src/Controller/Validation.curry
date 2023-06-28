@@ -1,4 +1,4 @@
-module Controller.Validation ( validationController ) where
+module Controller.Validation ( validationController, validationForm ) where
 
 import Data.Time
 import HTML.Base
@@ -9,6 +9,8 @@ import Model.Queries
 import Config.EntityRoutes
 import Config.UserProcesses
 import Config.Roles
+import Controller.Registration
+import Controller.Mail
 import System.SessionInfo
 import System.Authentication
 import System.Authorization
@@ -18,6 +20,7 @@ import System.PreludeHelpers
 import View.EntitiesToHtml
 import View.User
 import View.Registration
+import View.Validation
 import Database.CDBI.Connection
 
 --- Shows a form to register a new User.
@@ -25,6 +28,7 @@ validationController :: Controller
 validationController = do
     args <- getControllerParams
     case args of 
+        [] -> validationTokenController
         [token] -> do 
             result <- getValidationTokenWithToken token
             case result of
@@ -46,3 +50,49 @@ validateUser user = do
         validateUserAction key = do 
             oldUser <- getUser key
             updateUser (setUserRole oldUser roleNotTrusted)
+
+
+--- Shows a form to edit the given User entity.
+validationTokenController :: Controller
+validationTokenController = do
+    setParWuiStore validationStore () ""
+    return [formElem validationForm]
+
+validationForm
+  :: HtmlFormDef ((),WuiStore String)
+validationForm =
+    pwui2FormDef "Controller.Validation.validationForm" validationStore
+        (\_ -> wValidation)
+        (\_ login -> do
+            userResult <- getUserByNameOrEmail login
+            case userResult of 
+                Nothing -> do
+                    setPageMessage "User with that name/email address does not exist"
+                    redirectController "?Validation"
+                Just user -> do
+                    if userRole user == roleInvalid
+                        then do
+                            time <- getClockTime
+                            currentTokenResult <- getUserValidationToken user
+                            newTokenResult <- case currentTokenResult of 
+                                Nothing -> generateValidationToken time (userKey user)
+                                Just currentToken -> do 
+                                    let newToken = setValidationTokenValidSince currentToken time
+                                    runT (updateValidationToken newToken >+ return newToken)
+                            case newTokenResult of
+                                Left err -> do 
+                                    setPageMessage "Something went wrong, please try again"
+                                    redirectController "?Validation"
+                                Right newToken -> do 
+                                    sendValidationMail (userEmail user) (validationTokenToken newToken)
+                        else do
+                            setPageMessage "User is already validated"
+                            redirectController "?Validation"
+        )
+        (\_ ->
+            renderWUI () "Validate:" "Validate" "?" ()
+        )
+
+validationStore
+  :: SessionStore ((),WuiStore String)
+validationStore = sessionStore "validationStore"
