@@ -48,10 +48,10 @@ wUserEditAdmin
 wUserEditAdmin role =
   withRendering
    (w5Tuple
-    (wConstant stringToHtml) -- LoginName
-    (wConstant stringToHtml) -- PublicName
-    (wConstant stringToHtml) -- Email
-    (wConstant stringToHtml) -- PublicEmail
+    wRequiredString -- LoginName
+    wRequiredString -- PublicName
+    wRequiredString -- Email
+    wString -- PublicEmail
     (wSelect id roles) -- Role
    )
    (renderLabels userLabelListAdmin)

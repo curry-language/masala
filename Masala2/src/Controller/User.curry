@@ -126,7 +126,7 @@ editUserForm =
                nextInProcessOr (redirectController (showRoute userToEdit))
                 Nothing))))
    (\(sinfo,entity) ->
-     renderWUI sinfo "Edit User" "Change" (listRoute entity) ())
+     renderWUI sinfo "Edit User" "Change" (showRoute entity) ())
 
 editUserFormAdmin
   :: HtmlFormDef ((UserSessionInfo,User)
