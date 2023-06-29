@@ -5,19 +5,27 @@
 module Config.Masala
  where
 
--- Email address of administrator:
+--- Is the current installation a test system?
+--- In a test systems, mails are not really sent but its contents is
+--- just shown in the web page which sent it (see `Controller.Mail`).
+testSystem :: Bool
+testSystem = True
+
+--- Email address of administrator:
 adminEmail :: String
 adminEmail = "masala@curry-lang.org"
 
--- The name of the main script of the Masala system.
+--- The name of the main script of the Masala system.
 baseCGI :: String
 baseCGI = "spicey.cgi"
 
--- The URL of the main script of the module system
--- (used to generate external URLs for modules and master programs):
+--- The URL of the main script of the module system
+--- (used to generate external URLs for modules and master programs):
 baseURL :: String
---baseURL = "https://masala.curry-lang.org/" ++ baseCGI
-baseURL = "http://localhost/~mh/masala2/" ++ baseCGI -- for testing
+baseURL =
+  (if testSystem then "http://localhost/~mh/masala2/"
+                 else "https://www-ps.informatik.uni-kiel.de/~masala/Masala2")
+  ++ baseCGI
 
 --- The system hash key used to encode passwords
 --- (compare `System.Authentication`).

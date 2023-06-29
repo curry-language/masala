@@ -2,7 +2,7 @@
 
 module Controller.Mail ( sendValidationMail, sendPasswordMail ) where
 
-import System.Mail
+import qualified System.Mail
 
 import Config.Masala
 import HTML.Base
@@ -10,12 +10,15 @@ import System.Spicey
 
 sendMail :: [BaseHtml] -> String -> String -> String -> Controller
 sendMail emailInfo to subject contents = do
-  let mailtxt = showSendMail adminEmail to subject contents
-  return $ emailInfo ++
-            -- for testing only
-            [ hrule,
-             h3 [htxt "Mail sent in the real system:"],
-             verbatim mailtxt ]
+  let mailtxt = System.Mail.showSendMail adminEmail to subject contents
+  if testSystem
+    then return $ emailInfo ++
+                  -- for testing only
+                  [ hrule
+                  , h3 [htxt "Mail sent in the real system:"]
+                  , verbatim mailtxt ]
+    else do System.Mail.sendMail adminEmail to subject contents
+            return emailInfo
 
 sendPasswordMail :: String -> String -> Controller
 sendPasswordMail to password = do
