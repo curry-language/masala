@@ -23,9 +23,9 @@ sendMail emailInfo to subject contents = do
 sendPasswordMail :: String -> String -> Controller
 sendPasswordMail to password = do
   let subject = "Your password has been reset"
-      contents = "Your password has been reset and replaced with '"
-                 ++ password
-                 ++ "'. Please use it to login and change your password again."
+      contents = "Your password has been reset and replaced with '" ++
+                 password ++ "'.\n" ++
+                 "Please use it to login and change your password again."
       emailInfo = [ h3 [htxt "Password reset successful!"],
                     par [htxt $ "In order to login, please use the password contained " ++
                                 "in an email sent to '" ++ to ++ "'."] ]
@@ -35,12 +35,13 @@ sendPasswordMail to password = do
 sendValidationMail :: String -> String -> Controller
 sendValidationMail to token = do 
   let subject  = "Please validate your email address"
-      contents = "To validate your email address, please go to the URL "++
+      contents = "To validate your email address, please go to the URL\n"++
                  baseURL ++ "?Validation/" ++ token
       emailInfo = [ h3 [htxt "Initial registration successful!"],
-                    par [htxt $ "In order to use your account, please activate it by " ++
-                                "it by following the link (URL) containing in an email " ++
-                                "sent to '" ++ to ++ "'." ] ]
+                    par [htxt $
+                      "In order to use your account, please activate it by " ++
+                      "following the link (URL) containing in an email " ++
+                      "sent to '" ++ to ++ "'." ] ]
   sendMail emailInfo to subject contents
 {-
 sendValidationMail :: String -> String -> Controller
