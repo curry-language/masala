@@ -6,17 +6,19 @@
 --------------------------------------------------------------------------
 
 module View.SpiceySystem
-  ( loginView, processListView, historyView )
+  ( loginView, processListView, historyView, wForgotPassword )
  where
 
 import HTML.Base
 import HTML.Styles.Bootstrap4 ( hrefScndSmButton, primSmButton, scndButton )
+import HTML.WUI
 
 import Config.UserProcesses
 import System.Processes
 import System.Spicey
 import System.Authentication
 import Model.Queries
+import View.EntitiesToHtml
 
 -----------------------------------------------------------------------------
 --- Generates a form for login/logout.
@@ -28,7 +30,8 @@ loginView (currlogin,lurl) =
    Nothing -> [h3 [htxt "Login as:"],
                htxt "Login name:", nbsp, textField loginfield "", nbsp,
                htxt "Password:", nbsp, password passwdfield, nbsp,
-               primSmButton "Login" loginHandler]
+               primSmButton "Login" loginHandler, nbsp,
+               primSmButton "Forgot Password?" forgottenPasswordHandler]
    Just _  -> [h3 [htxt "Really logout?"],
                primSmButton "Logout" logoutHandler, nbsp,
                hrefScndSmButton lasturl [htxt "Cancel"]]
@@ -56,6 +59,15 @@ loginView (currlogin,lurl) =
   logoutHandler _ = do
     logoutFromSession >> setPageMessage "Logged out"
     nextInProcessOr (redirectController "?") Nothing >>= getPage
+  
+  forgottenPasswordHandler _ = do 
+    redirectController "?login/forgotpassword" >>= getPage
+
+wForgotPassword :: WuiSpec String
+wForgotPassword =
+  withRendering
+    wRequiredString
+    (renderLabels forgotPasswordLabelList)
 
 -----------------------------------------------------------------------------
 --- A view for all processes contained in a given process specification.

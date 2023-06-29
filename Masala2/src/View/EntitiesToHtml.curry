@@ -8,6 +8,10 @@ import Config.EntityRoutes
 import System.Spicey
 import Model.Masala2
 
+forgotPasswordLabelList :: HTML h => [[h]]
+forgotPasswordLabelList =
+  [[textstyle "spicey_label spicey_label_for_type_string" "Login Name/Email address"]]
+
 --- The list view of a User entity in HTML format.
 --- This view is used in a row of a table of all entities.
 userToListView :: HTML h => User -> [[h]]
@@ -90,17 +94,17 @@ userToDetailsViewLess user maintainerPackages watchingPackages =
 --- The labels of a User entity, as used in HTML tables.
 userLabelList :: HTML h => [[h]]
 userLabelList =
-  [[textstyle "spicey_label spicey_label_for_type_string" "LoginName"]
-  ,[textstyle "spicey_label spicey_label_for_type_string" "PublicName"]
+  [[textstyle "spicey_label spicey_label_for_type_string" "Login Name"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Public Name"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Email"]
-  ,[textstyle "spicey_label spicey_label_for_type_string" "PublicEmail"]]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Public Email"]]
 
 userLabelListAdmin :: HTML h => [[h]]
 userLabelListAdmin =
-  [[textstyle "spicey_label spicey_label_for_type_string" "LoginName"]
-  ,[textstyle "spicey_label spicey_label_for_type_string" "PublicName"]
+  [[textstyle "spicey_label spicey_label_for_type_string" "Login Name"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Public Name"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Email"]
-  ,[textstyle "spicey_label spicey_label_for_type_string" "PublicEmail"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Public Email"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Role"]]
 
 {-
