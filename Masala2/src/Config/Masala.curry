@@ -23,9 +23,9 @@ baseCGI = "spicey.cgi"
 --- (used to generate external URLs for modules and master programs):
 baseURL :: String
 baseURL =
-  (if testSystem then "http://localhost/~mh/masala2/"
-                 else "https://www-ps.informatik.uni-kiel.de/~masala/Masala2")
-  ++ baseCGI
+  (if testSystem then "http://localhost/~mh/masala2"
+                 else "https://www-ps.informatik.uni-kiel.de/~masala/masala2")
+  ++ "/" ++ baseCGI
 
 --- The system hash key used to encode passwords
 --- (compare `System.Authentication`).
