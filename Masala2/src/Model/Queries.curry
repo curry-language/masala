@@ -74,6 +74,14 @@ getUserByName loginName = fmap listToMaybe $ runQ
          From User as u
          Where u.LoginName = { loginName };''
 
+{-
+getUsersByName :: [String] -> IO [String]
+getUsersByName names = runQ
+  ``sql* Select *
+         From User as u
+         Where u.LoginName In { names };''
+-}
+
 getUserByNameOrEmail :: String -> IO (Maybe User)
 getUserByNameOrEmail login = fmap listToMaybe $ runQ
   ``sql* Select *
@@ -132,6 +140,28 @@ getPackageVersionByName pname vers = fmap (listToMaybe . map snd) $ runQ
          Where p.Name = { pname } And
                v.Version = { vers } And
                Satisfies v versionOf p;''
+
+getMaintainersOfPackage :: Package -> IO [User]
+getMaintainersOfPackage package = fmap (map fst) $ runQ
+  ``sql* Select *
+         From User as u, Package as p
+         Where p.Key = { packageKey package } And
+               Satisfies u maintains p;''
+
+getNonMaintainersOfPackage :: Package -> IO [User]
+getNonMaintainersOfPackage package = fmap (map fst) $ runQ
+  ``sql* Select *
+         From User as u, Package as p
+         Where p.Key = { packageKey package } And
+               Not Satisfies u maintains p;''
+
+checkIfMaintainer :: Package -> User -> IO Bool
+checkIfMaintainer package user = fmap (not . null) $ runQ
+  ``sql* Select *
+         From Package as p, User as u
+         Where p.Key = { packageKey package } And
+               u.Key = { userKey user } And
+               Satisfies u maintains p;''
 
 -----------------------------------------------------------------------
 -- Gets the versions of a given package.

@@ -12,6 +12,14 @@ forgotPasswordLabelList :: HTML h => [[h]]
 forgotPasswordLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Login Name/Email address"]]
 
+addMaintainerLabels :: HTML h => [[h]]
+addMaintainerLabels =
+  [[textstyle "spicey_label spicey_label_for_type_string" "Login Name"]]
+
+addMaintainerLabelsAdmin :: HTML h => [[h]]
+addMaintainerLabelsAdmin =
+  [[textstyle "spicey_label spicey_label_for_type_string" "Login Names"]]
+
 --- The list view of a User entity in HTML format.
 --- This view is used in a row of a table of all entities.
 userToListView :: HTML h => User -> [[h]]

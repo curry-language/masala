@@ -1,8 +1,10 @@
 module Controller.Package
-  ( mainPackageController, newPackageForm, editPackageForm ) where
+  ( mainPackageController, newPackageForm, editPackageForm
+  , addMaintainerPackageForm, addMaintainerPackageFormAdmin ) where
 
 import Data.List ( last, sortBy )
 
+import Data.Maybe
 import Data.Time
 import HTML.Base
 import HTML.Session
@@ -10,6 +12,7 @@ import HTML.WUI
 import Model.Masala2
 import Model.Queries
 import Config.EntityRoutes
+import Config.Roles
 import Config.UserProcesses
 import Controller.Version   ( showVersionController )
 import System.SessionInfo
@@ -37,6 +40,7 @@ mainPackageController = do
     ["new"] -> newPackageController
     ["show",s] -> controllerOnKey s showPackageController
     ["edit",s] -> controllerOnKey s editPackageController
+    ["addmaintainer",s] -> controllerOnKey s addMaintainerPackageController
     ["toggleabandoned",s] -> controllerOnKey s toggleAbandonedPackageController
     ["delete",s]    -> controllerOnKey s deletePackageController
     ["destroy",s]   -> controllerOnKey s destroyPackageController
@@ -176,3 +180,78 @@ showPackageController package =
     if null versions
       then displayError "Package has no versions!"
       else showVersionController (last (sortBy leqVersion versions))
+
+addMaintainerPackageController :: Package -> Controller
+addMaintainerPackageController package = 
+  checkAuthorization (packageOperationAllowed (UpdateEntity package))
+    $ (\sinfo ->
+        if isAdminSession sinfo 
+          then do 
+            users <- getNonMaintainersOfPackage package
+            let userNames = map userLoginName $ filter (\user -> userRole user /= roleInvalid) users
+            setParWuiStore addMaintainerPackageStoreAdmin (sinfo, package, userNames) (package,[])
+            return [formElem addMaintainerPackageFormAdmin]
+          else do 
+            setParWuiStore addMaintainerPackageStore (sinfo, package) (package, "")
+            return [formElem addMaintainerPackageForm]
+    )
+
+addMaintainerPackageStoreAdmin :: SessionStore ((UserSessionInfo,Package,[String]),WuiStore (Package,[String]))
+addMaintainerPackageStoreAdmin = sessionStore "addMaintainerPackageStoreAdmin"
+
+addMaintainerPackageStore :: SessionStore ((UserSessionInfo,Package),WuiStore (Package,String))
+addMaintainerPackageStore = sessionStore "addMaintainerPackageStore"
+
+addMaintainerPackageFormAdmin :: HtmlFormDef ((UserSessionInfo,Package,[String]),WuiStore (Package,[String]))
+addMaintainerPackageFormAdmin =
+  pwui2FormDef "Controller.Package.addMaintainerPackageFormAdmin" addMaintainerPackageStoreAdmin
+    (\(_,package,userNames) -> wAddMaintainerTypeAdmin package userNames)
+    (\_ (package, maintainerNames) -> do
+      maintainers <- mapM getUserByName maintainerNames
+      let newMaintainerKeys = map userKey (catMaybes maintainers)
+      let dbactions = map (flip newMaintainer (packageKey package)) newMaintainerKeys
+      case dbactions of 
+        [] -> redirectController (showRoute package)
+        _ -> do 
+          result <- runT $ foldl1 (>+) dbactions
+          case result of 
+            Left err -> do
+              setPageMessage "Something went wrong, please try again"
+              redirectController (entityRoute "addmaintainer" package)
+            Right _ -> do
+              setPageMessage "Maintainers added successfully"
+              redirectController (showRoute package)
+    )
+    (\(sinfo,entity,_) ->
+      renderWUI sinfo "Please choose the Users you want to add as Maintainers"
+        "Add Maintainers" (showRoute entity) ())
+
+addMaintainerPackageForm :: HtmlFormDef ((UserSessionInfo,Package),WuiStore (Package, String))
+addMaintainerPackageForm =
+  pwui2FormDef "Controller.Package.addMaintainerPackageForm" addMaintainerPackageStore
+    (\(_,package) -> wAddMaintainerType package)
+    (\_ (package, maintainerName) -> do
+      userResult <- getUserByName maintainerName
+      case userResult of 
+        Nothing -> do
+          setPageMessage "User with that name does not exist"
+          redirectController (entityRoute "addmaintainer" package)
+        Just user -> do 
+          isMaintainer <- checkIfMaintainer package user
+          case isMaintainer of 
+            False -> do 
+              result <- runT (newMaintainer (userKey user) (packageKey package))
+              case result of
+                Left err -> do
+                  setPageMessage "Something went wrong, please try again"
+                  redirectController (entityRoute "addmaintainer" package)
+                Right _ -> do 
+                  setPageMessage "Maintainer successfully added"
+                  redirectController (showRoute package)
+            True -> do 
+              setPageMessage "User is already a maintainer"
+              redirectController (entityRoute "addmaintainer" package)
+    )
+    (\(sinfo,entity) ->
+      renderWUI sinfo "Please type in the name of the User you want to add as Maintainer"
+        "Add Maintainer" (showRoute entity) ())

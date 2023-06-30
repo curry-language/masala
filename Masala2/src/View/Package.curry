@@ -1,5 +1,7 @@
 module View.Package
   ( wPackage, tuple2Package, package2Tuple, wPackageType, showPackageView
+  , wAddMaintainer, wAddMaintainerType
+  , wAddMaintainerAdmin, wAddMaintainerTypeAdmin
   , leqPackage, listPackageView, allPackagesView ) where
 
 import Data.List
@@ -80,3 +82,23 @@ allPackagesView _ title packages =
       (if packageAbandoned package then hrefScndBadge else hrefPrimBadge)
         (showRoute package)
         [htxt (packageName package)]
+
+wAddMaintainer :: WuiSpec String
+wAddMaintainer =
+  withRendering
+    wRequiredString
+    (renderLabels addMaintainerLabels)
+
+wAddMaintainerAdmin :: [String] -> WuiSpec [String]
+wAddMaintainerAdmin users =
+  --withRendering 
+    wMultiCheckSelect (\user -> [htxt user]) users
+    --(renderLabels addMaintainerLabelsAdmin)
+
+wAddMaintainerType :: Package -> WuiSpec (Package, String)
+wAddMaintainerType package =
+  transformWSpec (\name -> (package, name), \(_, name) -> name) wAddMaintainer
+
+wAddMaintainerTypeAdmin :: Package -> [String] -> WuiSpec (Package, [String])
+wAddMaintainerTypeAdmin package userNames =
+  transformWSpec (\names -> (package, names), snd) (wAddMaintainerAdmin userNames)

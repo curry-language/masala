@@ -179,7 +179,7 @@ showVersionView sinfo version package uploader maintainers cats allversions
   sidemenu =
     [ulistWithClass "list-group" "list-group-item"
        (map (\ (t,c) -> (h5 [htxt t] : c))
-            (versionInfoAsHTML sinfo version deppackages cats allversions
+            (versionInfoAsHTML sinfo package version deppackages cats allversions
                                uploader maintainers exportedmods))] ++
     [if versionTested version
        then blockstyle "badge badge-success" [htxt "Successfully tested"]
@@ -211,10 +211,10 @@ showVersionView sinfo version package uploader maintainers cats allversions
     [ hrule ]
 
 --- Renders information about a package as HTML description list.
-versionInfoAsHTML :: UserSessionInfo -> Version -> [Package] -> [Category]
+versionInfoAsHTML :: UserSessionInfo -> Package -> Version -> [Package] -> [Category]
                   -> [Version] -> User -> [User] -> [CurryModule]
                   -> [(String,[BaseHtml])]
-versionInfoAsHTML sinfo version deppackages cats allversions uploader
+versionInfoAsHTML sinfo package version deppackages cats allversions uploader
                   maintainers exportedmods =
   [("Categor" ++ if length cats == 1 then "y" else "ies",
     hitems $ map (\c -> hrefPrimBadge (showRoute c) [htxt $ categoryName c])
@@ -229,7 +229,7 @@ versionInfoAsHTML sinfo version deppackages cats allversions uploader
              calendarTimeToString (toUTCTime (versionUploadDate version)) ++
              " (UTC)"])
   , ("Maintainer" ++ if length maintainers > 1 then "s" else "",
-     vitems $ map userToRef maintainers)
+     vitems (map userToRef maintainers) ++ maintainerControl)
   , ("Visibility",
      [htxt (publicText (versionPublished version))] ++ togglePublicButton)
   , ("Deprecated",
@@ -238,6 +238,12 @@ versionInfoAsHTML sinfo version deppackages cats allversions uploader
   , ("Downloads", [htxt $ show $ versionDownloads version])
   ]
  where
+  maintainerControl = case userLoginOfSession sinfo of 
+    Nothing -> []
+    Just (loginName, _) -> if isAdminSession sinfo || loginName `elem` map userLoginName maintainers
+      then [breakline, hrefPrimSmButton (entityRoute "addmaintainer" package) [htxt "Add Maintainer"]]
+      else []
+      
   publicText b = if b then "Public" else "Private"
   versionDepr = versionDeprecated version
 

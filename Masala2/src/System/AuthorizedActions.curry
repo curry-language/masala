@@ -4,6 +4,7 @@ import System.Authentication ( getSessionLogin )
 import System.Authorization
 import System.SessionInfo
 import Model.Masala2
+import Model.Queries
 
 ----------------------------------------------------------------------------
 --- Grants access for the administrator.
@@ -45,7 +46,25 @@ packageOperationAllowed at sinfo =
   case at of
     ListEntities -> return AccessGranted
     ShowEntity _ -> return AccessGranted
+    UpdateEntity package -> adminOrMaintainer package sinfo
     _            -> checkAdmin sinfo
+
+adminOrMaintainer :: Package -> UserSessionInfo -> IO AccessResult
+adminOrMaintainer package sinfo =
+  if isAdminSession sinfo
+    then return AccessGranted
+    else do
+      case userLoginOfSession sinfo of 
+        Nothing -> return $ AccessDenied "Operation not allowed!"
+        Just (loginName, _) -> do 
+          userResult <- getUserByName loginName
+          case userResult of 
+            Nothing-> return $ AccessDenied "Operation not allowed!"
+            Just user -> do 
+              isMaintainer <- checkIfMaintainer package user
+              case isMaintainer of 
+                False -> return $ AccessDenied "Operation not allowed!"
+                True -> return AccessGranted
 
 --- Checks whether the application of an operation to a Version
 --- entity is allowed.
