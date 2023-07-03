@@ -12,7 +12,7 @@ module System.Spicey (
   getControllerURL,getControllerParams, showControllerURL,
   getPage, wDateType, wBoolean, wUncheckMaybe, wFloat,
   displayError, displayUrlError, cancelOperation,
-  renderWUI, renderLabels,
+  renderWUI, renderWUIWithText, renderLabels,
   stringToHtml, maybeStringToHtml,
   intToHtml,maybeIntToHtml, floatToHtml, maybeFloatToHtml,
   boolToHtml, maybeBoolToHtml, dateToHtml, maybeDateToHtml, timeToHtml,
@@ -208,6 +208,23 @@ renderWUI _ title buttontag cancelurl _ hexp handler =
    primSmButton buttontag (\env -> handler env >>= getPage), nbsp,
    hrefScndSmButton cancelurl [htxt "Cancel"]]
 
+--- Standard rendering for WUI forms to edit data.
+--- @param sinfo      - the UserSessionInfo to select the language
+--- @param title      - the title of the WUI form
+--- @param buttontag  - the text on the submit button
+--- @param cancelurl  - the URL selected if submission is cancelled
+--- @param envpar     - environment parameters (e.g., user session data)
+--- @param hexp       - the HTML expression representing the WUI form
+--- @param handler    - the handler for submitting data
+renderWUIWithText :: UserSessionInfo -> String -> String -> [HtmlExp]
+  -> String -> HtmlExp -> (HtmlEnv -> Controller) -> [HtmlExp]
+renderWUIWithText _ title buttontag cmts cancelurl hexp handler =
+  [h1 [htxt title]] ++ cmts ++
+  [hexp,
+   breakline,
+   primSmButton buttontag (\env -> handler env >>= getPage), nbsp,
+   hrefScndSmButton cancelurl [htxt "Cancel"]]
+
 
 --- A WUI for manipulating CalendarTime entities.
 --- It is based on a WUI for dates, i.e., the time is ignored.
@@ -264,7 +281,7 @@ readMaybeFloat s =
 
 --- The title of this application (shown in the header).
 spiceyTitle :: String
-spiceyTitle = "Masala: The Repository of Curry Packages"
+spiceyTitle = "Masala: The Repository of Curry Packages (TEST VERSION!)"
 
 --- The home URL and brand shown at the left top of the main page.
 spiceyHomeBrand :: (String, [BaseHtml])
@@ -291,13 +308,17 @@ getPage viewblock = case viewblock of
     msg        <- getPageMessage
     login      <- getSessionLoginName
     lasturl    <- getLastUrl
-    withSessionCookie $ bootstrapPage favIcon cssIncludes jsIncludes
-      spiceyTitle spiceyHomeBrand routemenu (rightTopMenu login)
+    withSessionCookie $ bootstrapPage2 favIcon cssIncludes jsIncludes
+      spiceyTitle spiceyHomeBrand
+      (addNavItemClass routemenu) (rightTopMenu login)
       0 []
-      [h1 [htxt "Masala: ", smallMutedText "The Repository of Curry Packages"]]
+      [h1 [htxt "Masala: ",
+           smallMutedText "The Repository of Curry Packages (TEST VERSION!)"]]
       (messageLine msg lasturl : viewblock)
       spiceyFooter
  where
+  addNavItemClass = map (\i -> ("nav-item", i))
+
   messageLine msg lasturl =
     if null msg
       then htmlStruct "header" [("class","pagemessage pagemessage-empty")]
@@ -305,11 +326,41 @@ getPage viewblock = case viewblock of
       else htmlStruct "header" [("class","pagemessage")] [htxt msg]
         
   rightTopMenu login =
-    [[hrefNav "?login" (maybe [htxt "Login"]
-                              (\n -> [ htxt "Logout"
-                                     , htxt $ " (" ++ n ++ ")"
-                                     ])
-                              login)]]
+    maybe (addNavItemClass [[hrefNav "?Registration" [htxt "Registration"]],
+                            [hrefNav "?Validation"   [htxt "Validation"]],
+                            [hrefNav "?login"        [htxt "Login"]]])
+          (\n -> [dropDownMenu
+                    [userWhiteIcon, htxt $ " " ++ n, dropDownIcon]
+                    (map (\ (hr,he) -> href hr he `addClass` "dropdown-item")
+                         userMenu)])
+          login
+
+-- A dropdown menu (represented as a HTML list item).
+-- The first argument is the title (as HTML expressions) and
+-- the second argument is the actual menu (a list of elements with
+-- class "dropdown-item").
+dropDownMenu :: [BaseHtml] -> [BaseHtml] -> (String,[BaseHtml])
+dropDownMenu title ddmenu =
+  ("nav-item dropdown",
+   [hrefNav "#" title
+    `addAttrs` [("class","dropdown-toggle"),
+                ("id", "dropdownuser"),
+                ("data-toggle","dropdown"),
+                ("aria-haspopup", "true"),
+                ("aria-expanded", "false")],
+   blockstyle "dropdown-menu dropdown-menu-right" ddmenu
+     `addAttr` ("area-labelledby", "dropdownuser")])
+
+--- The menu for a user if it he is logged in.
+userMenu :: [(String,[BaseHtml])]
+userMenu =
+  [ ("?User/profile",     [htxt $ "Show profile"])
+  , ("?User/editprofile", [htxt $ "Change profile"])
+  , ("?User/password",    [htxt $ "Change password"])
+  , ("?User/maintaining", [htxt $ "Maintained packages"])
+  , ("?User/watching",    [htxt $ "Watched packages"])
+  , ("?login",            [htxt "Logout"])
+  ]
 
 favIcon :: String
 favIcon = "bt4" </> "img" </> "favicon.ico"
@@ -407,6 +458,19 @@ spTable items = table items  `addClass` "table table-hover table-condensed"
 --- A small muted text (used in the title):
 smallMutedText :: HTML h => String -> h
 smallMutedText s = htmlStruct "small" [("class","text-muted")] [htxt s]
+
+--------------------------------------------------------------------------
+-- Icons:
+
+--- User (white) icon:
+userWhiteIcon :: HTML h => h
+userWhiteIcon =
+  image "bt4/img/user-white.svg" "User"
+    `addAttrs` [("width","32"), ("height","32")]
+
+--- Drowdown icon:
+dropDownIcon :: HTML h => h
+dropDownIcon = image "bt4/img/caret-down-white.svg" "Open"
 
 --------------------------------------------------------------------------
 -- The page messages are implemented by a session store.

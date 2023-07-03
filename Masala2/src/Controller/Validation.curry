@@ -90,8 +90,14 @@ validationForm =
                             redirectController "?Validation"
         )
         (\_ ->
-            renderWUI () "Validate:" "Validate" "?" ()
+            renderWUIWithText () "Validate:" "Send validation token"
+              [par [htxt explain]] "?"
         )
+ where
+  explain = "If you have already registered with a name and email address " ++
+            "but forgot to validate it, you can request " ++
+            "a new validation token which will be send to your registered " ++
+            "email address:"
 
 validationStore
   :: SessionStore ((),WuiStore String)

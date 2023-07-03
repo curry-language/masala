@@ -48,7 +48,7 @@ getRouteMenu = do
   getLinks []                                = []
   getLinks ((name, matcher, _) : restroutes) =
     case matcher of
-      Exact string -> if string == "login"
+      Exact string -> if string `elem` ["login", "Registration", "Validation"]
                         then getLinks restroutes
                         else [(hrefNav ("?" ++ string) [htxt name])] :
                              getLinks restroutes
@@ -58,6 +58,6 @@ getRouteMenu = do
                              , "User", "ValidationToken" ] ++
                          map (\e -> (e,"list")) ["CurryModule", "Version"]
                         then getLinks restroutes
-                        else [hrefNav ("?"++s1++"/"++s2) [htxt name]] :
+                        else [hrefNav ("?" ++ s1 ++ "/" ++ s2) [htxt name]] :
                              getLinks restroutes
       _ -> getLinks restroutes

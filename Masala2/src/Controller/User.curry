@@ -33,21 +33,27 @@ type NewUser = (String
 
 --- Choose the controller for a User entity according to the URL parameter.
 mainUserController :: Controller
-mainUserController =
-  do args <- getControllerParams
-     case args of
-       [] -> listUserController
-       ["list"] -> listUserController
-       ["new"] -> newUserController
-       ["show",s] -> controllerOnKey s showUserController
-       ["show",s,listName] -> controllerOnKey s (showPackagesController listName)
-       ["profile"] -> showProfileController
-       ["edit",s] -> controllerOnKey s editUserController
-       ["edit",s,"Password"] -> controllerOnKey s editPasswordController
-       ["delete",s] -> controllerOnKey s deleteUserController
-       ["destroy",s] -> controllerOnKey s destroyUserController
-       ["togglewatching",s,pkg] -> controllerOnKey s (toggleWatchingUserController pkg)
-       _ -> displayUrlError
+mainUserController = do
+  args <- getControllerParams
+  case args of
+    [] -> listUserController
+    ["list"] -> listUserController
+    ["new"] -> newUserController
+    ["show",s] -> controllerOnKey s showUserController
+    ["show",s,listName] -> controllerOnKey s (showPackagesController listName)
+    ["profile"] -> controllerOnCurrentUser showUserController
+    ["editprofile"] -> controllerOnCurrentUser editUserController
+    ["watching"] -> controllerOnCurrentUser (showPackagesController "Watching")
+    ["maintaining"] -> controllerOnCurrentUser
+                         (showPackagesController "Maintaining")
+    ["password"] -> controllerOnCurrentUser editPasswordController
+    ["edit",s] -> controllerOnKey s editUserController
+    ["edit",s,"Password"] -> controllerOnKey s editPasswordController
+    ["delete",s] -> controllerOnKey s deleteUserController
+    ["destroy",s] -> controllerOnKey s destroyUserController
+    ["togglewatching",s,pkg] -> controllerOnKey s
+                                  (toggleWatchingUserController pkg)
+    _ -> displayUrlError
 
 --- Shows a form to create a new User entity.
 newUserController :: Controller
@@ -299,6 +305,17 @@ showUserController user =
         else return 
           (showUserView sinfo user)
         )
+
+controllerOnCurrentUser :: (User -> Controller) -> Controller
+controllerOnCurrentUser usercontroller = do
+  loginInfo <- getSessionLogin
+  case loginInfo of 
+    Nothing -> displayUrlError
+    Just (loginName, role) -> do
+      maybeuser <- getUserByName loginName
+      case maybeuser of 
+        Nothing -> displayError ("User " ++ loginName ++ " does not exist")
+        Just user -> usercontroller user
 
 showProfileController :: Controller
 showProfileController = do

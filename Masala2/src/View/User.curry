@@ -302,20 +302,21 @@ showUserView
   :: UserSessionInfo -> User -> [BaseHtml]
 showUserView _ user =
   userToDetailsView user
-   ++ [hrefPrimSmButton (editRoute user) [htxt "Change data"]]
+{- ++ [hrefPrimSmButton (editRoute user) [htxt "Change data"]]
    ++ [hrefPrimSmButton (editRoute user ++ "/Password") [htxt "Change Password"]]
    ++ [hrefPrimSmButton (showRoute user ++ "/Maintaining") [htxt "Maintained Packages"]]
    ++ [hrefPrimSmButton (showRoute user ++ "/Watching") [htxt "Watched Packages"]]
+-}
 
 --- Supplies a view to show the details of a User for the admin.
 showUserViewAdmin
   :: UserSessionInfo -> User -> [BaseHtml]
 showUserViewAdmin _ user =
-  userToDetailsViewAdmin user
-   ++ [hrefPrimSmButton (editRoute user) [htxt "Change data"]]
-   ++ [hrefPrimSmButton (editRoute user ++ "/Password") [htxt "Change Password"]]
-   ++ [hrefPrimSmButton (showRoute user ++ "/Maintaining") [htxt "Maintained Packages"]]
-   ++ [hrefPrimSmButton (showRoute user ++ "/Watching") [htxt "Watched Packages"]]
+  userToDetailsViewAdmin user ++
+  [ hrefPrimSmButton (editRoute user) [htxt "Change data"], nbsp
+  , hrefPrimSmButton (editRoute user ++ "/Password") [htxt "Change Password"], nbsp
+  , hrefPrimSmButton (showRoute user ++ "/Maintaining") [htxt "Maintained Packages"], nbsp
+  , hrefPrimSmButton (showRoute user ++ "/Watching") [htxt "Watched Packages"]]
 
 {-
 showUserView

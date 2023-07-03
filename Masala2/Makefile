@@ -88,7 +88,7 @@ deploy: checkdeploy
 
 $(WEBSERVERDIR)/spicey.cgi: src/*.curry src/*/*.curry
 	$(CPM) exec $(CURRY2CGI) --system="$(SYSTEM)" \
-	  -i Controller.SpiceySystem -i Controller.User -i Controller.Package -i Controller.Version -i Controller.Category -i Controller.CurryModule -i Controller.ValidationToken -i Controller.Registration \
+	  -i Controller.SpiceySystem -i Controller.User -i Controller.Package -i Controller.Version -i Controller.Category -i Controller.CurryModule -i Controller.ValidationToken -i Controller.Validation -i Controller.Registration \
 	  -o $@ Main.curry
 
 # clean up generated the package directory

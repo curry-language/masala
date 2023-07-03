@@ -56,12 +56,12 @@ getRoutes =
        , Exact "Validation"
        , ValidationController)
       ] ++
-      case login of 
+      {- case login of 
          Nothing -> []
          Just (loginName, role) -> 
                         [(loginName
                         ,Prefix "User" "profile"
                         ,UserController)]
-      ++
+      ++ -}
       [(maybe "Login" (const "Logout") login,Exact "login",LoginController)
       ,("default",Always,PackageController)]
