@@ -56,7 +56,8 @@ getRouteMenu = do
                          map (\e -> (e,"new"))
                              [ "CurryModule", "Version", "Package", "Category"
                              , "User", "ValidationToken" ] ++
-                         map (\e -> (e,"list")) ["CurryModule", "Version"]
+                         map (\e -> (e,"list")) ["CurryModule", "Version"] ++
+                         [("User","profile")]
                         then getLinks restroutes
                         else [hrefNav ("?" ++ s1 ++ "/" ++ s2) [htxt name]] :
                              getLinks restroutes
