@@ -41,6 +41,7 @@ mainPackageController = do
     ["show",s] -> controllerOnKey s showPackageController
     ["edit",s] -> controllerOnKey s editPackageController
     ["addmaintainer",s] -> controllerOnKey s addMaintainerPackageController
+    ["removemaintainer",s,u] -> controllerOnKey s (removeMaintainerPackageController u)
     ["toggleabandoned",s] -> controllerOnKey s toggleAbandonedPackageController
     ["delete",s]    -> controllerOnKey s deletePackageController
     ["destroy",s]   -> controllerOnKey s destroyPackageController
@@ -255,3 +256,26 @@ addMaintainerPackageForm =
     (\(sinfo,entity) ->
       renderWUI sinfo "Please type in the name of the User you want to add as Maintainer"
         "Add Maintainer" (showRoute entity) ())
+
+removeMaintainerPackageController :: String -> Package -> Controller
+removeMaintainerPackageController maintainerKey package = do 
+  checkAuthorization (packageOperationAllowed (UpdateEntity package))
+    $ (\sinfo -> do
+        numberMaintainers <- getNumberOfMaintainers package
+        if numberMaintainers <= 1
+          then do
+            setPageMessage "Cannot remove maintainer, because they are the last maintainer of this package"
+            redirectController (showRoute package)
+          else do
+            case readUserKey maintainerKey of 
+              Nothing -> do 
+                displayError "User with that key does not exist"
+              Just user -> do 
+                result <- runT $ deleteMaintainer user (packageKey package)
+                case result of 
+                  Left _ -> do 
+                    setPageMessage "Something went wrong, please try again"
+                  Right _ -> do 
+                    setPageMessage "Maintainer has been removed"
+                redirectController (showRoute package)
+      )
