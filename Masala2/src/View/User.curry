@@ -56,11 +56,9 @@ wUserEditAdmin role =
    )
    (renderLabels userLabelListAdmin)
   where
-    roles = if role == roleAdmin
-              then [roleAdmin]
-              else if role == roleInvalid
-                then [roleInvalid]
-                else [roleNotTrusted, roleTrusted]
+    roles = if role == roleInvalid
+              then [roleInvalid]
+              else [roleNotTrusted, roleTrusted, roleAdmin]
 
 wUser
   :: [Package]
