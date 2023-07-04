@@ -141,6 +141,9 @@ getPackageVersionByName pname vers = fmap (listToMaybe . map snd) $ runQ
                v.Version = { vers } And
                Satisfies v versionOf p;''
 
+getNumberOfMaintainers :: Package -> IO Int
+getNumberOfMaintainers = fmap length . getMaintainersOfPackage
+
 getMaintainersOfPackage :: Package -> IO [User]
 getMaintainersOfPackage package = fmap (map fst) $ runQ
   ``sql* Select *

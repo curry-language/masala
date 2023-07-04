@@ -229,7 +229,7 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
              calendarTimeToString (toUTCTime (versionUploadDate version)) ++
              " (UTC)"])
   , ("Maintainer" ++ if length maintainers > 1 then "s" else "",
-     vitems (map userToRef maintainers) ++ maintainerControl)
+     concat (map (userToEntry (length maintainers > 1)) maintainers) ++ maintainerControl)
   , ("Visibility",
      [htxt (publicText (versionPublished version))] ++ togglePublicButton)
   , ("Deprecated",
@@ -243,6 +243,13 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
     Just (loginName, _) -> if isAdminSession sinfo || loginName `elem` map userLoginName maintainers
       then [breakline, hrefPrimSmButton (entityRoute "addmaintainer" package) [htxt "Add Maintainer"]]
       else []
+
+  userToEntry True  u = [userToRef u, userToRemoveButton u, breakline]
+  userToEntry False u = [userToRef u, breakline]
+
+  userToRemoveButton u = hrefPrimSmButton
+    (entityRoute "removemaintainer" package ++ "/" ++ showUserKey u)
+    [htxt "Remove"]
       
   publicText b = if b then "Public" else "Private"
   versionDepr = versionDeprecated version
