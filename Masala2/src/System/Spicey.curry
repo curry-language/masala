@@ -326,9 +326,12 @@ getPage viewblock = case viewblock of
       else htmlStruct "header" [("class","pagemessage")] [htxt msg]
         
   rightTopMenu login =
-    maybe (addNavItemClass [[hrefNav "?Registration" [htxt "Registration"]],
-                            [hrefNav "?Validation"   [htxt "Validation"]],
-                            [hrefNav "?login"        [htxt "Login"]]])
+    maybe [dropDownMenu [htxt "Registration", dropDownIcon]
+             (map (\ (hr,he) -> href hr he `addClass` "dropdown-item")
+                  [ ("?Registration", [htxt "New registration"])
+                  , ("?Validation",   [htxt "Validate your account"])
+                  ]),
+           ("nav-item", [hrefNav "?login" [userWhiteIcon, htxt " Login"]])]
           (\n -> [dropDownMenu
                     [userWhiteIcon, htxt $ " " ++ n, dropDownIcon]
                     (map (\ (hr,he) -> href hr he `addClass` "dropdown-item")
@@ -354,11 +357,11 @@ dropDownMenu title ddmenu =
 --- The menu for a user if it he is logged in.
 userMenu :: [(String,[BaseHtml])]
 userMenu =
-  [ ("?User/profile",     [htxt $ "Show profile"])
-  , ("?User/editprofile", [htxt $ "Change profile"])
-  , ("?User/password",    [htxt $ "Change password"])
-  , ("?User/maintaining", [htxt $ "Maintained packages"])
-  , ("?User/watching",    [htxt $ "Watched packages"])
+  [ ("?User/profile",     [htxt "Show profile"])
+  , ("?User/editprofile", [htxt "Change profile"])
+  , ("?User/password",    [htxt "Change password"])
+  , ("?User/maintaining", [htxt "Maintained packages"])
+  , ("?User/watching",    [htxt "Watched packages"])
   , ("?login",            [htxt "Logout"])
   ]
 
