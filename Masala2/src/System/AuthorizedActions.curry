@@ -47,6 +47,7 @@ packageOperationAllowed at sinfo =
     ListEntities -> return AccessGranted
     ShowEntity _ -> return AccessGranted
     UpdateEntity package -> adminOrMaintainer package sinfo
+    NewEntity    -> isLoggedIn
     _            -> checkAdmin sinfo
 
 adminOrMaintainer :: Package -> UserSessionInfo -> IO AccessResult

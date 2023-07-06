@@ -25,13 +25,15 @@ import Database.CDBI.Connection
 
 uploadController :: Controller
 uploadController = do
-    sinfo <- getUserSessionInfo
-    -- CHECK AUTHORIZATION
-    case userLoginOfSession sinfo of 
-        Nothing -> displayError "You must be logged in to upload packages"
-        Just (loginName, role) -> do
-            putSessionData uploadViewData loginName
-            return $ [formElem uploadFormDef]
+    checkAuthorization
+        (packageOperationAllowed NewEntity)
+        (\sinfo ->
+            case userLoginOfSession sinfo of 
+                Nothing -> displayError "You must be logged in to upload packages"
+                Just (loginName, role) -> do
+                    putSessionData uploadViewData loginName
+                    return $ [formElem uploadFormDef]
+        )
 
 uploadFormDef :: HtmlFormDef String
 uploadFormDef = formDefWithID "Controller.Upload.uploadFormDef"
