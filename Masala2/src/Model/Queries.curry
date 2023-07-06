@@ -126,20 +126,26 @@ validateUser user = runQ
 
 -----------------------------------------------------------------------
 -- Gets the version of a package with a given name and version string.
-getPackageWithName :: String -> IO (Maybe Package)
-getPackageWithName pname = fmap listToMaybe $ runQ
+getPackageWithNameAction :: String -> DBAction (Maybe Package)
+getPackageWithNameAction pname = fmap listToMaybe $ 
   ``sql* Select *
          From Package as p
          Where p.Name = { pname };''
 
+getPackageWithName :: String -> IO (Maybe Package)
+getPackageWithName = runQ . getPackageWithNameAction
+
 -- Gets the version of a package with a given name and version string.
-getPackageVersionByName :: String -> String -> IO (Maybe Version)
-getPackageVersionByName pname vers = fmap (listToMaybe . map snd) $ runQ
+getPackageVersionByNameAction :: String -> String -> DBAction (Maybe Version)
+getPackageVersionByNameAction pname vers = fmap (listToMaybe . map snd) $ 
   ``sql* Select *
          From Package as p, Version as v
          Where p.Name = { pname } And
                v.Version = { vers } And
                Satisfies v versionOf p;''
+
+getPackageVersionByName :: String -> String -> IO (Maybe Version)
+getPackageVersionByName pname vers = runQ $  getPackageVersionByNameAction pname vers
 
 getNumberOfMaintainers :: Package -> IO Int
 getNumberOfMaintainers = fmap length . getMaintainersOfPackage
@@ -158,13 +164,16 @@ getNonMaintainersOfPackage package = fmap (map fst) $ runQ
          Where p.Key = { packageKey package } And
                Not Satisfies u maintains p;''
 
-checkIfMaintainer :: Package -> User -> IO Bool
-checkIfMaintainer package user = fmap (not . null) $ runQ
+checkIfMaintainerAction :: Package -> User -> DBAction Bool
+checkIfMaintainerAction package user = fmap (not . null) $
   ``sql* Select *
          From Package as p, User as u
          Where p.Key = { packageKey package } And
                u.Key = { userKey user } And
                Satisfies u maintains p;''
+
+checkIfMaintainer :: Package -> User -> IO Bool
+checkIfMaintainer package user = runQ $ checkIfMaintainerAction package user
 
 -----------------------------------------------------------------------
 -- Gets the versions of a given package.
@@ -197,10 +206,13 @@ getPackageMaintainers pkg = fmap (map snd) $ runQ
 
 -----------------------------------------------------------------------
 -- Gets a category with a given name.
-getCategoryWithName :: String -> IO (Maybe Category)
-getCategoryWithName cname = fmap listToMaybe $ runQ
+getCategoryWithNameAction :: String -> DBAction (Maybe Category)
+getCategoryWithNameAction cname = fmap listToMaybe $
   ``sql* Select * From Category as c
          Where c.Name = { cname };''
+
+getCategoryWithName :: String -> IO (Maybe Category)
+getCategoryWithName = runQ . getCategoryWithNameAction
 
 -- Gets all packages in a category with a given name.
 getPackagesOfCategory :: Category -> IO [Package]
@@ -213,10 +225,13 @@ getPackagesOfCategory cat = fmap (nub . map (\(_,_,c) -> c)) $ runQ
 
 -----------------------------------------------------------------------
 -- Gets a Curry module with a given name.
-getCurryModuleWithName :: String -> IO (Maybe CurryModule)
-getCurryModuleWithName mname = fmap listToMaybe $ runQ
+getCurryModuleWithNameAction :: String -> DBAction (Maybe CurryModule)
+getCurryModuleWithNameAction mname = fmap listToMaybe $
   ``sql* Select * From CurryModule as m
          Where m.Name = { mname };''
+
+getCurryModuleWithName :: String -> IO (Maybe CurryModule)
+getCurryModuleWithName = runQ . getCurryModuleWithNameAction
 
 -- Gets the package versions exporting a Curry module with a given name.
 getPackageVersionsWithCurryModuleName :: String -> IO [(String,String)]

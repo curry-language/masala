@@ -13,6 +13,7 @@ data ControllerReference = ProcessListController
                          | ValidationTokenController
                          | RegistrationController
                          | ValidationController
+                         | UploadController
 
 data UrlMatch = Exact String
               | Prefix String String
@@ -49,7 +50,10 @@ getRoutes =
                ,Prefix "ValidationToken" "new"
                ,ValidationTokenController)]
          else []) ++
-      [( "Registration"
+      [( "Upload"
+       , Exact "Upload"
+       , UploadController)
+      ,( "Registration"
        , Exact "Registration"
        , RegistrationController)
       ,( "Validation"

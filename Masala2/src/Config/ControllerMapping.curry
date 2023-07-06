@@ -12,6 +12,7 @@ import Controller.CurryModule
 import Controller.ValidationToken
 import Controller.Registration
 import Controller.Validation
+import Controller.Upload
 
 --- Maps the controllers associated to URLs in module RoutesData
 --- into the actual controller operations.
@@ -28,4 +29,5 @@ getController fktref =
     ValidationTokenController -> mainValidationTokenController
     RegistrationController -> registrationController
     ValidationController -> validationController
+    UploadController -> uploadController
     -- _ -> displayError "getController: no mapping found"
