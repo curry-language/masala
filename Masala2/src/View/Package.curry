@@ -2,7 +2,8 @@ module View.Package
   ( wPackage, tuple2Package, package2Tuple, wPackageType, showPackageView
   , wAddMaintainer, wAddMaintainerType
   , wAddMaintainerAdmin, wAddMaintainerTypeAdmin
-  , leqPackage, listPackageView, allPackagesView ) where
+  , leqPackage, listPackageView, allPackagesView
+  , removeMaintainerView ) where
 
 import Data.List
 import Data.Time
@@ -82,6 +83,31 @@ allPackagesView _ title packages =
       (if packageAbandoned package then hrefScndBadge else hrefPrimBadge)
         (showRoute package)
         [htxt (packageName package)]
+
+removeMaintainerView :: Maybe (Package, String, UserID) -> [HtmlExp]
+removeMaintainerView Nothing = [ h3 [htxt "Something went wrong!"]]
+removeMaintainerView (Just (package, userName, user)) =
+    [ h3 [htxt "Removing maintainer:"]
+    , htxt $ "Are you sure you want to remove "
+      ++ userName ++ " as a maintainer from "
+      ++ packageName package ++ "?"
+    , nbsp
+    , primSmButton "Remove" removeHandler, nbsp
+    , primSmButton "Cancel" cancelHandler]
+  where 
+    removeHandler :: (HtmlRef -> String) -> IO HtmlPage
+    removeHandler _ = do 
+      result <- runT $ deleteMaintainer user (packageKey package)
+      case result of 
+        Left _ -> do 
+          setPageMessage "Something went wrong, please try again"
+        Right _ -> do 
+          setPageMessage "Maintainer has been removed"
+      redirectController (showRoute package) >>= getPage
+    
+    cancelHandler :: (HtmlRef -> String) -> IO HtmlPage
+    cancelHandler _ = do
+      redirectController (showRoute package) >>= getPage
 
 wAddMaintainer :: WuiSpec String
 wAddMaintainer =

@@ -1,6 +1,7 @@
 module Controller.Package
   ( mainPackageController, newPackageForm, editPackageForm
-  , addMaintainerPackageForm, addMaintainerPackageFormAdmin ) where
+  , addMaintainerPackageForm, addMaintainerPackageFormAdmin
+  , removeMaintainerPackageForm ) where
 
 import Data.List ( last, sortBy )
 
@@ -270,7 +271,12 @@ removeMaintainerPackageController maintainerKey package = do
             case readUserKey maintainerKey of 
               Nothing -> do 
                 displayError "User with that key does not exist"
-              Just user -> do 
+              Just userid -> do 
+                user <- runQ $ getUser userid
+                putSessionData removeMaintainerPackageStore
+                  (Just (package, userLoginName user, userid))
+                return [formElem removeMaintainerPackageForm]
+                {-
                 result <- runT $ deleteMaintainer user (packageKey package)
                 case result of 
                   Left _ -> do 
@@ -278,4 +284,12 @@ removeMaintainerPackageController maintainerKey package = do
                   Right _ -> do 
                     setPageMessage "Maintainer has been removed"
                 redirectController (showRoute package)
+                -}
       )
+
+removeMaintainerPackageStore :: SessionStore (Maybe (Package, String, UserID))
+removeMaintainerPackageStore = sessionStore "removeMaintainerPackageStore"
+
+removeMaintainerPackageForm :: HtmlFormDef (Maybe (Package, String, UserID))
+removeMaintainerPackageForm = formDefWithID "Controller.Package.removeMaintainerPackageForm"
+  (getSessionData removeMaintainerPackageStore Nothing) removeMaintainerView
