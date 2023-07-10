@@ -50,10 +50,8 @@ getRoutes =
                ,Prefix "ValidationToken" "new"
                ,ValidationTokenController)]
          else []) ++
-      [( "Upload"
-       , Exact "Upload"
-       , UploadController)
-      ,( "Registration"
+      maybe [] (const [("Upload", Exact "Upload", UploadController)]) login ++
+      [( "Registration"
        , Exact "Registration"
        , RegistrationController)
       ,( "Validation"

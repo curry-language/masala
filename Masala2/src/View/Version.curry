@@ -193,7 +193,9 @@ showVersionView sinfo version package uploader maintainers cats allversions
         Nothing -> []
         Just currentUser' ->
           [blockstyle "badge badge-secondary"
-             [ bold [htxt $ "Watched: "], htxt $ show watchesPackage
+             [ bold [htxt $ if watchesPackage then "I am watching"
+                                              else "I do not watch",
+                     htxt " this package "]
              , nbsp
              , hrefWarnBadge
                  (entityRoute "togglewatching" currentUser' ++ "/" ++
