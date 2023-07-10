@@ -58,8 +58,7 @@ validationTokenController = do
     setParWuiStore validationStore () ""
     return [formElem validationForm]
 
-validationForm
-  :: HtmlFormDef ((),WuiStore String)
+validationForm :: HtmlFormDef ((),WuiStore String)
 validationForm =
     pwui2FormDef "Controller.Validation.validationForm" validationStore
         (\_ -> wValidation)
@@ -96,8 +95,8 @@ validationForm =
  where
   explain = "If you have already registered with a name and email address " ++
             "but forgot to validate it, you can request " ++
-            "a new validation token which will be send to your registered " ++
-            "email address:"
+            "a new validation token which will be sent to your registered " ++
+            "email address."
 
 validationStore
   :: SessionStore ((),WuiStore String)

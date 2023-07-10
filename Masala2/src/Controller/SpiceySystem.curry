@@ -79,7 +79,13 @@ forgotPasswordForm =
               sendPasswordMail (userEmail user) uncryptpasswd
     )
     (\sinfo ->
-      renderWUI sinfo "Pleasy type in your username or email address" "Reset password" "?" ())
+      renderWUIWithText sinfo "Reset and send a new password"
+        "Reset password" [par [htxt explain]] "?")
+ where
+  explain = "If you forgot your password, a new password can be created " ++
+            "and sent to your registered email address. " ++
+            "For this purpose, type in below your login name or " ++
+            "email address."
 
 -----------------------------------------------------------------------------
 --- Controller for showing and selecting user processes.

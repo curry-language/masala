@@ -12,14 +12,10 @@ module View.Validation
 import HTML.WUI
 import HTML.Base
 import System.Spicey
+import View.EntitiesToHtml
 
-wValidation
-  :: WuiSpec String -- LoginName or Email
+wValidation :: WuiSpec String -- LoginName or Email
 wValidation =
   withRendering
    wRequiredString
-   (renderLabels validationLabelList)
-
-validationLabelList :: HTML h => [[h]]
-validationLabelList =
-    [[textstyle "spicey_label spicey_label_for_type_string" "LoginName"]]
+   (renderLabels loginNameEmailLabelList)

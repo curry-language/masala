@@ -8,9 +8,9 @@ import Config.EntityRoutes
 import System.Spicey
 import Model.Masala2
 
-forgotPasswordLabelList :: HTML h => [[h]]
-forgotPasswordLabelList =
-  [[textstyle "spicey_label spicey_label_for_type_string" "Login Name/Email address"]]
+loginNameEmailLabelList :: HTML h => [[h]]
+loginNameEmailLabelList =
+  [[textstyle "spicey_label" "Your login name or email:"]]
 
 addMaintainerLabels :: HTML h => [[h]]
 addMaintainerLabels =

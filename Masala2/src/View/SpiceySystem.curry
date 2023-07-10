@@ -67,7 +67,7 @@ wForgotPassword :: WuiSpec String
 wForgotPassword =
   withRendering
     wRequiredString
-    (renderLabels forgotPasswordLabelList)
+    (renderLabels loginNameEmailLabelList)
 
 -----------------------------------------------------------------------------
 --- A view for all processes contained in a given process specification.
