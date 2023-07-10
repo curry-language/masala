@@ -20,7 +20,7 @@ import View.Package
 wCategory :: WuiSpec (String,String)
 wCategory =
   withRendering
-   (wPair wRequiredString wString)
+   (wPair (wRequiredStringSize 60) (wTextArea (5,60)))
    (renderLabels (take 2 categoryLabelList))
 
 --- Transformation from data of a WUI form to entity type Category.
@@ -110,9 +110,13 @@ listCategoryView sinfo categorys =
 
 --- A view for a given list of Category entities.
 allCategoriesView :: UserSessionInfo -> [Category] -> [BaseHtml]
-allCategoriesView _ categorys =
+allCategoriesView sinfo categorys =
   [ h1 [htxt "Index of all categories"]
-  , par (intersperse nbsp (map listCategory (sortBy leqCategory categorys)))]
+  , par (intersperse nbsp (map listCategory (sortBy leqCategory categorys)))] ++
+  if isAdminSession sinfo
+    then [ breakline
+         , hrefWarnSmButton "?Category/new" [htxt "Add a new category"]]
+    else []
   where
     listCategory category =
       hrefPrimBadge (showRoute category) [htxt (categoryName category)]
