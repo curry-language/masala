@@ -193,10 +193,13 @@ showVersionView sinfo version package uploader maintainers cats allversions
         Nothing -> []
         Just currentUser' ->
           [blockstyle "badge badge-secondary"
-                  [ bold [htxt $ "Watched: "], htxt $ show watchesPackage
-                  , nbsp
-                  , hrefWarnBadge (entityRoute "togglewatching" currentUser' ++ "/" ++ showPackageKey package)
-                            [htxt $ if watchesPackage then "Stop watching" else "Start watching"]]]
+             [ bold [htxt $ "Watched: "], htxt $ show watchesPackage
+             , nbsp
+             , hrefWarnBadge
+                 (entityRoute "togglewatching" currentUser' ++ "/" ++
+                  showPackageKey package)
+                 [htxt $ if watchesPackage then "Stop watching"
+                                           else "Start watching"]]]
     ) ++
     (if isAdminSession sinfo
        then [blockstyle "badge badge-secondary"
@@ -211,8 +214,8 @@ showVersionView sinfo version package uploader maintainers cats allversions
     [ hrule ]
 
 --- Renders information about a package as HTML description list.
-versionInfoAsHTML :: UserSessionInfo -> Package -> Version -> [Package] -> [Category]
-                  -> [Version] -> User -> [User] -> [CurryModule]
+versionInfoAsHTML :: UserSessionInfo -> Package -> Version -> [Package]
+                  -> [Category] -> [Version] -> User -> [User] -> [CurryModule]
                   -> [(String,[BaseHtml])]
 versionInfoAsHTML sinfo package version deppackages cats allversions uploader
                   maintainers exportedmods =
@@ -229,7 +232,8 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
              calendarTimeToString (toUTCTime (versionUploadDate version)) ++
              " (UTC)"])
   , ("Maintainer" ++ if length maintainers > 1 then "s" else "",
-     concat (map (userToEntry (length maintainers > 1)) maintainers) ++ maintainerControl)
+     concatMap ((++ [breakline]) . userToEntry (length maintainers > 1))
+               maintainers ++ maintainerControl)
   , ("Visibility",
      [htxt (publicText (versionPublished version))] ++ togglePublicButton)
   , ("Deprecated",
@@ -240,16 +244,19 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
  where
   maintainerControl = case userLoginOfSession sinfo of 
     Nothing -> []
-    Just (loginName, _) -> if isAdminSession sinfo || loginName `elem` map userLoginName maintainers
-      then [breakline, hrefPrimSmButton (entityRoute "addmaintainer" package) [htxt "Add Maintainer"]]
-      else []
+    Just (loginName, _) ->
+      if isAdminSession sinfo || loginName `elem` map userLoginName maintainers
+        then [hrefWarnBadge (entityRoute "addmaintainer" package)
+                            [htxt "Add new maintainer"]]
+        else []
 
-  userToEntry True  u = [userToRef u, userToRemoveButton u, breakline]
-  userToEntry False u = [userToRef u, breakline]
+  userToEntry True  u = [userToRef u, nbsp, userToRemoveButton u]
+  userToEntry False u = [userToRef u]
 
-  userToRemoveButton u = hrefPrimSmButton
-    (entityRoute "removemaintainer" package ++ "/" ++ showUserKey u)
-    [htxt "Remove"]
+  userToRemoveButton u =
+    hrefWarnBadge
+      (entityRoute "removemaintainer" package ++ "/" ++ showUserKey u)
+      [htxt "Remove"]
       
   publicText b = if b then "Public" else "Private"
   versionDepr = versionDeprecated version

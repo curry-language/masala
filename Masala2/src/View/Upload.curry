@@ -23,9 +23,12 @@ import View.EntitiesToHtml
 
 uploadView :: String -> [HtmlExp]
 uploadView loginName =
-  [ h3 [htxt "Upload package:"]
-  , htxt "PackageJSON:", nbsp
-  , textField uploadfield "", nbsp
+  [ h3 [htxt "Upload a package:"]
+  , par [htxt $ "To upload a new package or a new version of a package " ++
+                "maintained by you, copy the contents of 'package.json' of " ++
+                "your package into the text field below:"]
+  --, htxt "PackageJSON:", nbsp
+  , textArea uploadfield (20,60) "", nbsp
   , primSmButton "Upload" uploadHandler]
     where 
       uploadfield free

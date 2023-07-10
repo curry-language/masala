@@ -225,7 +225,7 @@ addMaintainerPackageFormAdmin =
               redirectController (showRoute package)
     )
     (\(sinfo,entity,_) ->
-      renderWUI sinfo "Please choose the Users you want to add as Maintainers"
+      renderWUI sinfo "Please choose the users you want to add as maintainers"
         "Add Maintainers" (showRoute entity) ())
 
 addMaintainerPackageForm :: HtmlFormDef ((UserSessionInfo,Package),WuiStore (Package, String))
@@ -255,7 +255,8 @@ addMaintainerPackageForm =
               redirectController (entityRoute "addmaintainer" package)
     )
     (\(sinfo,entity) ->
-      renderWUI sinfo "Please type in the name of the User you want to add as Maintainer"
+      renderWUI sinfo
+        "Type in the login name of the user you want to add as maintainer"
         "Add Maintainer" (showRoute entity) ())
 
 removeMaintainerPackageController :: String -> Package -> Controller
