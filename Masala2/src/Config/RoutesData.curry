@@ -4,6 +4,7 @@ import Model.Queries
 import System.Authentication
 
 data ControllerReference = ProcessListController
+                         | WelcomeController
                          | LoginController
                          | UserController
                          | PackageController
@@ -66,4 +67,4 @@ getRoutes =
                         ,UserController)]
       ++
       [(maybe "Login" (const "Logout") login,Exact "login",LoginController)
-      ,("default",Always,PackageController)]
+      ,("default",Always,WelcomeController)]

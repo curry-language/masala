@@ -1,5 +1,5 @@
 module Controller.Upload
-  ( uploadController, uploadFormDef ) where
+  ( uploadController, uploadFormDef, uploadByName ) where
 
 import Data.List ( last, sortBy )
 
@@ -41,3 +41,18 @@ uploadFormDef = formDefWithID "Controller.Upload.uploadFormDef"
 
 uploadViewData :: SessionStore String
 uploadViewData = sessionStore "uploadViewData"
+
+--- Uploads a package in batch mode, i.e., the parameters are the
+--- login name, the encrypted password and the text of the package
+--- specification (`package.json` file contents.
+--- Then it is checked whether the password is correct and the user
+--- is allowed to upload the package.
+--- The result is either a message about the successful upload
+--- or an error message.
+uploadByName :: String -> String -> String -> IO String
+uploadByName login passwd packagetxt = do
+  -- an empty implementation just returning the parameters:
+  let answer = unlines ["LOGIN: " ++ login, "PASSWORD: " ++ passwd
+                       ,"PACKAGE:", packagetxt]
+  return answer
+

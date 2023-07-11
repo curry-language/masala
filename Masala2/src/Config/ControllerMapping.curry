@@ -20,6 +20,7 @@ getController :: ControllerReference -> Controller
 getController fktref =
   case fktref of
     ProcessListController -> processListController
+    WelcomeController -> welcomeController
     LoginController -> loginController
     UserController -> mainUserController
     PackageController -> mainPackageController

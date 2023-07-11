@@ -6,7 +6,7 @@
 --------------------------------------------------------------------------
 
 module Controller.SpiceySystem
-  ( loginController, loginFormDef
+  ( welcomeController, loginController, loginFormDef
   , processListController, historyController
   , forgotPasswordController, forgotPasswordForm
   )
@@ -18,6 +18,7 @@ import Config.UserProcesses
 import Controller.Mail
 import System.Spicey
 import HTML.Base
+import HTML.Parser ( readHtmlFile )
 import HTML.Session
 import HTML.WUI
 import Model.Masala2
@@ -25,6 +26,11 @@ import Model.Queries
 import System.Processes
 import System.Authentication
 import View.SpiceySystem
+
+-----------------------------------------------------------------------------
+--- Controller for login/logout.
+welcomeController :: Controller
+welcomeController = readHtmlFile "welcome.html"
 
 -----------------------------------------------------------------------------
 --- Controller for login/logout.
