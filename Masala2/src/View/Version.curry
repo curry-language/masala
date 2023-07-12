@@ -10,6 +10,7 @@ import HTML.Styles.Bootstrap4
 import HTML.WUI
 import Model.Masala2
 import Config.EntityRoutes
+import Config.Masala
 import System.SessionInfo
 import System.Spicey
 import View.EntitiesToHtml
@@ -188,7 +189,11 @@ showVersionView sinfo version package uploader maintainers cats allversions
   pkgAbandoned = packageAbandoned package
 
   contents =
-    [ par [htxt $ versionDescription version] ] ++
+    [ par [htxt $ versionDescription version]
+    , par [ehrefInfoBadge (packageURLinCPM (packageName package))
+             [htxt "Detailed package information"],
+           htxt " (available when the package has been published)"]
+    ] ++
     ( case currentUser of 
         Nothing -> []
         Just currentUser' ->

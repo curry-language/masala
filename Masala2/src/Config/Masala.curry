@@ -32,3 +32,7 @@ baseURL =
 systemHashKey :: String
 systemHashKey = "3masala25" -- change this key for every spicey instance
 
+--- Documentation URL of a package in the CPM repository.
+packageURLinCPM :: String -> String
+packageURLinCPM pkgname =
+  "https://cpm.curry-lang.org/pkgs/" ++ pkgname ++ ".html"

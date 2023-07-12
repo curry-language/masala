@@ -41,7 +41,8 @@ uploadView loginName =
 uploadPackage :: String -> String -> IO [BaseHtml] --String -> String -> IO ViewBlock
 uploadPackage loginName packageJson = do
     -- Read Package JSON
-    case readPackageData packageJson of 
+    readresult <- readPackageData packageJson
+    case readresult of 
         Left err -> displayError err 
         Right json -> do
           userResult <- getUserByName loginName
