@@ -234,7 +234,8 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
              calendarTimeToString (toUTCTime (versionUploadDate version)) ++
              " (UTC)"])
   , ("Maintainer" ++ if length maintainers > 1 then "s" else "",
-     concatMap ((++ [breakline]) . userToEntry (length maintainers > 1))
+     concatMap ((++ [breakline]) .
+                userToEntry (canEditMaintainers && length maintainers > 1))
                maintainers ++ maintainerControl)
   , ("Visibility",
      [htxt (publicText (versionPublished version))] ++ togglePublicButton)
@@ -244,13 +245,16 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
   , ("Downloads", [htxt $ show $ versionDownloads version])
   ]
  where
-  maintainerControl = case userLoginOfSession sinfo of 
-    Nothing -> []
-    Just (loginName, _) ->
-      if isAdminSession sinfo || loginName `elem` map userLoginName maintainers
-        then [hrefWarnBadge (entityRoute "addmaintainer" package)
-                            [htxt "Add new maintainer"]]
-        else []
+  canEditMaintainers = case userLoginOfSession sinfo of
+    Nothing             -> False
+    Just (loginname, _) -> isAdminSession sinfo ||
+                           loginname `elem` map userLoginName maintainers
+
+  maintainerControl =
+    if canEditMaintainers
+      then [hrefWarnBadge (entityRoute "addmaintainer" package)
+                          [htxt "Add new maintainer"]]
+      else []
 
   userToEntry True  u = [userToRef u, nbsp, userToRemoveButton u]
   userToEntry False u = [userToRef u]

@@ -18,7 +18,6 @@ import Config.UserProcesses
 import Controller.Mail
 import System.Spicey
 import HTML.Base
-import HTML.Parser ( readHtmlFile )
 import HTML.Session
 import HTML.WUI
 import Model.Masala2
@@ -30,7 +29,11 @@ import View.SpiceySystem
 -----------------------------------------------------------------------------
 --- Controller for login/logout.
 welcomeController :: Controller
-welcomeController = readHtmlFile "welcome.html"
+welcomeController = do
+  args <- getControllerParams
+  case args of
+    [] -> readFile "welcome.html" >>= return . (:[]) . BaseText
+    _  -> displayUrlError
 
 -----------------------------------------------------------------------------
 --- Controller for login/logout.

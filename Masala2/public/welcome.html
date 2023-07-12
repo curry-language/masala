@@ -1,6 +1,10 @@
+<div class="col-lg-8 mx-auto p-4 py-md-5">
+
 <h2 style="text-align:center">
 <a href="http://www.curry-lang.org" target="_blank"><img src="images/curry_flavor.png" alt="Curry"/></a>
 </h2>
+
+<h5>General</h5>
 <p>
 <b>Masala</b> is a web-based system to upload and publish
 software packages written
@@ -12,6 +16,8 @@ with the
 <a href="http://www.curry-lang.org/tools/cpm" target="_blank">Curry Package Manager (CPM)</a>
 on a local machine.
 </p>
+
+<h5>Uploading packages</h5>
 <p>
 Before uploading a new package or a new version of an existing package,
 one has to register and then log in (see the buttons/links
@@ -22,6 +28,16 @@ of your package. Note that only maintainers of a package
 can upload new versions of the same package.
 </p>
 <p>
+Note that package specifications require one or more categories
+to which they belong. When uploading a package, the specified
+categories must exist in the
+<a href="?Category/list">current list of categories</a>.
+If you want to add a new category to Masala,
+please contact the system administrator.
+</p>
+
+<h5>Publishing packages</h5>
+<p>
 Packages or package versions are not immediately visible to other users.
 In order to make a package visible, you must either be a trusted user
 (ask the Masala administrator to make you a trusted user)
@@ -30,21 +46,41 @@ This is necessary to avoid the publication of useless packages.
 The administrator can be contacted inside Masala if you are logged in.
 </p>
 <p>
+When a package has been published,
+it is visible in Masala and ready for downloading,
+but it might require some time to appear in the
+<a href="https://cpm.curry-lang.org" target="_blank">general list of Curry packages</a>
+which is automatically generated each day.
+</p>
+
+<h5>Development</h5>
+<p>
 Masala has been developed by the
 <a href="https://www.ps.informatik.uni-kiel.de/" target="_blank">Programming Languages and Compiler Construction Group</a>
 at the <a href="https://www.uni-kiel.de/" target="_blank">Kiel University</a>.
 Suggestions to improve the system are welcome!
 </p>
-<p>
-Here are some useful links:
-</p>
+
+<h5>Further information:</h5>
 <ul>
 <li>
 Documentation of
-<a href="https://cpm.curry-lang.org" target="_blank">all published packages</a>
+<ul>
+<li>
+<a href="https://cpm.curry-lang.org/index.html" target="_blank">all published packages</a>
+</li>
+<li>
+<a href="https://cpm.curry-lang.org/indexc.html" target="_blank">all categories of published packages</a>
+</li>
+<li>
+<a href="https://cpm.curry-lang.org/indexv.html" target="_blank">recent uploads of published packages</a>
+</li>
+</ul>
 </li>
 <li>
 Description of the
 <a href="http://www.curry-lang.org/tools/cpm" target="_blank">Curry Package Manager</a>
 </li>
 </ul>
+
+</div>
