@@ -39,6 +39,8 @@ main = do
       -> do uptxt <- uploadByName (urlencoded2string login)
                                   (urlencoded2string passwd)
                                   (urlencoded2string package)
+                                  False
+                                  False
             return $ answerEncText "utf-8"uptxt
     _ ->  dispatcher
 
