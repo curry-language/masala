@@ -286,10 +286,10 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
                           exportedmods)]
 
   togglePublicButton =
-    if isAdminSession sinfo
+    if isAdminSession sinfo && not (versionPublished version)
       then [nbsp,
             hrefWarnBadge (entityRoute "togglepublic" version)
-              [htxt $ "Set to " ++ publicText (not (versionPublished version))]]
+              [htxt "Publish this package version"]]
       else []
 
   toggleDeprButton =
