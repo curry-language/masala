@@ -57,8 +57,11 @@ uploadViewData = sessionStore "uploadViewData"
 uploadByName :: String -> String -> String -> Bool -> Bool -> IO String
 uploadByName login passwd packagetxt publish force = do
   -- an empty implementation just returning the parameters:
-  let answer = unlines ["LOGIN: " ++ login, "PASSWORD: " ++ passwd
-                       ,"PACKAGE:", packagetxt]
+  let answer = unlines [ "LOGIN   : " ++ login
+                       , "PASSWORD: " ++ passwd
+                       , "PUBLISH : " ++ show publish
+                       , "FORCE   : " ++ show force
+                       , "PACKAGE:", packagetxt]
   -- and call
   --   storePackageSpec pname pvers packagetxt
   -- in the real implementation
