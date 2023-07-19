@@ -15,6 +15,8 @@ import Data.Time
 
 import Config.Roles
 
+import System.PreludeHelpers
+
 -----------------------------------------------------------------------
 -- Checks whether the given user login name is available, i.e.,
 -- not already used.
@@ -135,6 +137,12 @@ getPackageWithNameAction pname = fmap listToMaybe $
 getPackageWithName :: String -> IO (Maybe Package)
 getPackageWithName = runQ . getPackageWithNameAction
 
+getDependenciesWithNameAction :: [String] -> DBAction [Either String Package]
+getDependenciesWithNameAction = mapM (taggedDBAction getPackageWithNameAction)
+
+getDependenciesWithName :: [String] -> IO [Either String Package]
+getDependenciesWithName = runQ . getDependenciesWithNameAction
+
 -- Gets the version of a package with a given name and version string.
 getPackageVersionByNameAction :: String -> String -> DBAction (Maybe Version)
 getPackageVersionByNameAction pname vers = fmap (listToMaybe . map snd) $ 
@@ -213,6 +221,12 @@ getCategoryWithNameAction cname = fmap listToMaybe $
 
 getCategoryWithName :: String -> IO (Maybe Category)
 getCategoryWithName = runQ . getCategoryWithNameAction
+
+getCategoriesWithNameAction :: [String] -> DBAction [Either String Category]
+getCategoriesWithNameAction = mapM (taggedDBAction getCategoryWithNameAction)
+
+getCategoriesWithName :: [String] -> IO [Either String Category]
+getCategoriesWithName = runQ . getCategoriesWithNameAction
 
 -- Gets all packages in a category with a given name.
 getPackagesOfCategory :: Category -> IO [Package]

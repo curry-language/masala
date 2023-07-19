@@ -1,6 +1,6 @@
 module Controller.Version
   ( mainVersionController, newVersionForm, editVersionForm
-  , showVersionController ) where
+  , showVersionController, deleteVersionT ) where
 
 import Data.Time
 import HTML.Base
