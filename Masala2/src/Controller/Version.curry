@@ -2,6 +2,7 @@ module Controller.Version
   ( mainVersionController, newVersionForm, editVersionForm
   , showVersionController, deleteVersionT ) where
 
+import Control.Monad        ( unless )
 import Data.Time
 import HTML.Base
 import HTML.Session
@@ -15,6 +16,7 @@ import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
 import System.Spicey
+import System.PackageHelpers ( publishPackageVersion )
 import System.PreludeHelpers
 import View.EntitiesToHtml
 import View.Version
@@ -216,11 +218,17 @@ toggleDeprecatedVersionController vers =
 togglePublishedVersionController :: Version -> Controller
 togglePublishedVersionController vers =
   checkAuthorization (versionOperationAllowed (UpdateEntity vers)) $ \_ -> do
-    let newvers = setVersionPublished vers (not (versionPublished vers))
-    transactionController (runT (updateVersion newvers))
-      (const $ do
-         setPageMessage "Published status changed"
-         nextInProcessOr (redirectController (showRoute vers)) Nothing)
+    let verspub = versionPublished vers
+        newvers = setVersionPublished vers True
+    if verspub
+      then displayError "Operation not allowed: version is already published!"
+      else do
+        transactionController (runT (updateVersion newvers))
+          (const $ do
+             pkg <- runJustT (getVersioningPackage vers)
+             publishPackageVersion (packageName pkg) (versionVersion vers)
+             setPageMessage "Package version has been scheduled for publishing"
+             nextInProcessOr (redirectController (showRoute vers)) Nothing)
 
 --- Deletes a given Version entity (after asking for confirmation)
 --- and proceeds with the list controller.

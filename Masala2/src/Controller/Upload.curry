@@ -133,9 +133,20 @@ uploadViewData = sessionStore "uploadViewData"
 --- is allowed to upload the package.
 --- The result is either a message about the successful upload
 --- or an error message.
-uploadByName :: String -> String -> String -> IO String
-uploadByName login passwd packagetxt = do
+--- If the `publish` parameter is `True`, the package should directly
+--- be published (by calling `System.PackageHelpers.pubhlishPackageVersion`)
+--- if the user is an admin or a truested(!) maintainer of the package.
+--- If the `force` parameter is `True`, overwriting an existing version
+--- is allowed if the user as an admin.
+uploadByName :: String -> String -> String -> Bool -> Bool -> IO String
+uploadByName login passwd packagetxt publish force = do
   -- an empty implementation just returning the parameters:
-  let answer = unlines ["LOGIN: " ++ login, "PASSWORD: " ++ passwd
-                       ,"PACKAGE:", packagetxt]
+  let answer = unlines [ "LOGIN   : " ++ login
+                       , "PASSWORD: " ++ passwd
+                       , "PUBLISH : " ++ show publish
+                       , "FORCE   : " ++ show force
+                       , "PACKAGE:", packagetxt]
+  -- and call
+  --   storePackageSpec pname pvers packagetxt
+  -- in the real implementation
   return answer

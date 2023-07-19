@@ -35,10 +35,12 @@ main = do
   params <- fmap (splitOn "/") getUrlParameter
   case params of
     ["About"] -> readHtmlFile "about.html" >>= getPage
-    ["UploadBy",login,passwd,package]
+    ["UploadBy",login,passwd,publish,force,package]
       -> do uptxt <- uploadByName (urlencoded2string login)
                                   (urlencoded2string passwd)
                                   (urlencoded2string package)
+                                  (read publish)
+                                  (read force)
             return $ answerEncText "utf-8"uptxt
     _ ->  dispatcher
 

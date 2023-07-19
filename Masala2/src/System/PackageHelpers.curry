@@ -6,7 +6,15 @@
 module System.PackageHelpers
  where
 
+import System.Directory
+import System.FilePath
+import System.Process     ( getPID )
+
 import CPM.Package
+import CPM.ErrorLogger
+import CPM.FileUtil
+import CPM.Package.Helpers ( installPackageSourceTo )
+
 
 type PackageJSON = (String,String,String,[String],[String],[String])
 
@@ -36,16 +44,29 @@ readPackageData s =
 
 --- Checks whether the package is appropriate for uploading.
 --- Currently, the `source` field must be defined to be a http address
---- or a git repository.
---- Later, one should also check whether the source can be downloaded.
+--- or a git repository. Furthermore, the source must be ready for download.
 checkPackageForUpload :: Package -> IO (Either String Package)
 checkPackageForUpload pkg = case source pkg of
   Nothing            -> return $
                           Left "The package description has no 'source' field!"
-  Just (Http url)    -> return $ Right pkg
-  Just (Git url rev) -> return $ Right pkg
+  Just (Http url)    -> downloadSource pkg (Http url)
+  Just (Git url rev) -> downloadSource pkg (Git url rev)
   _                  -> return $
                           Left "The package has an illegal 'source' field!"
+
+--- Tries to download the source of the package. If this is not possible,
+--- return `Left errormsg`, otherwise return the package.
+downloadSource :: Package -> PackageSource -> IO (Either String Package)
+downloadSource pkg _ = return $ Right pkg
+{-
+downloadSource pkg pkgsrc = do
+  let installdir = "data" </> "downloads"
+  recreateDirectory $ installdir </> packageId pkg
+  (msgs,ires) <- fromErrorLoggerMsgs Info $
+                   installPackageSourceTo pkg pkgsrc installdir
+  let downloaderr = "COULD NOT DOWNLOAD PACKAGE SOURCE:\n"
+  return $ maybe (Left $ downloaderr ++ msgs) (const (Right pkg)) ires
+-}
 
 --- Transforms a package specification into the data stored in Masala
 --- (name, version, description, dependencies, exported modules, categories).
@@ -64,3 +85,29 @@ masalaDataOfPackage pkg =
     maybe (synopsis p)
           id
           (description p)
+
+--- Stores the text of package specification with the same directory structure
+--- as the CPM index.
+storePackageSpec :: String -> String -> String -> IO ()
+storePackageSpec pname pvers pkgtxt = do
+  let specdir = "data" </> "packages" </> pname </> pvers
+  recreateDirectory specdir
+  writeFile (specdir </> packageSpecFile) pkgtxt
+
+--- Publish a package.
+--- Should be later implemented by contacting the cpm-upload script.
+publishPackageVersion :: String -> String -> IO ()
+publishPackageVersion pname pvers = do
+  let specfile = "data" </> "packages" </> pname </> pvers </> packageSpecFile
+  pkgtxt <- readFile specfile
+  -- temporary implementation:
+  let pubdir = "data" </> "published" </> pname ++ "-" ++ pvers
+  recreateDirectory pubdir
+  writeFile (pubdir </> packageSpecFile) pkgtxt
+
+------------------------------------------------------------------------------
+-- The name of the package specification file.
+packageSpecFile :: String
+packageSpecFile = "package.json"
+
+------------------------------------------------------------------------------

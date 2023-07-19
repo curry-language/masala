@@ -206,7 +206,9 @@ uploadPackage loginName packageJson = do
                 uncurry6 (uploadPackageAction user time) json
               case result of 
                 Left (DBError _ msg) -> displayError msg
-                Right pkg -> return $ displaySuccess pkg
+                Right pkg -> do let (pname,pvers,_,_,_,_) = json
+                                storePackageSpec pname pvers packageJson
+                                return $ displaySuccess pkg
 
   where
     displaySuccess :: Package -> [BaseHtml] -- ViewBlock
