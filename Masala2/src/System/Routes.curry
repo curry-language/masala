@@ -55,7 +55,7 @@ getRouteMenu = do
       Prefix s1 s2 -> if (s1,s2) `elem`
                          map (\e -> (e,"new"))
                              [ "CurryModule", "Version", "Package", "Category"
-                             , "User", "ValidationToken" ] ++
+                             , "User", "ValidationToken", "Mail" ] ++
                          map (\e -> (e,"list")) ["CurryModule", "Version"] ++
                          [("User","profile")]
                         then getLinks restroutes

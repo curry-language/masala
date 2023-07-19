@@ -5,6 +5,7 @@ import System.Authentication
 
 data ControllerReference = ProcessListController
                          | WelcomeController
+                         | MailController
                          | LoginController
                          | UserController
                          | PackageController
@@ -41,7 +42,8 @@ getRoutes =
       ,("Categories",Prefix "Category" "list",CategoryController)
       ,("New Category",Prefix "Category" "new",CategoryController)
       ,("List CurryModule",Prefix "CurryModule" "list",CurryModuleController)
-      ,("New CurryModule",Prefix "CurryModule" "new",CurryModuleController) ] ++
+      ,("New CurryModule",Prefix "CurryModule" "new",CurryModuleController)
+      ,("Send Mail",Prefix "Mail" "new", MailController) ] ++
       (if admin
          then [("List User",Prefix "User" "list",UserController)
               ,("New User",Prefix "User" "new",UserController)

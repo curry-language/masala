@@ -1,12 +1,50 @@
 --- A controller to send emails and informs the result in a web page
 
-module Controller.Mail ( sendValidationMail, sendPasswordMail ) where
+module Controller.Mail
+  ( mailController, mailFormDef, sendValidationMail, sendPasswordMail )
+ where
 
 import qualified System.Mail
 
 import Config.Masala
 import HTML.Base
+import HTML.Session
+import System.Authentication
 import System.Spicey
+import View.Mail
+
+------------------------------------------------------------------------------
+--- Controller for login/logout.
+mailController :: Controller
+mailController = do
+  args <- getControllerParams
+  case args of
+    ["admin"] -> adminMailController
+    _         -> displayUrlError
+
+------------------------------------------------------------------------------
+adminMailController :: Controller
+adminMailController = do
+  mblogin <- getSessionLoginName
+  case mblogin of 
+    Nothing    -> displayError "You must be logged in to send emails"
+    Just login -> do
+      let cmt = "With this form you can contact the administrator of Masala " ++
+                "by email, e.g., to request the publication of a package " ++
+                "or to change your user status."
+      putSessionData mailViewData
+                     (login,cmt,"the Masala administrator",adminEmail)
+      return $ [formElem mailFormDef]
+
+mailFormDef :: HtmlFormDef (String,String,String,String)
+mailFormDef = formDefWithID "Controller.Mail.mailFormDef"
+  (getSessionData mailViewData ("","","",""))
+  (mailView sendMail)
+
+mailViewData :: SessionStore (String,String,String,String)
+mailViewData = sessionStore "mailViewData"
+
+------------------------------------------------------------------------------
 
 sendMail :: [BaseHtml] -> String -> String -> String -> Controller
 sendMail emailInfo to subject contents = do
@@ -63,3 +101,5 @@ sendValidationMail to token = do
                   "it by following the link (URL) containing in an email " ++
                   "sent to '" ++ emailaddr ++ "'." ] ]
 -}
+
+------------------------------------------------------------------------------

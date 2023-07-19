@@ -13,6 +13,7 @@ import Controller.ValidationToken
 import Controller.Registration
 import Controller.Validation
 import Controller.Upload
+import Controller.Mail
 
 --- Maps the controllers associated to URLs in module RoutesData
 --- into the actual controller operations.
@@ -21,6 +22,7 @@ getController fktref =
   case fktref of
     ProcessListController -> processListController
     WelcomeController -> welcomeController
+    MailController -> mailController
     LoginController -> loginController
     UserController -> mainUserController
     PackageController -> mainPackageController

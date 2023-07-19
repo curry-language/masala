@@ -332,10 +332,10 @@ getPage viewblock = case viewblock of
                   , ("?Validation",   [htxt "Validate your account"])
                   ]),
            ("nav-item", [hrefNav "?login" [userWhiteIcon, htxt " Login"]])]
-          (\n -> [dropDownMenu
-                    [userWhiteIcon, htxt $ " " ++ n, dropDownIcon]
-                    (map (\ (hr,he) -> href hr he `addClass` "dropdown-item")
-                         userMenu)])
+          (\n -> [ dropDownMenu
+                     [userWhiteIcon, htxt $ " " ++ n, dropDownIcon]
+                     (map (\ (hr,he) -> href hr he `addClass` "dropdown-item")
+                          userMenu) ])
           login
 
 -- A dropdown menu (represented as a HTML list item).
@@ -362,6 +362,7 @@ userMenu =
   , ("?User/password",    [htxt "Change password"])
   , ("?User/maintaining", [htxt "Maintained packages"])
   , ("?User/watching",    [htxt "Watched packages"])
+  , ("?Mail/admin",       [htxt "Send mail to admin"])
   , ("?login",            [htxt "Logout"])
   ]
 
