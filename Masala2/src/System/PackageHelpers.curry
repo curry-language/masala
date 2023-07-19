@@ -16,11 +16,25 @@ import CPM.FileUtil
 import CPM.Package.Helpers ( installPackageSourceTo )
 
 
+type PackageJSON = (String,String,String,[String],[String],[String])
+
+jsonDependencies :: PackageJSON -> [String]
+jsonDependencies (_,_,_,deps,_,_) = deps
+
+jsonCategories :: PackageJSON -> [String]
+jsonCategories (_,_,_,_,_,cats) = cats
+
+jsonName :: PackageJSON -> String
+jsonName (name,_,_,_,_,_) = name
+
+jsonVersion :: PackageJSON -> String
+jsonVersion (_,vsn,_,_,_,_) = vsn
+
 --- Parses a string representation of a package description
 --- and returns either an error message or some package data
 --- (name, version, description, dependencies, exported modules, categories).
 readPackageData :: String
-  -> IO (Either String (String,String,String,[String],[String],[String]))
+  -> IO (Either String PackageJSON)
 readPackageData s =
   either (return . Left)
          (\pkg -> checkPackageForUpload pkg >>=
@@ -57,7 +71,7 @@ downloadSource pkg pkgsrc = do
 --- Transforms a package specification into the data stored in Masala
 --- (name, version, description, dependencies, exported modules, categories).
 masalaDataOfPackage :: Package
-                    -> (String,String,String,[String],[String],[String])
+                    -> PackageJSON
 masalaDataOfPackage pkg =
   ( name pkg
   , showVersion $ version pkg
