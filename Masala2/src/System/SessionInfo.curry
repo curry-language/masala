@@ -11,12 +11,14 @@
 
 module System.SessionInfo (
   UserSessionInfo(..), userLoginOfSession, setUserLoginOfSession, 
-  getUserSessionInfo, updateUserSessionInfo, isAdminSession, loggedInAsUserSession
+  getUserSessionInfo, updateUserSessionInfo, isAdminSession,
+  isTrustedUserSession, isNotTrustedUserSession, loggedInAsUserSession
  ) where
 
-import HTML.Base    ( fromFormReader )
+import HTML.Base     ( fromFormReader )
 import HTML.Session
-import Model.Masala2 (User, userLoginName)
+import Config.Roles
+import Model.Masala2 ( User, userLoginName )
 
 --------------------------------------------------------------------------
 --- The data associated to a user session.
@@ -58,8 +60,17 @@ updateUserSessionInfo = modifySessionData userSessionInfo emptySessionInfo
 --- Is the current session an administrator session?
 isAdminSession :: UserSessionInfo -> Bool
 isAdminSession sinfo =
-  --maybe False (== "admin") (userLoginOfSession sinfo)
-  maybe False ((== "Admin") . snd) (userLoginOfSession sinfo)
+  maybe False ((== roleAdmin) . snd) (userLoginOfSession sinfo)
+
+--- Is the current session a session of a trusted user?
+isTrustedUserSession :: UserSessionInfo -> Bool
+isTrustedUserSession sinfo =
+  maybe False ((== roleTrusted) . snd) (userLoginOfSession sinfo)
+
+--- Is the current session a session of a untrusted user?
+isNotTrustedUserSession :: UserSessionInfo -> Bool
+isNotTrustedUserSession sinfo =
+  maybe False ((== roleNotTrusted) . snd) (userLoginOfSession sinfo)
 
 loggedInAsUserSession :: User -> UserSessionInfo -> Bool
 loggedInAsUserSession user sinfo =

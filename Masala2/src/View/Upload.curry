@@ -35,8 +35,8 @@ wUploadJson =
     (wTextArea (20,60))
     (renderLabels uploadJsonLabelList)
 
-wUploadCheck :: (String, Maybe PackageJSON) -> [HtmlExp]
-wUploadCheck (msg, jsonMaybe) =
+wUploadCheck :: (String, String, Maybe PackageJSON) -> [HtmlExp]
+wUploadCheck (msg, packageJson, jsonMaybe) =
   [ h3 [htxt msg]
   , par [htxt $ "To upload the new package anyways, an already existing " ++
                 "version might be overwritten or new categories may be " ++
@@ -52,12 +52,12 @@ wUploadCheck (msg, jsonMaybe) =
             case jsonMaybe of 
               Nothing -> displayError "No json data" >>= getPage
               Just jsonData -> do
-                uploadPackage login jsonData True >>= getPage
+                uploadPackage login packageJson jsonData True >>= getPage
 
       cancelHandler _ = redirectController "?Upload" >>= getPage
 
-uploadPackage :: String -> PackageJSON -> Bool -> IO [BaseHtml] --String -> String -> IO ViewBlock
-uploadPackage loginName jsonData adminConfirmation = do
+uploadPackage :: String -> String -> PackageJSON -> Bool -> IO [BaseHtml] --String -> String -> IO ViewBlock
+uploadPackage loginName packageJson jsonData adminConfirmation = do
     userResult <- getUserByName loginName
     case userResult of 
       Nothing -> displayError ("User " ++ loginName ++ " does not exist, although logged in")
@@ -67,7 +67,9 @@ uploadPackage loginName jsonData adminConfirmation = do
           uncurry6 (uploadPackageAction user time adminConfirmation) jsonData
         case result of 
           Left (DBError _ msg) -> displayError msg
-          Right pkg -> return $ displaySuccess pkg
+          Right pkg -> do storePackageSpec (jsonName jsonData)
+                            (jsonVersion jsonData) packageJson
+                          return $ displaySuccess pkg
 
   where
     displaySuccess :: Package -> [BaseHtml] -- ViewBlock

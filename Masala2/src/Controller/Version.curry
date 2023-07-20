@@ -216,16 +216,16 @@ toggleDeprecatedVersionController vers =
 
 --- A controller to toggle the published status of the given Version entity.
 togglePublishedVersionController :: Version -> Controller
-togglePublishedVersionController vers =
-  checkAuthorization (versionOperationAllowed (UpdateEntity vers)) $ \_ -> do
+togglePublishedVersionController vers = do
+  pkg <- runJustT (getVersioningPackage vers)
+  checkAuthorization (adminOrMaintainer pkg) $ \sinfo -> do
     let verspub = versionPublished vers
         newvers = setVersionPublished vers True
-    if verspub
-      then displayError "Operation not allowed: version is already published!"
+    if verspub || isNotTrustedUserSession sinfo
+      then displayError "Operation not allowed"
       else do
         transactionController (runT (updateVersion newvers))
           (const $ do
-             pkg <- runJustT (getVersioningPackage vers)
              publishPackageVersion (packageName pkg) (versionVersion vers)
              setPageMessage "Package version has been scheduled for publishing"
              nextInProcessOr (redirectController (showRoute vers)) Nothing)

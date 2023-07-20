@@ -285,12 +285,16 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
                                                  (curryModuleName m)])
                           exportedmods)]
 
-  togglePublicButton =
-    if isAdminSession sinfo && not (versionPublished version)
-      then [nbsp,
-            hrefWarnBadge (entityRoute "togglepublic" version)
-              [htxt "Publish this package version"]]
-      else []
+  togglePublicButton = case userLoginOfSession sinfo of
+    Nothing             -> []
+    Just (loginname, _) ->
+      if not (versionPublished version) &&
+         (isAdminSession sinfo ||
+          (loginname `elem` map userLoginName maintainers && isTrustedUserSession sinfo))
+        then [nbsp,
+              hrefWarnBadge (entityRoute "togglepublic" version)
+                [htxt "Publish this package version"]]
+        else []
 
   toggleDeprButton =
     if isAdminSession sinfo

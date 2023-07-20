@@ -35,8 +35,8 @@ userOperationAllowed at sinfo =
 adminOrLoggedInAsUser :: User -> UserSessionInfo -> IO AccessResult
 adminOrLoggedInAsUser user sinfo =
   return $ if isAdminSession sinfo || loggedInAsUserSession user sinfo 
-              then AccessGranted
-              else AccessDenied "Operation not allowed!"
+             then AccessGranted
+             else AccessDenied "Operation not allowed!"
 
 --- Checks whether the application of an operation to a Package
 --- entity is allowed.

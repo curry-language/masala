@@ -66,13 +66,13 @@ uploadJsonForm =
                             -- Check if admin
                             if isAdminSession sinfo && (vsnExist || not (null nonExistingCats))
                                 then do
-                                    putSessionData uploadCheckStore (msg, Just jsonData)
+                                    putSessionData uploadCheckStore (msg, json, Just jsonData)
                                     redirectController "?Upload/check"
                                 else do 
                                     case userLoginOfSession sinfo of 
                                         Nothing -> displayError "User not logged in"
                                         Just (login, _) -> do
-                                            uploadPackage login jsonData False
+                                            uploadPackage login json jsonData False
                 )
             )
             (\sinfo -> renderWUI sinfo "Upload Package" "Upload" "?Upload" ())
@@ -96,11 +96,11 @@ uploadCheckController = do
                 else displayUrlError
         )
 
-uploadCheckForm :: HtmlFormDef (String, Maybe PackageJSON)
+uploadCheckForm :: HtmlFormDef (String, String, Maybe PackageJSON)
 uploadCheckForm = formDefWithID "Controller.Upload.uploadCheckForm"
-    (getSessionData uploadCheckStore ("", Nothing)) wUploadCheck
+    (getSessionData uploadCheckStore ("", "", Nothing)) wUploadCheck
 
-uploadCheckStore :: SessionStore (String, Maybe PackageJSON)
+uploadCheckStore :: SessionStore (String, String, Maybe PackageJSON)
 uploadCheckStore = sessionStore "uploadCheckStore"
 
 --------------------------------------------------------
