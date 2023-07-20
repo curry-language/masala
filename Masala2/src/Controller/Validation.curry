@@ -37,7 +37,8 @@ validationController = do
                     deleteValidationTokenWithToken token
                     validationResult <- validateUser (validationTokenUserValidatingKey validationToken)
                     case validationResult of 
-                        Left err -> displayError "Validation failed"
+                        Left err -> displayError $ "Validation failed (" ++
+                                                   show err ++ ")"
                         Right _ -> do
                             setPageMessage "Successfully validated"
                             redirectController "?"
@@ -80,7 +81,8 @@ validationForm =
                                     runT (updateValidationToken newToken >+ return newToken)
                             case newTokenResult of
                                 Left err -> do 
-                                    setPageMessage "Something went wrong, please try again"
+                                    setPageMessage $ "Something went wrong, please try again (" ++
+                                                     show err ++ ")"
                                     redirectController "?Validation"
                                 Right newToken -> do 
                                     sendValidationMail (userEmail user) (validationTokenToken newToken)

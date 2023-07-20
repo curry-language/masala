@@ -62,12 +62,16 @@ registrationForm =
           then do
             userResult <- registerUser loginName publicName email cryptpasswd
             case userResult of 
-              Left err -> displayError "Controller.Registration: Adding new user did not work, although input data was correct."
+              Left err -> displayError $
+                "Controller.Registration: Adding new user did not work, " ++
+                "although input data was correct (error: " ++ show err ++ ")"
               Right user -> do
                 time <- getClockTime
                 tokenResult <- generateValidationToken time (userKey user)
                 case tokenResult of 
-                  Left err -> displayError "Controller.Registration: Adding new token did not work, although token should be free."
+                  Left err -> displayError $
+                    "Controller.Registration: Adding new token did not work, " ++
+                    "although token should be free (error: " ++ show err ++ ")"
                   Right token -> sendValidationMail email (validationTokenToken token)
             {-
             time <- getClockTime
@@ -113,14 +117,8 @@ displayRegistrationError usernameAvailable emailAvailable =
     errorUsernameAvailable True = ""
     errorUsernameAvailable False = "The given username is not available, please choose another one.\n"
 
-    errorEmailSyntax True = ""
-    errorEmailSyntax False = "The given email address is not a correct email address, please make sure to give a correct email address.\n"
-
     errorEmailAvailable True = ""
     errorEmailAvailable False = "The given email address is already used, please choose another one.\n"
-
-    errorPasswordFine True = ""
-    errorPasswordFine False = "The password must be at least 8 symbols long.\n"
 
 generateValidationToken :: ClockTime -> UserID -> IO (SQLResult ValidationToken)
 generateValidationToken time user = do

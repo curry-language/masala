@@ -91,12 +91,12 @@ uploadPackageAction user time adminConfirmation name version description depende
         pkg <- case pkgResult of 
           -- Create new package if not already exists
           Nothing -> do
-            pkg <- newPackage name False
+            newpkg <- newPackage name False
             -- Add uploader as maintainer
-            newMaintainer (userKey user) (packageKey pkg)
-            return pkg
+            newMaintainer (userKey user) (packageKey newpkg)
+            return newpkg
           -- Package found
-          Just pkg -> return pkg
+          Just pkg' -> return pkg'
         isMaintainer <- checkIfMaintainerAction pkg user
         case isMaintainer of 
           False -> actionError "User is not a maintainer of this package"

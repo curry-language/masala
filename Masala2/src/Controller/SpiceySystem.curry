@@ -82,7 +82,8 @@ forgotPasswordForm =
           updateUserResult <- runT (updateUser $ setUserPassword user cryptpasswd)
           case updateUserResult of 
             Left err -> do 
-              setPageMessage "Something went wront, please try again"
+              setPageMessage $ "Something went wront, please try again (" ++
+                               show err ++ ")"
               redirectController "?/forgotpassword"
             Right _ -> do
               sendPasswordMail (userEmail user) uncryptpasswd

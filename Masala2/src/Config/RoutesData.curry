@@ -63,7 +63,7 @@ getRoutes =
       ] ++
       case login of 
          Nothing -> []
-         Just (loginName, role) -> 
+         Just (loginName, _) -> 
                         [(loginName
                         ,Prefix "User" "profile"
                         ,UserController)]

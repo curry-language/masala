@@ -311,7 +311,7 @@ controllerOnCurrentUser usercontroller = do
   loginInfo <- getSessionLogin
   case loginInfo of 
     Nothing -> displayUrlError
-    Just (loginName, role) -> do
+    Just (loginName, _) -> do
       maybeuser <- getUserByName loginName
       case maybeuser of 
         Nothing -> displayError ("User " ++ loginName ++ " does not exist")
@@ -322,7 +322,7 @@ showProfileController = do
   loginInfo <- getSessionLogin
   case loginInfo of 
     Nothing -> displayUrlError
-    Just (loginName, role) -> do
+    Just (loginName, _) -> do
       maybeuser <- getUserByName loginName
       case maybeuser of 
         Nothing -> displayError ("User " ++ loginName ++ " does not exist")
@@ -345,13 +345,14 @@ showPackagesController listName user = do
 toggleWatchingUserController :: String -> User -> Controller
 toggleWatchingUserController pkg user = do 
   checkAuthorization (userOperationAllowed (UpdateEntity user))
-    $ (\sinfo -> do
+    $ (\_ -> do
       case readPackageKey pkg of 
         Nothing -> displayError "Package does not exist!"
         Just pkgKey -> do
           packageResult <- runT $ getPackage pkgKey
           case packageResult of 
-            Left err -> displayError "Some error occured while getting package"
+            Left err -> displayError $ "Some error occured while getting package (" ++
+                                       show err ++ ")"
             Right package -> do
               watchesPackage <- checkUserWatches user package
               case watchesPackage of 

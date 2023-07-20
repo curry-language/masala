@@ -218,7 +218,8 @@ addMaintainerPackageFormAdmin =
           result <- runT $ foldl1 (>+) dbactions
           case result of 
             Left err -> do
-              setPageMessage "Something went wrong, please try again"
+              setPageMessage $ "Something went wrong, please try again (" ++
+                               show err ++ ")"
               redirectController (entityRoute "addmaintainer" package)
             Right _ -> do
               setPageMessage "Maintainers added successfully"
@@ -245,7 +246,8 @@ addMaintainerPackageForm =
               result <- runT (newMaintainer (userKey user) (packageKey package))
               case result of
                 Left err -> do
-                  setPageMessage "Something went wrong, please try again"
+                  setPageMessage $ "Something went wrong, please try again (" ++
+                                   show err ++ ")"
                   redirectController (entityRoute "addmaintainer" package)
                 Right _ -> do 
                   setPageMessage "Maintainer successfully added"
@@ -262,7 +264,7 @@ addMaintainerPackageForm =
 removeMaintainerPackageController :: String -> Package -> Controller
 removeMaintainerPackageController maintainerKey package = do 
   checkAuthorization (packageOperationAllowed (UpdateEntity package))
-    $ (\sinfo -> do
+    $ (\_ -> do
         numberMaintainers <- getNumberOfMaintainers package
         if numberMaintainers <= 1
           then do

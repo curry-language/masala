@@ -63,8 +63,8 @@ createVersion packages admin ctime package version description uploadtimeS =
     (error "createVersion: no packageID found!")
     (\packageID ->
       let uptime = case reads uploadtimeS of
-                     [(Just uptime, "")] -> toClockTime uptime
-                     _                   -> ctime
+                     [(Just upldtime, "")] -> toClockTime upldtime
+                     _                     -> ctime
       in newVersionWithPackageVersioningKeyWithUserUploadKey version True True
            description "" 0 uptime False packageID admin)
     (lookup package packages)
@@ -76,7 +76,7 @@ insertVersion connection lines packages admin currtime = do
     results <- mapM (flip runDBAction connection .
                        (uncurry4 (createVersion packages admin currtime)))
                     versions
-    return $ zipWith (\(pkg, vsn, dsc, _) result -> fmap ((,) (pkg, vsn)) result)
+    return $ zipWith (\(pkg, vsn, _, _) result -> fmap ((,) (pkg, vsn)) result)
                      versions
                      (map (fmap versionKey) results)
 
@@ -207,20 +207,20 @@ initializeDatabase lname pname email passwd = do
 
     -- Add admin as maintainer of all packages
     putStrLn "Add admin as maintainer"
-    maintainerResults <- insertMaintainer connection packageKeys admin
+    insertMaintainer connection packageKeys admin
 
     -- Add depending
     putStrLn "Add depending"
-    dependingResults <- insertDependings connection packageKeys versionKeys
+    insertDependings connection packageKeys versionKeys
                                         (drop 1 lines)
 
     -- Add exporting
     putStrLn "Add exporting"
-    exportingResults <- insertExportings connection versionKeys moduleKeys (drop 1 lines)
+    insertExportings connection versionKeys moduleKeys (drop 1 lines)
 
     -- Add categorizes
     putStrLn "Add categorizes"
-    categorizesResults <- insertCategorizes connection versionKeys categoryKeys (drop 1 lines)
+    insertCategorizes connection versionKeys categoryKeys (drop 1 lines)
 
     disconnect connection
 
