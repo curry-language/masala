@@ -263,7 +263,8 @@ deleteUserController user =
   checkAuthorization (userOperationAllowed (DeleteEntity user))
    $ (\sinfo ->
      confirmDeletionPage sinfo
-      (concat ["Really delete entity \"",userToShortView user,"\"?"]))
+      (concat ["Really delete user \"", userToShortView user, "\" and ",
+               " and all its maintainer roles?"]))
 
 --- Deletes a given User entity
 --- and proceeds with the list controller.
@@ -278,12 +279,15 @@ destroyUserController user =
 
 --- Transaction to delete a given User entity.
 deleteUserT :: User -> DBAction ()
-deleteUserT user =
-  do oldMaintainerPackages <- getMaintainerUserPackages user
-     removeMaintainer oldMaintainerPackages user
-     oldWatchingPackages <- getWatchingUserPackages user
-     removeWatching oldWatchingPackages user
-     deleteUser user
+deleteUserT user = do
+  oldMaintainerPackages <- getMaintainerUserPackages user
+  removeMaintainer oldMaintainerPackages user
+  oldWatchingPackages <- getWatchingUserPackages user
+  removeWatching oldWatchingPackages user
+  tokens <- queryCondValidationToken
+              (\t -> validationTokenUserValidatingKey t == userKey user)
+  mapM deleteValidationToken tokens
+  deleteUser user
 
 --- Lists all User entities with buttons to show, delete,
 --- or edit an entity.

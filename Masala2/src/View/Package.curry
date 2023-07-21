@@ -88,9 +88,9 @@ removeMaintainerView :: Maybe (Package, String, UserID) -> [HtmlExp]
 removeMaintainerView Nothing = [ h3 [htxt "Something went wrong!"]]
 removeMaintainerView (Just (package, userName, user)) =
     [ h3 [htxt "Removing maintainer:"]
-    , htxt $ "Are you sure you want to remove "
-      ++ userName ++ " as a maintainer from "
-      ++ packageName package ++ "?"
+    , htxt $ "Are you sure you want to remove '"
+      ++ userName ++ "' as a maintainer from package '"
+      ++ packageName package ++ "'?"
     , nbsp
     , primSmButton "Remove" removeHandler, nbsp
     , primSmButton "Cancel" cancelHandler]
