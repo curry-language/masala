@@ -95,7 +95,7 @@ storePackageSpec pname pvers pkgtxt = do
   writeFile (specdir </> packageSpecFile) pkgtxt
 
 --- Publish a package and return True if it was possible.
---- Should be later implemented by contacting the cpm-upload script.
+--- Should later be implemented by contacting the cpm-upload script.
 publishPackageVersion :: String -> String -> IO Bool
 publishPackageVersion pname pvers = do
   let specfile = "data" </> "packages" </> pname </> pvers </> packageSpecFile

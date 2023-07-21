@@ -18,13 +18,13 @@ import System.Spicey
 -----------------------------------------------------------------------------
 --- A generic form to send emails.
 mailView :: ([BaseHtml] -> String -> String -> String -> Controller)
-              -> (String,String,String,String) -> [HtmlExp]
-mailView sendmail (login,mailcmt,toname,tomail) =
+         -> (String,String,String,String,String,String) -> [HtmlExp]
+mailView sendmail (login,mailcmt,toname,tomail,subj,contents) =
   [ h3 [htxt $ "Send mail to " ++ toname ]
   , par [htxt mailcmt]
   , par [htxt "Subject: ", nbsp,
-         textField subjectfield "" `addAttr` ("size","50")]
-  , textArea contentsfield (10,60) "", nbsp
+         textField subjectfield subj `addAttr` ("size","50")]
+  , textArea contentsfield (10,60) contents, nbsp
   , primSmButton "Send" sendHandler]
  where 
   subjectfield, contentsfield free

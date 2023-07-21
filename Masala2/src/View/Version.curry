@@ -11,6 +11,7 @@ import HTML.WUI
 import Model.Masala2
 import Config.EntityRoutes
 import Config.Masala
+import Config.Roles
 import System.SessionInfo
 import System.Spicey
 import View.EntitiesToHtml
@@ -243,7 +244,7 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
                 userToEntry (canEditMaintainers && length maintainers > 1))
                maintainers ++ maintainerControl)
   , ("Visibility",
-     [htxt (publicText (versionPublished version))] ++ togglePublicButton)
+     [htxt (publicText (versionPublished version)), nbsp] ++ togglePublicButton)
   , ("Deprecated",
      [htxt (if versionDepr then "yes" else "no")] ++ toggleDeprButton)
   , ("JobStatus", [htxt $ versionJobStatus version])
@@ -287,14 +288,16 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
 
   togglePublicButton = case userLoginOfSession sinfo of
     Nothing             -> []
-    Just (loginname, _) ->
-      if not (versionPublished version) &&
-         (isAdminSession sinfo ||
-          (loginname `elem` map userLoginName maintainers && isTrustedUserSession sinfo))
-        then [nbsp,
-              hrefWarnBadge (entityRoute "togglepublic" version)
-                [htxt "Publish this package version"]]
-        else []
+    Just (loginname, role)
+      | versionPublished version -> []
+      | isAdminSession sinfo ||
+        (loginname `elem` map userLoginName maintainers && role == roleTrusted)
+        -> [hrefWarnBadge (entityRoute "togglepublic" version)
+              [htxt "Publish this package version"]]
+      | loginname `elem` map userLoginName maintainers
+        -> [hrefWarnBadge (entityRoute "requestpublish" version)
+              [htxt "Request publishing this version"]]
+      | otherwise -> []
 
   toggleDeprButton =
     if isAdminSession sinfo

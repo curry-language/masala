@@ -12,6 +12,7 @@ import Model.Queries
 import Config.EntityRoutes
 import Config.UserProcesses
 import Controller.Category
+import Controller.Mail
 import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
@@ -49,6 +50,7 @@ mainVersionController = do
     ["edit",s] -> controllerOnKey s editVersionController
     ["toggledepr",s]   -> controllerOnKey s toggleDeprecatedVersionController
     ["togglepublic",s] -> controllerOnKey s togglePublishedVersionController
+    ["requestpublish",s] -> controllerOnKey s requestPublishVersionController
     ["delete",s]       -> controllerOnKey s deleteVersionController
     ["destroy",s]      -> controllerOnKey s destroyVersionController
     _                  -> displayUrlError
@@ -234,6 +236,17 @@ togglePublishedVersionController vers = do
             setPageMessage $ "Package version could not be published " ++
                              "(specification file missing)"
             nextInProcessOr (redirectController (showRoute vers)) Nothing
+
+--- A controller to request the publication of the given Version entity.
+requestPublishVersionController :: Version -> Controller
+requestPublishVersionController vers = do
+  pkg <- runJustT (getVersioningPackage vers)
+  checkAuthorization (adminOrMaintainer pkg) $ \_ -> do
+    let subj = "Please publish my package " ++ packageName pkg ++ "-" ++
+               versionVersion vers
+        cnts = subj ++ " or change my role to a \"trusted user\" so that " ++
+               "I can publish this package by myself."
+    (adminMailController subj cnts)
 
 --- Deletes a given Version entity (after asking for confirmation)
 --- and proceeds with the list controller.

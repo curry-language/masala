@@ -4,7 +4,7 @@
 ------------------------------------------------------------------------------
 
 module System.Spicey (
-  Controller, EntityController(..),
+  ViewBlock, Controller, EntityController(..),
   showRoute, editRoute, deleteRoute, listRoute,
   applyControllerOn, redirectController, nextInProcessOr,
   transactionController,

@@ -69,12 +69,12 @@ uploadPackage loginName packageJson jsonData adminConfirmation = do
           Left (DBError _ msg) -> displayError msg
           Right pkg -> do storePackageSpec (jsonName jsonData)
                             (jsonVersion jsonData) packageJson
-                          return $ displaySuccess pkg
-
+                          return $ displaySuccess pkg (jsonVersion jsonData)
   where
-    displaySuccess :: Package -> [BaseHtml] -- ViewBlock
-    displaySuccess pkg = 
-      [htxt $ "Package " ++ (packageName pkg) ++ " was successfully uploaded!"]
+    displaySuccess :: Package -> String -> ViewBlock
+    displaySuccess pkg vers = 
+      [htxt $ "Package '" ++ packageName pkg ++ "-" ++ vers ++
+              "' successfully uploaded!"]
 
 uploadPackageAction :: User -> ClockTime -> Bool -> String -> String -> String -> [String] -> [String] -> [String] -> DBAction Package
 uploadPackageAction user time adminConfirmation name version description dependencies curryModules categories = do
