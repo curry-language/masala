@@ -9,6 +9,7 @@ module View.SpiceySystem
   ( loginView, processListView, historyView, wForgotPassword )
  where
 
+import Data.Time
 import HTML.Base
 import HTML.Styles.Bootstrap4 ( hrefScndSmButton, primSmButton, scndButton )
 import HTML.WUI
@@ -17,6 +18,7 @@ import Config.UserProcesses
 import System.Processes
 import System.Spicey
 import System.Authentication
+import Model.Masala2
 import Model.Queries
 import View.EntitiesToHtml
 
@@ -45,10 +47,12 @@ loginView (currlogin,lurl) =
         passwdtxt = env passwdfield
     -- In the real system, you should also verify a password here.
     cryptpasswd <- getUserHash loginname passwdtxt
-    loginSuccess <- checkLoginData loginname cryptpasswd
-    if loginSuccess
+    users <- getUsersByLoginData loginname cryptpasswd
+    if not (null users)
       then do role <- getRoleOfUser loginname
               loginToSession loginname role
+              ctime <- getClockTime
+              runT (updateUser (setUserLastLogin (head users) (Just ctime)))
               setPageMessage $
                 "Logged in as: " ++ loginname ++ " / role: " ++ role
               redirectController lasturl >>= getPage

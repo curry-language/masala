@@ -1,4 +1,4 @@
-{-# OPTIONS_FRONTEND -F --pgmF=currypp --optF=foreigncode #-}
+{-# OPTIONS_FRONTEND -F --pgmF=currypp --optF=foreigncode --optF=-o #-}
 
 --- Some SQL queries useful for the implementation of Masala.
 
@@ -57,8 +57,8 @@ checkEmailAvailable email = fmap null $ runQ
          From User as u
          Where u.Email = { email };''
 
-checkLoginData :: String -> String -> IO Bool
-checkLoginData loginName password = fmap (not . null) $ runQ
+getUsersByLoginData :: String -> String -> IO [User]
+getUsersByLoginData loginName password = runQ
   ``sql* Select *
          From User as u
          Where u.LoginName = { loginName } And u.Password = { password } And u.Role != { roleInvalid };''

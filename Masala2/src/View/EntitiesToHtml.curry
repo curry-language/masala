@@ -31,7 +31,7 @@ userToListView user =
   ,[stringToHtml (userRole user)]
   --,[stringToHtml (userPassword user)]
   --,[stringToHtml (userToken user)]
-  --,[maybeDateToHtml (userLastLogin user)]
+  ,[maybeDateToHtml (userLastLogin user)]
   ]
 
 --- The short view of a User entity as a string.
@@ -113,7 +113,8 @@ userLabelListAdmin =
   ,[textstyle "spicey_label spicey_label_for_type_string" "Public Name"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Email"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Public Email"]
-  ,[textstyle "spicey_label spicey_label_for_type_string" "Role"]]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Role"]
+  ,[textstyle "spicey_label spicey_label_for_type_date"   "LastLogin"]]
 
 {-
 userLabelList :: HTML h => [[h]]
