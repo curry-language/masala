@@ -34,6 +34,7 @@ import HTML.Session
 import HTML.Styles.Bootstrap4
 import HTML.WUI
 
+import Config.Roles
 import Config.UserProcesses
 import System.Routes
 import System.Processes
@@ -306,7 +307,7 @@ getPage viewblock = case viewblock of
   _ -> do
     routemenu  <- getRouteMenu
     msg        <- getPageMessage
-    login      <- getSessionLoginName
+    login      <- getSessionLogin
     lasturl    <- getLastUrl
     withSessionCookie $ bootstrapPage2 favIcon cssIncludes jsIncludes
       spiceyTitle spiceyHomeBrand
@@ -326,17 +327,29 @@ getPage viewblock = case viewblock of
       else htmlStruct "header" [("class","pagemessage")] [htxt msg]
         
   rightTopMenu login =
-    maybe [dropDownMenu [htxt "Registration", dropDownIcon]
-             (map (\ (hr,he) -> href hr he `addClass` "dropdown-item")
-                  [ ("?Registration", [htxt "New registration"])
-                  , ("?Validation",   [htxt "Validate your account"])
-                  ]),
+    maybe [ddRegMenu,
            ("nav-item", [hrefNav "?login" [userWhiteIcon, htxt " Login"]])]
-          (\n -> [ dropDownMenu
-                     [userWhiteIcon, htxt $ " " ++ n, dropDownIcon]
-                     (map (\ (hr,he) -> href hr he `addClass` "dropdown-item")
-                          userMenu) ])
+          (\ (n,r) -> (if r == roleAdmin then [ddAdminMenu] else []) ++
+                      [ddUserMenu n] )
           login
+   where
+    ddRegMenu = dropDownMenu [htxt "Registration", dropDownIcon]
+                 (map (\ (hr,he) -> href hr he `addClass` "dropdown-item")
+                      [ ("?Registration", [htxt "New registration"])
+                      , ("?Validation",   [htxt "Validate your account"])
+                      ])
+
+    ddUserMenu n =
+      dropDownMenu [userWhiteIcon, htxt $ " " ++ n, dropDownIcon]
+                   (map (\ (hr,he) -> href hr he `addClass` "dropdown-item")
+                        userMenu)
+
+    ddAdminMenu = dropDownMenu [htxt "Administrator", dropDownIcon]
+        (map (\ (hr,he) -> href hr he `addClass` "dropdown-item")
+             [ ("?User/list", [htxt "All users"])
+             , ("?ValidationToken/list", [htxt "Validation tokens"])
+             , ("?Version/unpublished", [htxt "Unpublished package versions"])
+             ])
 
 -- A dropdown menu (represented as a HTML list item).
 -- The first argument is the title (as HTML expressions) and

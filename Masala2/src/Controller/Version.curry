@@ -42,6 +42,7 @@ mainVersionController = do
   case args of
     [] -> listVersionController
     ["list"] -> listVersionController
+    ["unpublished"] -> allUnpublishedController
     ["new"] -> newVersionController
     ["shows",s] -> controllerOnKey s showStandardVersionController
     ["show",s] -> controllerOnKey s showVersionController
@@ -224,11 +225,15 @@ togglePublishedVersionController vers = do
     if verspub || isNotTrustedUserSession sinfo
       then displayError "Operation not allowed"
       else do
-        transactionController (runT (updateVersion newvers))
-          (const $ do
-             publishPackageVersion (packageName pkg) (versionVersion vers)
-             setPageMessage "Package version has been scheduled for publishing"
-             nextInProcessOr (redirectController (showRoute vers)) Nothing)
+        pp <- publishPackageVersion (packageName pkg) (versionVersion vers)
+        if pp
+          then transactionController (runT (updateVersion newvers)) $ \_ -> do
+            setPageMessage "Package version has been scheduled for publishing"
+            nextInProcessOr (redirectController (showRoute vers)) Nothing
+          else do
+            setPageMessage $ "Package version could not be published " ++
+                             "(specification file missing)"
+            nextInProcessOr (redirectController (showRoute vers)) Nothing
 
 --- Deletes a given Version entity (after asking for confirmation)
 --- and proceeds with the list controller.
@@ -263,6 +268,15 @@ deleteVersionT version =
      cats <- getPackageVersionCategories versioningPackage version
      mapM_ (\cat -> removeCategorizes [version] cat) cats
      deleteVersion version
+
+--- Lists all private versions of packages.
+allUnpublishedController :: Controller
+allUnpublishedController =
+  checkAuthorization (packageOperationAllowed ListEntities)
+   $ (\sinfo ->
+     do versions <- getUnpublishedVersions
+        pkgversions <- mapM (\v -> runJustT (getVersioningPackage v) >>= \p -> return (p,v)) versions
+        return (allVersionsView sinfo "All unpublished package versions" pkgversions))
 
 --- Lists all Version entities with buttons to show, delete,
 --- or edit an entity.

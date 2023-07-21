@@ -193,6 +193,14 @@ getPackageVersions pkg = fmap (map snd) $ runQ
                Satisfies v versionOf p;''
 
 -----------------------------------------------------------------------
+-- Gets all private versions of all packages.
+getUnpublishedVersions :: IO [Version]
+getUnpublishedVersions = runQ
+  ``sql* Select *
+         From Version as v
+         Where v.Published = FALSE;''
+
+-----------------------------------------------------------------------
 -- Gets the categories of a given package version.
 getPackageVersionCategories :: Package -> Version -> DBAction [Category]
 getPackageVersionCategories pkg vers = fmap (map (\(_,_,c) -> c)) $

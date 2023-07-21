@@ -1,7 +1,7 @@
 module View.Version
   ( wVersion, tuple2Version, version2Tuple, wVersionType
-  , showStandardVersionView, showVersionView, listVersionView
-  , leqVersion ) where
+  , showStandardVersionView, showVersionView, allVersionsView
+  , listVersionView, leqVersion ) where
 
 import Data.List
 import Data.Time
@@ -329,6 +329,20 @@ leqVersion v1 v2 = readVersionString v1 <= readVersionString v2
 
   readN s | all isDigit s = read s
           | otherwise     = 0
+
+--- A view for a given list of Package entities.
+allVersionsView :: UserSessionInfo -> String -> [(Package,Version)] -> [BaseHtml]
+allVersionsView _ title pkgversions =
+  [ h1 [htxt title]
+  , par (intersperse nbsp (map listVersion (sortBy leqPkgVersion pkgversions)))]
+ where
+  listVersion (pkg,version) =
+      (if packageAbandoned pkg then hrefScndBadge else hrefPrimBadge)
+        (showRoute version)
+        [htxt (packageName pkg ++ "-" ++ versionVersion version)]
+
+  leqPkgVersion (p1,v1) (p2,v2) =
+    leqPackage p1 p2 || (packageName p1 == packageName p2 && leqVersion v1 v2)
 
 --- Supplies a list view for a given list of Version entities.
 --- Shows also show/edit/delete buttons if the user is logged in.

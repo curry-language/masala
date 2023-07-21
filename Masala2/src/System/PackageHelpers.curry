@@ -94,16 +94,21 @@ storePackageSpec pname pvers pkgtxt = do
   recreateDirectory specdir
   writeFile (specdir </> packageSpecFile) pkgtxt
 
---- Publish a package.
+--- Publish a package and return True if it was possible.
 --- Should be later implemented by contacting the cpm-upload script.
-publishPackageVersion :: String -> String -> IO ()
+publishPackageVersion :: String -> String -> IO Bool
 publishPackageVersion pname pvers = do
   let specfile = "data" </> "packages" </> pname </> pvers </> packageSpecFile
-  pkgtxt <- readFile specfile
-  -- temporary implementation:
-  let pubdir = "data" </> "published" </> pname ++ "-" ++ pvers
-  recreateDirectory pubdir
-  writeFile (pubdir </> packageSpecFile) pkgtxt
+  sfexists <- doesFileExist specfile
+  if sfexists
+    then do
+      pkgtxt <- readFile specfile
+      -- temporary implementation:
+      let pubdir = "data" </> "published" </> pname ++ "-" ++ pvers
+      recreateDirectory pubdir
+      writeFile (pubdir </> packageSpecFile) pkgtxt
+      return True
+    else return False
 
 ------------------------------------------------------------------------------
 -- The name of the package specification file.
