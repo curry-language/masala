@@ -5,6 +5,8 @@
 module Config.Masala
  where
 
+import System.FilePath ( (</>) )
+
 --- Is the current installation a test system?
 --- In a test systems, mails are not really sent but its contents is
 --- just shown in the web page which sent it (see `Controller.Mail`).
@@ -36,3 +38,14 @@ systemHashKey = "3masala25" -- change this key for every spicey instance
 packageURLinCPM :: String -> String
 packageURLinCPM pkgname =
   "https://cpm.curry-lang.org/pkgs/" ++ pkgname ++ ".html"
+
+--- The directory where the sources of uploaded packages are stored.
+--- If it is empty, the sources are not downloaded.
+downloadSourceDir :: String
+downloadSourceDir = "" -- do not download
+--downloadSourceDir = "data" </> "downloads"
+
+--- The directory where the tar files of the sources of uploaded packages
+--- are stored.
+downloadTarDir :: String
+downloadTarDir = "TARFILES"

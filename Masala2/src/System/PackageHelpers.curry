@@ -9,13 +9,14 @@ module System.PackageHelpers
 import System.Directory
 import System.FilePath
 import System.IOExts      ( evalCmd )
-import System.Process     ( getPID )
+import System.Process     ( getPID, system )
 
 import CPM.Package
 import CPM.ErrorLogger
 import CPM.FileUtil
 import CPM.Package.Helpers ( installPackageSourceTo )
 
+import Config.Masala
 
 type PackageJSON = (String,String,String,[String],[String],[String])
 
@@ -58,16 +59,29 @@ checkPackageForUpload pkg = case source pkg of
 --- Tries to download the source of the package. If this is not possible,
 --- return `Left errormsg`, otherwise return the package.
 downloadSource :: Package -> PackageSource -> IO (Either String Package)
-downloadSource pkg _ = return $ Right pkg
-{-
-downloadSource pkg pkgsrc = do
-  let installdir = "data" </> "downloads"
-  recreateDirectory $ installdir </> packageId pkg
-  (msgs,ires) <- fromErrorLoggerMsgs Info $
-                   installPackageSourceTo pkg pkgsrc installdir
-  let downloaderr = "COULD NOT DOWNLOAD PACKAGE SOURCE:\n"
-  return $ maybe (Left $ downloaderr ++ msgs) (const (Right pkg)) ires
--}
+downloadSource pkg pkgsrc =
+  if null downloadSourceDir
+    then return $ Right pkg
+    else do
+      recreateDirectory $ downloadSourceDir </> packageId pkg
+      (msgs,ires) <- fromErrorLoggerMsgs Info $
+                       installPackageSourceTo pkg pkgsrc downloadSourceDir
+      let downloaderr = "COULD NOT DOWNLOAD PACKAGE SOURCE:\n"
+      maybe (return $ Left $ downloaderr ++ msgs) (const createTarFile) ires
+ where
+  createTarFile = do
+    createDirectoryIfMissing True downloadTarDir
+    let pkgid = packageId pkg
+    tarfile <- getAbsolutePath $ downloadTarDir </> pkgid ++ ".tar.gz"
+    system $ unwords [ "rm", "-f", tarfile]
+    let cmd = unwords [ "cd", downloadSourceDir </> pkgid, "&&"
+                      , "tar", "czf", tarfile, ".", "&&"
+                      , "chmod", "644", tarfile
+                      ]
+    ecode <- system cmd
+    if ecode > 0
+      then return $ Left $ "ERROR IN TARRING PACKAGE '" ++ pkgid ++"'!"
+      else return $ Right pkg
 
 --- Transforms a package specification into the data stored in Masala
 --- (name, version, description, dependencies, exported modules, categories).
@@ -104,7 +118,7 @@ publishPackageVersion pname pvers = do
   if sfexists
     then --readFile specfile >>= uploadPackageToCPM
          readFile specfile >>= uploadPackageToMasalaStore pname pvers
-    else return (Left "Specification file missing")
+    else return $ Left "Specification file missing"
 
 --- Uploads a package specification to the CPM repository via `cpm-upload`
 --- command.

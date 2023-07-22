@@ -390,7 +390,7 @@ cssIncludes =
 jsIncludes :: [String]
 jsIncludes = 
   map (\n -> "bt4" </> "js" </> n ++ ".js")
-      ["jquery.slim.min", "bootstrap.bundle.min"]
+      ["jquery.slim.min", "bootstrap.bundle.min", "spicey"]
 
 -------------------------------------------------------------------------
 -- Action performed when a "cancel" button is pressed.

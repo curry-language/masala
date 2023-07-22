@@ -291,16 +291,23 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
     Just (loginname, role)
       | versionPublished version && isAdminSession sinfo
         -> [hrefWarnBadge (entityRoute "togglepublic" version)
-              [htxt "Publish this package version again"]]
+              [htxt "Publish this package version again", uploadSpinner]
+              `addAttr` onClickAttr]
       | versionPublished version -> []
       | isAdminSession sinfo ||
         (loginname `elem` map userLoginName maintainers && role == roleTrusted)
         -> [hrefWarnBadge (entityRoute "togglepublic" version)
-              [htxt "Publish this package version"]]
+              [htxt "Publish this package version", uploadSpinner]
+              `addAttr` onClickAttr]
       | loginname `elem` map userLoginName maintainers
         -> [hrefWarnBadge (entityRoute "requestpublish" version)
               [htxt "Request publishing this version"]]
       | otherwise -> []
+   where
+    onClickAttr = ("onClick","setDisplayInlineBlock('uploadSpinner')")
+    uploadSpinner = textstyle "spinner-border spinner-border-sm" "Publishing..."
+      `addAttrs` [("id","uploadSpinner"), ("role","status"),
+                  ("style","display:none")]
 
   toggleDeprButton =
     if isAdminSession sinfo

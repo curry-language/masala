@@ -1,3 +1,5 @@
+{-# OPTIONS_FRONTEND -Wno-incomplete-patterns #-}
+
 module Model.Initialization where
 
 import Model.Masala2
