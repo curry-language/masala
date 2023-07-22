@@ -8,6 +8,7 @@ module System.PackageHelpers
 
 import System.Directory
 import System.FilePath
+import System.IOExts      ( evalCmd )
 import System.Process     ( getPID )
 
 import CPM.Package
@@ -96,19 +97,35 @@ storePackageSpec pname pvers pkgtxt = do
 
 --- Publish a package and return True if it was possible.
 --- Should later be implemented by contacting the cpm-upload script.
-publishPackageVersion :: String -> String -> IO Bool
+publishPackageVersion :: String -> String -> IO (Either String String)
 publishPackageVersion pname pvers = do
   let specfile = "data" </> "packages" </> pname </> pvers </> packageSpecFile
   sfexists <- doesFileExist specfile
   if sfexists
-    then do
-      pkgtxt <- readFile specfile
-      -- temporary implementation:
-      let pubdir = "data" </> "published" </> pname ++ "-" ++ pvers
-      recreateDirectory pubdir
-      writeFile (pubdir </> packageSpecFile) pkgtxt
-      return True
-    else return False
+    then --readFile specfile >>= uploadPackageToCPM
+         readFile specfile >>= uploadPackageToMasalaStore pname pvers
+    else return (Left "Specification file missing")
+
+--- Uploads a package specification to the CPM repository via `cpm-upload`
+--- command.
+--- Returns either an error message or the standard output.
+uploadPackageToCPM :: String -> IO (Either String String)
+uploadPackageToCPM pkgspec = do
+  (rc,out,err) <- evalCmd "ssh"
+                          ["-p 55055", "cpm@cpm.informatik.uni-kiel.de",
+                           ".cpm/bin/cpm-upload", "-f"] pkgspec
+  return $ if rc == 0 then Right out
+                      else Left $ err ++ out
+
+-- Temporary implementation without really uploading:
+uploadPackageToMasalaStore :: String -> String -> String
+                           -> IO (Either String String)
+uploadPackageToMasalaStore pname pvers pkgspec = do
+  let pubdir = "data" </> "published" </> pname ++ "-" ++ pvers
+  recreateDirectory pubdir
+  writeFile (pubdir </> packageSpecFile) pkgspec
+  return $ Right "Package stored in published packages"
+
 
 ------------------------------------------------------------------------------
 -- The name of the package specification file.

@@ -222,20 +222,19 @@ togglePublishedVersionController :: Version -> Controller
 togglePublishedVersionController vers = do
   pkg <- runJustT (getVersioningPackage vers)
   checkAuthorization (adminOrMaintainer pkg) $ \sinfo -> do
-    let verspub = versionPublished vers
-        newvers = setVersionPublished vers True
-    if verspub || isNotTrustedUserSession sinfo
+    let newvers = setVersionPublished vers True
+    if isNotTrustedUserSession sinfo
       then displayError "Operation not allowed"
-      else do
-        pp <- publishPackageVersion (packageName pkg) (versionVersion vers)
-        if pp
-          then transactionController (runT (updateVersion newvers)) $ \_ -> do
-            setPageMessage "Package version has been scheduled for publishing"
-            nextInProcessOr (redirectController (showRoute vers)) Nothing
-          else do
-            setPageMessage $ "Package version could not be published " ++
-                             "(specification file missing)"
-            nextInProcessOr (redirectController (showRoute vers)) Nothing
+      else publishPackageVersion (packageName pkg) (versionVersion vers) >>=
+        either
+          (\e -> do
+             setPageMessage $ "Package version could not be published: " ++ e
+             nextInProcessOr (redirectController (showRoute vers)) Nothing )
+          (\o ->
+             transactionController (runT (updateVersion newvers)) $ \_ -> do
+               setPageMessage $
+                 "Package version has been scheduled for publishing: " ++ o
+               nextInProcessOr (redirectController (showRoute vers)) Nothing )
 
 --- A controller to request the publication of the given Version entity.
 requestPublishVersionController :: Version -> Controller

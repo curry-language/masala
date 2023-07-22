@@ -289,6 +289,9 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
   togglePublicButton = case userLoginOfSession sinfo of
     Nothing             -> []
     Just (loginname, role)
+      | versionPublished version && isAdminSession sinfo
+        -> [hrefWarnBadge (entityRoute "togglepublic" version)
+              [htxt "Publish this package version again"]]
       | versionPublished version -> []
       | isAdminSession sinfo ||
         (loginname `elem` map userLoginName maintainers && role == roleTrusted)
