@@ -39,6 +39,14 @@ packageURLinCPM :: String -> String
 packageURLinCPM pkgname =
   "https://cpm.curry-lang.org/pkgs/" ++ pkgname ++ ".html"
 
+--- Log file for emails.
+emailLogFile :: String
+emailLogFile = "data" </> "EMAILLOG.txt"
+
+--- The directory where the package specifications (`package.json`) are stored.
+packageSpecDir :: String
+packageSpecDir = "data" </> "packages"
+
 --- The directory where the sources of uploaded packages are stored.
 --- If it is empty, the sources are not downloaded.
 downloadSourceDir :: String

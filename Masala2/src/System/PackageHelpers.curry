@@ -105,7 +105,7 @@ masalaDataOfPackage pkg =
 --- as the CPM index.
 storePackageSpec :: String -> String -> String -> IO ()
 storePackageSpec pname pvers pkgtxt = do
-  let specdir = "data" </> "packages" </> pname </> pvers
+  let specdir = packageSpecDir </> pname </> pvers
   recreateDirectory specdir
   writeFile (specdir </> packageSpecFile) pkgtxt
 
@@ -113,7 +113,7 @@ storePackageSpec pname pvers pkgtxt = do
 --- Should later be implemented by contacting the cpm-upload script.
 publishPackageVersion :: String -> String -> IO (Either String String)
 publishPackageVersion pname pvers = do
-  let specfile = "data" </> "packages" </> pname </> pvers </> packageSpecFile
+  let specfile = packageSpecDir </> pname </> pvers </> packageSpecFile
   sfexists <- doesFileExist specfile
   if sfexists
     then --readFile specfile >>= uploadPackageToCPM

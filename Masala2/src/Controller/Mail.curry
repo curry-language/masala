@@ -5,6 +5,9 @@ module Controller.Mail
   , sendPasswordMail )
  where
 
+import Control.Monad  ( unless )
+import Data.Time
+import System.IOExts  ( exclusiveIO )
 import qualified System.Mail
 
 import Config.Masala
@@ -40,7 +43,7 @@ adminMailController subject contents = do
 mailFormDef :: HtmlFormDef (String,String,String,String,String,String)
 mailFormDef = formDefWithID "Controller.Mail.mailFormDef"
   (getSessionData mailViewData ("","","","","",""))
-  (mailView sendMail)
+  (mailView sendMailController)
 
 --- The session store for the mail view contains the login name,
 --- the comment shown at the top, the name of the recipient,
@@ -50,17 +53,36 @@ mailViewData = sessionStore "mailViewData"
 
 ------------------------------------------------------------------------------
 
-sendMail :: [BaseHtml] -> String -> String -> String -> Controller
-sendMail emailInfo to subject contents = do
+--- Sends an email similarly to `System.Mail.sendMail` and log the
+--- email in the email log file of Masala.
+--- @param from - the email address of the sender
+--- @param to - the email address of the recipient
+--- @param subject - the subject of the email
+--- @param contents - the contents of the email
+sendMail :: String -> String -> String -> String -> IO ()
+sendMail from to subject contents = do
   let mailtxt = System.Mail.showSendMail adminEmail to subject contents
+      line    = take 78 (repeat '-')
+  ctime <- fmap (calendarTimeToString . toUTCTime) getClockTime
+  exclusiveIO (emailLogFile ++ ".LOCK") $
+    appendFile emailLogFile
+               (line ++ "\nSent at " ++ ctime ++ " (UTC)\n" ++ mailtxt)
+  unless testSystem $ System.Mail.sendMail from to subject contents
+
+--- A controller which sends an email to a given recipient with
+--- given subject and contents. After sending, the info document
+--- provided as the first argument is shown.
+sendMailController :: [BaseHtml] -> String -> String -> String -> Controller
+sendMailController emailInfo to subject contents = do
+  let mailtxt = System.Mail.showSendMail adminEmail to subject contents
+  sendMail adminEmail to subject contents
   if testSystem
     then return $ emailInfo ++
                   -- for testing only
                   [ hrule
                   , h3 [htxt "Mail sent in the real system:"]
                   , verbatim mailtxt ]
-    else do System.Mail.sendMail adminEmail to subject contents
-            return emailInfo
+    else return emailInfo
 
 sendPasswordMail :: String -> String -> Controller
 sendPasswordMail to password = do
@@ -71,7 +93,7 @@ sendPasswordMail to password = do
       emailInfo = [ h3 [htxt "Password reset successful!"],
                     par [htxt $ "In order to login, please use the password contained " ++
                                 "in an email sent to '" ++ to ++ "'."] ]
-  sendMail emailInfo to subject contents
+  sendMailController emailInfo to subject contents
 
 -- Send an email to request the validation of the registered email address.
 sendValidationMail :: String -> String -> Controller
@@ -84,7 +106,7 @@ sendValidationMail to token = do
                       "In order to use your account, please activate it by " ++
                       "following the link (URL) containing in an email " ++
                       "sent to '" ++ to ++ "'." ] ]
-  sendMail emailInfo to subject contents
+  sendMailController emailInfo to subject contents
 {-
 sendValidationMail :: String -> String -> Controller
 sendValidationMail to token = do
