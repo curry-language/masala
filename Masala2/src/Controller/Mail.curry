@@ -1,8 +1,8 @@
 --- A controller to send emails and informs the result in a web page
 
 module Controller.Mail
-  ( mailController, adminMailController, mailFormDef, sendValidationMail
-  , sendPasswordMail )
+  ( mailController, adminMailController, mailFormDef
+  , sendMail, sendValidationMail, sendPasswordMail )
  where
 
 import Control.Monad  ( unless )
