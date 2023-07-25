@@ -153,17 +153,26 @@ getPackageVersionByNameAction pname vers = fmap (listToMaybe . map snd) $
                Satisfies v versionOf p;''
 
 getPackageVersionByName :: String -> String -> IO (Maybe Version)
-getPackageVersionByName pname vers = runQ $  getPackageVersionByNameAction pname vers
+getPackageVersionByName pname vers =
+  runQ $ getPackageVersionByNameAction pname vers
 
 getNumberOfMaintainers :: Package -> IO Int
-getNumberOfMaintainers = fmap length . getMaintainersOfPackage
+getNumberOfMaintainers = fmap length . runQ . queryMaintainersOfPackage
 
-getMaintainersOfPackage :: Package -> IO [User]
-getMaintainersOfPackage package = fmap (map fst) $ runQ
+queryMaintainersOfPackage :: Package -> DBAction [User]
+queryMaintainersOfPackage package = fmap (map fst) $
   ``sql* Select *
          From User as u, Package as p
          Where p.Key = { packageKey package } And
                Satisfies u maintains p;''
+
+--- Queries the users watching a package.
+queryWatchersOfPackage :: Package -> DBAction [User]
+queryWatchersOfPackage package = fmap (map fst) $
+  ``sql* Select *
+         From User as u, Package as p
+         Where p.Key = { packageKey package } And
+               Satisfies u watches p;''
 
 getNonMaintainersOfPackage :: Package -> IO [User]
 getNonMaintainersOfPackage package = fmap (map fst) $ runQ

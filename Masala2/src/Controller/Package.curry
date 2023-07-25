@@ -140,7 +140,7 @@ deletePackageController package =
   checkAuthorization (packageOperationAllowed (DeleteEntity package))
    $ (\sinfo ->
      confirmDeletionPage sinfo
-      (concat ["Really delete entity \"",packageToShortView package,"\"?"]))
+      (concat ["Really delete package \"",packageToShortView package,"\"?"]))
 
 --- Deletes a given Package entity
 --- and proceeds with the list controller.
@@ -155,7 +155,12 @@ destroyPackageController package =
 
 --- Transaction to delete a given Package entity.
 deletePackageT :: Package -> DBAction ()
-deletePackageT package = deletePackage package
+deletePackageT pkg = do
+  maintainers <- queryMaintainersOfPackage pkg
+  mapM_ (\u -> deleteMaintainer (userKey u) (packageKey pkg)) maintainers
+  watchers <- queryWatchersOfPackage pkg
+  mapM_ (\u -> deleteWatching (userKey u) (packageKey pkg)) watchers
+  deletePackage pkg
 
 --- Lists all Package entities with buttons to show, delete,
 --- or edit an entity.
@@ -177,11 +182,12 @@ allPackagesController =
 --- Shows a Package entity.
 showPackageController :: Package -> Controller
 showPackageController package =
-  checkAuthorization (packageOperationAllowed (ShowEntity package)) $ \_ -> do
-    versions <- getPackageVersions package
-    if null versions
-      then displayError "Package has no versions!"
-      else showVersionController (last (sortBy leqVersion versions))
+  checkAuthorization (packageOperationAllowed (ShowEntity package)) $
+   \sinfo -> do
+      versions <- getPackageVersions package
+      if null versions
+        then return $ showNoVersionPackageView sinfo package
+        else showVersionController (last (sortBy leqVersion versions))
 
 addMaintainerPackageController :: Package -> Controller
 addMaintainerPackageController package = 

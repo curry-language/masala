@@ -1,5 +1,6 @@
 module View.Package
-  ( wPackage, tuple2Package, package2Tuple, wPackageType, showPackageView
+  ( wPackage, tuple2Package, package2Tuple, wPackageType
+  , showNoVersionPackageView, showPackageView
   , wAddMaintainer, wAddMaintainerType
   , wAddMaintainerAdmin, wAddMaintainerTypeAdmin
   , leqPackage, listPackageView, allPackagesView
@@ -37,6 +38,21 @@ package2Tuple package = (packageName package,packageAbandoned package)
 wPackageType :: Package -> WuiSpec Package
 wPackageType package =
   transformWSpec (tuple2Package package,package2Tuple) wPackage
+
+--- Supplies a view to show the a package having no versions.
+--- For the admin, a delete button is displayed.
+showNoVersionPackageView :: UserSessionInfo -> Package -> [BaseHtml]
+showNoVersionPackageView sinfo package =
+  [ h1 $ [smallMutedText "Curry Package ", htxt $ packageName package] ++
+         deleteButton
+  , h5 [htxt $ "This package has no versions."]]
+ where
+  deleteButton =
+    if isAdminSession sinfo
+      then [nbsp,
+            hStruct "small" [hrefWarnBadge (deleteRoute package)
+                               [htxt $ "Delete package"]]]
+      else []
 
 --- Supplies a view to show the details of a Package.
 showPackageView :: UserSessionInfo -> [Version] -> Package -> [BaseHtml]
