@@ -70,7 +70,8 @@ wCategoryDescType category =
 --- Supplies a view to show the details of a Category.
 showCategoryView :: UserSessionInfo -> Category -> [Package] -> [BaseHtml]
 showCategoryView sinfo category packages =
-  [ h1 $ [htxt $ categoryName category, nbsp] ++ editButton, hrule ] ++
+  [ h1 $ [htxt $ categoryName category, nbsp] ++ editButton ++ delButton,
+          hrule ] ++
   (if null catdesc then [] else [par [htxt catdesc, hrule]]) ++ 
   [ h5 [htxt "Packages in this category:"]
   , par (intersperse nbsp (map listPackage (sortBy leqPackage packages)))
@@ -79,7 +80,12 @@ showCategoryView sinfo category packages =
   editButton = if isAdminSession sinfo
                  then [htmlStruct "small" []
                          [hrefWarnBadge (editRoute category)
-                                        [htxt "Edit description"]]]
+                                        [htxt "Edit description"], nbsp]]
+                 else []
+  delButton = if isAdminSession sinfo && null packages
+                 then [htmlStruct "small" []
+                         [hrefWarnBadge (deleteRoute category)
+                                        [htxt "Delete category"]]]
                  else []
   catdesc = categoryDescription category
   listPackage p = hrefPrimBadge (showRoute p) [htxt (packageName p)]

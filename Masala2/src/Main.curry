@@ -41,6 +41,6 @@ main = do
                                   (urlencoded2string package)
                                   (read publish)
                                   (read force)
-            return $ answerEncText "utf-8"uptxt
+            return $ answerEncText "utf-8" uptxt
     _ ->  dispatcher
 

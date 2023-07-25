@@ -191,7 +191,7 @@ showVersionView sinfo version package uploader maintainers cats allversions
 
   contents =
     [ par [htxt $ versionDescription version]
-    , par [ehrefInfoBadge (packageURLinCPM (packageName package))
+    , par [eTarget $ hrefInfoButton (packageURLinCPM (packageName package))
              [htxt "Detailed package information"],
            htxt " (available when the package has been published)"]
     ] ++

@@ -164,7 +164,7 @@ deleteCategoryController category =
   checkAuthorization (categoryOperationAllowed (DeleteEntity category))
    $ (\sinfo ->
      confirmDeletionPage sinfo
-      (concat ["Really delete entity \"",categoryToShortView category,"\"?"]))
+      (concat ["Really delete category \"",categoryToShortView category,"\"?"]))
 
 --- Deletes a given Category entity
 --- and proceeds with the list controller.
