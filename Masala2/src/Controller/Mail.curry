@@ -100,7 +100,7 @@ sendValidationMail :: String -> String -> Controller
 sendValidationMail to token = do 
   let subject  = "Please validate your email address"
       contents = "To validate your email address, please go to the URL\n"++
-                 baseURL ++ "?Validation/" ++ token
+                 mainScriptURL ++ "?Validation/" ++ token
       emailInfo = [ h3 [htxt "Initial registration successful!"],
                     par [htxt $
                       "In order to use your account, please activate it by " ++
@@ -112,7 +112,7 @@ sendValidationMail :: String -> String -> Controller
 sendValidationMail to token = do
   let subject  = "Please validate your email address"
       contents = "To validate your email address, please go to the URL "++
-                 baseURL ++ "?Validation/" ++ token
+                 mainScriptURL ++ "?Validation/" ++ token
   -- for testing:
   let mailtxt = showSendMail adminEmail to subject contents
   return $ emailInfo to ++

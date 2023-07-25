@@ -114,20 +114,26 @@ storePackageSpec pname pvers pkgtxt = do
 publishPackageVersion :: String -> String -> IO (Either String String)
 publishPackageVersion pname pvers = do
   let specfile = packageSpecDir </> pname </> pvers </> packageSpecFile
+      tarfile  = downloadTarDir </> pname ++ "-" ++ pvers ++ ".tar.gz"
   sfexists <- doesFileExist specfile
-  if sfexists
-    then --readFile specfile >>= uploadPackageToCPM
+  tfexists <- doesFileExist tarfile
+  if sfexists && tfexists
+    then --readFile specfile >>= uploadPackageToCPM tarfile
          readFile specfile >>= uploadPackageToMasalaStore pname pvers
-    else return $ Left "Specification file missing"
+    else return $ Left $
+           if sfexists then "Tar file missing"
+                       else "Specification file missing"
 
---- Uploads a package specification to the CPM repository via `cpm-upload`
---- command.
+--- Uploads a package specification with a given tar file containing the
+--- package source to the CPM repository via the `cpm-upload -t` command.
 --- Returns either an error message or the standard output.
-uploadPackageToCPM :: String -> IO (Either String String)
-uploadPackageToCPM pkgspec = do
+uploadPackageToCPM :: String -> String -> IO (Either String String)
+uploadPackageToCPM tarfile pkgspec = do
   (rc,out,err) <- evalCmd "ssh"
-                          ["-p 55055", "cpm@cpm.informatik.uni-kiel.de",
-                           ".cpm/bin/cpm-upload", "-f"] pkgspec
+                          [ "-p 55055", "cpm@cpm.informatik.uni-kiel.de"
+                          , ".cpm/bin/cpm-upload", "-t"
+                          , baseURL ++ "/" ++ tarfile]
+                          pkgspec
   return $ if rc == 0 then Right out
                       else Left $ err ++ out
 
