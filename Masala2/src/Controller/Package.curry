@@ -177,7 +177,7 @@ allPackagesController =
   checkAuthorization (packageOperationAllowed ListEntities)
    $ (\sinfo ->
      do packages <- runQ queryAllPackages
-        return (allPackagesView sinfo "Index of all packages" packages))
+        return (allPackagesView sinfo "All packages" packages))
 
 --- Shows a Package entity.
 showPackageController :: Package -> Controller

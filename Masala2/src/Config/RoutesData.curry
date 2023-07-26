@@ -40,6 +40,7 @@ getRoutes =
       ,("List Version",Prefix "Version" "list",VersionController)
       ,("New Version",Prefix "Version" "new",VersionController)
       ,("Categories",Prefix "Category" "list",CategoryController)
+      ,("Packages by Category",Prefix "Category" "listpkgs",CategoryController)
       ,("New Category",Prefix "Category" "new",CategoryController)
       ,("List CurryModule",Prefix "CurryModule" "list",CurryModuleController)
       ,("New CurryModule",Prefix "CurryModule" "new",CurryModuleController)

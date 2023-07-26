@@ -28,6 +28,7 @@ mainCategoryController =
      case args of
        [] -> allCategoriesController
        ["list"] -> allCategoriesController
+       ["listpkgs"] -> allCategoriesPackagesController
        ["new"] -> newCategoryController
        ["show",s] -> controllerOnKey s showCategoryController
        ["edit",s] -> controllerOnKey s editCategoryDescController
@@ -200,6 +201,15 @@ allCategoriesController =
    $ (\sinfo ->
      do categorys <- runQ queryAllCategorys
         return (allCategoriesView sinfo categorys))
+
+--- Lists all Category entities together with their packages.
+allCategoriesPackagesController :: Controller
+allCategoriesPackagesController =
+  checkAuthorization (categoryOperationAllowed ListEntities)
+   $ (\sinfo ->
+     do categories <- runQ queryAllCategorys
+        catpkgs <- mapM (\c -> getPackagesOfCategory c >>= \ps -> return (c,ps)) categories
+        return (allCategoriesPackagesView sinfo catpkgs))
 
 --- Shows a Category entity.
 showCategoryController :: Category -> Controller

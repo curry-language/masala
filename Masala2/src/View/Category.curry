@@ -1,6 +1,7 @@
 module View.Category
   ( wCategory, tuple2Category, category2Tuple, wCategoryType, wCategoryDescType
-  , showCategoryView, listCategoryView, allCategoriesView ) where
+  , showCategoryView, listCategoryView, allCategoriesView
+  , allCategoriesPackagesView ) where
 
 import Data.List
 import Data.Time
@@ -72,7 +73,7 @@ showCategoryView :: UserSessionInfo -> Category -> [Package] -> [BaseHtml]
 showCategoryView sinfo category packages =
   [ h1 $ [htxt $ categoryName category, nbsp] ++ editButton ++ delButton,
           hrule ] ++
-  (if null catdesc then [] else [par [htxt catdesc, hrule]]) ++ 
+  (if null catdesc then [] else [par [italic [htxt catdesc, hrule]]]) ++ 
   [ h5 [htxt "Packages in this category:"]
   , par (intersperse nbsp (map listPackage (sortBy leqPackage packages)))
   , hrule ]
@@ -117,7 +118,7 @@ listCategoryView sinfo categorys =
 --- A view for a given list of Category entities.
 allCategoriesView :: UserSessionInfo -> [Category] -> [BaseHtml]
 allCategoriesView sinfo categorys =
-  [ h1 [htxt "Index of all categories"]
+  [ h1 [htxt "All categories"]
   , par (intersperse nbsp (map listCategory (sortBy leqCategory categorys)))] ++
   if isAdminSession sinfo
     then [ breakline
@@ -126,3 +127,29 @@ allCategoriesView sinfo categorys =
   where
     listCategory category =
       hrefPrimBadge (showRoute category) [htxt (categoryName category)]
+
+--- A view for a given list of Category entities.
+allCategoriesPackagesView :: UserSessionInfo -> [(Category,[Package])]
+                          -> [BaseHtml]
+allCategoriesPackagesView sinfo catpkgs =
+  [ h1 [htxt "All categories and their packages"] ] ++
+  concatMap showCatPkgs
+            (sortBy (\ (c1,_) (c2,_) -> leqCategory c1 c2) catpkgs) ++
+  if isAdminSession sinfo
+    then [ breakline
+         , hrefWarnSmButton "?Category/new" [htxt "Add a new category"]]
+    else []
+  where
+    showCatPkgs (category,pkgs) =
+      [h3 [hrefInfoBadge (showRoute category)
+                         [htxt (categoryName category)]]] ++
+      (if null catdesc then [] else [par [italic [htxt catdesc, hrule]]]) ++ 
+  
+      [ par [htxt "Packages in this category:"]
+      , par (intersperse nbsp
+               (map listPackage (sortBy leqPackage pkgs)))
+      , hrule
+      ]
+     where
+      catdesc = categoryDescription category
+      listPackage p = hrefPrimBadge (showRoute p) [htxt (packageName p)]
