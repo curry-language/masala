@@ -32,6 +32,10 @@ jsonName (name,_,_,_,_,_) = name
 jsonVersion :: PackageJSON -> String
 jsonVersion (_,vsn,_,_,_,_) = vsn
 
+--- The package id.
+jsonPackageID :: PackageJSON -> String
+jsonPackageID pj = jsonName pj ++ "-" ++ jsonVersion pj
+
 --- Parses a string representation of a package description
 --- and returns either an error message or some package data
 --- (name, version, description, dependencies, exported modules, categories).
@@ -118,8 +122,9 @@ publishPackageVersion pname pvers = do
   sfexists <- doesFileExist specfile
   tfexists <- doesFileExist tarfile
   if sfexists && tfexists
-    then --readFile specfile >>= uploadPackageToCPM tarfile
-         readFile specfile >>= uploadPackageToMasalaStore pname pvers
+    then if testSystem
+           then readFile specfile >>= uploadPackageToMasalaStore pname pvers
+           else readFile specfile >>= uploadPackageToCPM tarfile
     else return $ Left $
            if sfexists then "Tar file missing"
                        else "Specification file missing"

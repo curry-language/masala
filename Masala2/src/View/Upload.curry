@@ -3,7 +3,7 @@ module View.Upload
  where
 
 import HTML.Base
-import HTML.Styles.Bootstrap4 ( hrefScndSmButton, primSmButton, scndButton )
+import HTML.Styles.Bootstrap4 ( hrefScndSmButton, primSmButton, scndSmButton )
 import HTML.WUI
 
 import Database.CDBI.Connection
@@ -42,7 +42,7 @@ wUploadCheck (msg, packageJson, jsonMaybe) =
                 "version might be overwritten or new categories may be " ++
                 "created. Please confirm or cancel the upload."]
   , primSmButton "Upload" uploadHandler, nbsp
-  , primSmButton "Cancel" cancelHandler]
+  , scndSmButton "Cancel" cancelHandler]
     where
       uploadHandler _ = do
         sinfo <- getUserSessionInfo
@@ -106,7 +106,8 @@ uploadPackageAction user time adminConfirmation name version description depende
             vsnResult <- getPackageVersionByNameAction name version
             if isJust vsnResult && not adminConfirmation
               -- Version already exists, no admin confirmation, deny upload
-              then actionError "Version already exists, please choose another version"
+              then actionError $ "Version '" ++ name ++ "-" ++ version ++
+                                 "' already exists, please choose another version"
               -- Version does not exist or we have admin confirmation
               else do
                 case vsnResult of 

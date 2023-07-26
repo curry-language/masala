@@ -62,7 +62,7 @@ uploadJsonForm =
                             nonExistingCats <- do
                                 cats <- getCategoriesWithName (jsonCategories jsonData)
                                 return $ lefts cats
-                            let msg = errorMessage vsnExist nonExistingCats
+                            let msg = errorMessage jsonData vsnExist nonExistingCats
                             -- Check if admin
                             if isAdminSession sinfo && (vsnExist || not (null nonExistingCats))
                                 then do
@@ -77,11 +77,15 @@ uploadJsonForm =
             )
             (\sinfo -> renderWUI sinfo "Upload Package" "Upload" "?Upload" ())
     where
-        errorMessage :: Bool -> [String] -> String
-        errorMessage vsnExist nonExistingCats = let
-                vsnMsg = if vsnExist then "Version already exists" else ""
-                catMsg = if null nonExistingCats then "" else ("Some categories do not exist: " ++ show nonExistingCats)
-            in unlines [vsnMsg, catMsg]
+        errorMessage :: PackageJSON -> Bool -> [String] -> String
+        errorMessage jd vsnExist nonExistingCats = unlines [vsnMsg, catMsg]
+         where
+          vsnMsg = if vsnExist
+                     then "Version '" ++ jsonPackageID jd ++ "' already exists!"
+                     else ""
+          catMsg = if null nonExistingCats
+                     then "" 
+                     else "Some categories do not exist: " ++ unwords nonExistingCats
 
 uploadJsonStore :: SessionStore (UserSessionInfo,WuiStore String)
 uploadJsonStore = sessionStore "uploadJsonStore"
