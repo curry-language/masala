@@ -22,8 +22,8 @@ module System.Spicey (
   saveLastUrl, getLastUrl, getLastUrls
   ) where
 
-import Data.Char           ( isSpace, isDigit )
-import Data.List           ( split )
+import Data.Char           ( isSpace, isDigit, toLower )
+import Data.List           ( intersperse, nub, split )
 
 import Data.Time
 import System.FilePath     ( (</>) )
@@ -327,15 +327,15 @@ getPage viewblock = case viewblock of
       else htmlStruct "header" [("class","pagemessage")] [htxt msg]
         
   rightTopMenu login =
-    maybe [ddRegMenu,
-           ("nav-item", [hrefNav "?login" [userWhiteIcon, htxt " Login"]])]
+    maybe [ddRegMenu]
           (\ (n,r) -> (if r == roleAdmin then [ddAdminMenu] else []) ++
                       [ddUserMenu n] )
           login
    where
-    ddRegMenu = dropDownMenu [htxt "Registration", dropDownIcon]
+    ddRegMenu = dropDownMenu [htxt "Login/Register", dropDownIcon]
                  (map (\ (hr,he) -> href hr he `addClass` "dropdown-item")
-                      [ ("?Registration", [htxt "New registration"])
+                      [ ("?login",        [htxt "Login"])
+                      , ("?Registration", [htxt "New registration"])
                       , ("?Validation",   [htxt "Validate your account"])
                       ])
 
