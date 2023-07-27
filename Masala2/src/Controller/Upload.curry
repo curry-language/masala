@@ -109,27 +109,6 @@ uploadCheckStore = sessionStore "uploadCheckStore"
 
 --------------------------------------------------------
 
-{-
-uploadController :: Controller
-uploadController = do
-    checkAuthorization
-        (packageOperationAllowed NewEntity)
-        (\sinfo ->
-            case userLoginOfSession sinfo of 
-                Nothing -> displayError "You must be logged in to upload packages"
-                Just (loginName, role) -> do
-                    putSessionData uploadViewData loginName
-                    return $ [formElem uploadFormDef]
-        )
-
-uploadFormDef :: HtmlFormDef String
-uploadFormDef = formDefWithID "Controller.Upload.uploadFormDef"
-    (getSessionData uploadViewData "") uploadView
-
-uploadViewData :: SessionStore String
-uploadViewData = sessionStore "uploadViewData"
--}
-
 --- Uploads a package in batch mode, i.e., the parameters are the
 --- login name, the encrypted password and the text of the package
 --- specification (`package.json` file contents.
@@ -144,13 +123,33 @@ uploadViewData = sessionStore "uploadViewData"
 --- is allowed if the user as an admin.
 uploadByName :: String -> String -> String -> Bool -> Bool -> IO String
 uploadByName login passwd packagetxt publish force = do
-  -- an empty implementation just returning the parameters:
-  let answer = unlines [ "LOGIN   : " ++ login
-                       , "PASSWORD: " ++ passwd
-                       , "PUBLISH : " ++ show publish
-                       , "FORCE   : " ++ show force
-                       , "PACKAGE:", packagetxt]
-  -- and call
-  --   storePackageSpec pname pvers packagetxt
-  -- in the real implementation
-  return answer
+    userResult <- getUserByLoginData login passwd
+    case userResult of 
+        Nothing -> return ("User " ++ login ++ " does not exist")
+        Just user -> do
+            case force && userRole user /= roleAdmin of
+                True -> return "'force' can only be used by an Admin"
+                False -> do
+                    case publish && userRole user /= roleAdmin && userRole user /= roleTrusted of
+                        True -> return "'publish' can only be used by an Admin or Trusted User"
+                        False -> do
+                            jsonResult <- readPackageData packagetxt
+                            case jsonResult of
+                                Left err -> return err
+                                Right json -> do
+                                    time <- getClockTime
+                                    uploadResult <- runT $ uncurry6 (uploadPackageAction user time force) json
+                                    case uploadResult of
+                                        Left (DBError _ msg) -> return msg
+                                        Right (pkg, vsn) -> do
+                                            if publish
+                                                then do
+                                                    publishResult <- publishPackageVersion
+                                                        (packageName pkg) (versionVersion vsn)
+                                                    case publishResult of 
+                                                        Left err ->
+                                                            return ("Package successfully uploaded, but publishing failed: " ++ err)
+                                                        Right msg ->
+                                                            -- runT $ updateVersion (setVersionPublished vsn True)
+                                                            return ("Package successfully uploaded and published: " ++ msg)
+                                                else return "Package successfully uploaded"

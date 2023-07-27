@@ -1,5 +1,5 @@
 module View.Upload
-  ( wUploadJson, wUploadCheck, uploadPackage )
+  ( wUploadJson, wUploadCheck, uploadPackage, uploadPackageAction )
  where
 
 import HTML.Base
@@ -67,16 +67,18 @@ uploadPackage loginName packageJson jsonData adminConfirmation = do
           uncurry6 (uploadPackageAction user time adminConfirmation) jsonData
         case result of 
           Left (DBError _ msg) -> displayError msg
-          Right pkg -> do storePackageSpec (jsonName jsonData)
-                            (jsonVersion jsonData) packageJson
-                          return $ displaySuccess pkg (jsonVersion jsonData)
+          Right (pkg, _) -> do
+            storePackageSpec (jsonName jsonData) (jsonVersion jsonData) packageJson
+            return $ displaySuccess pkg (jsonVersion jsonData)
   where
     displaySuccess :: Package -> String -> ViewBlock
     displaySuccess pkg vers = 
       [htxt $ "Package '" ++ packageName pkg ++ "-" ++ vers ++
               "' successfully uploaded!"]
 
-uploadPackageAction :: User -> ClockTime -> Bool -> String -> String -> String -> [String] -> [String] -> [String] -> DBAction Package
+uploadPackageAction
+  :: User -> ClockTime -> Bool -> String -> String -> String -> [String]
+  -> [String] -> [String] -> DBAction (Package, Version)
 uploadPackageAction user time adminConfirmation name version description dependencies curryModules categories = do
     -- Find all dependencies
     depsResult <- getDependenciesWithNameAction dependencies
@@ -132,11 +134,11 @@ uploadPackageAction user time adminConfirmation name version description depende
                 -- Create categorizes
                 mapM_ (flip newCategorizes (versionKey vsn)) (map categoryKey (cats ++ newCats))
 
-                return pkg
+                return (pkg, vsn)
   where
     actionError msg = failDB (DBError UnknownError msg)
 
-    dependencyCategoryError :: [String] -> [String] -> DBAction Package
+    dependencyCategoryError :: [String] -> [String] -> DBAction (Package, Version)
     dependencyCategoryError missingDeps missingCats = let
         msg = dependencyError missingDeps ++ "; " ++ categoryError missingCats
       in actionError msg
