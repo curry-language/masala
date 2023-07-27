@@ -57,18 +57,11 @@ checkEmailAvailable email = fmap null $ runQ
          From User as u
          Where u.Email = { email };''
 
-getUsersByLoginData :: String -> String -> IO [User]
-getUsersByLoginData loginName password = runQ
+getUserByLoginData :: String -> String -> IO (Maybe User)
+getUserByLoginData loginName password = fmap listToMaybe $ runQ
   ``sql* Select *
          From User as u
          Where u.LoginName = { loginName } And u.Password = { password } And u.Role != { roleInvalid };''
-
--- Gets the role of a user with a given login name.
-getRoleOfUser :: String -> IO String
-getRoleOfUser loginName = fmap (\rs -> if null rs then "" else head rs) $ runQ
-  ``sql* Select u.Role
-         From User as u
-         Where u.LoginName = { loginName };''
 
 getUserByName :: String -> IO (Maybe User)
 getUserByName loginName = fmap listToMaybe $ runQ

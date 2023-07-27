@@ -47,19 +47,21 @@ loginView (currlogin,lurl) =
         passwdtxt = env passwdfield
     -- In the real system, you should also verify a password here.
     cryptpasswd <- getUserHash loginname passwdtxt
-    users <- getUsersByLoginData loginname cryptpasswd
-    if not (null users)
-      then do role <- getRoleOfUser loginname
-              loginToSession loginname role
-              ctime <- getClockTime
-              runT (updateUser (setUserLastLogin (head users) (Just ctime)))
-              setPageMessage $
-                "Logged in as: " ++ loginname ++ " / role: " ++ role
-              redirectController lasturl >>= getPage
-      else do setPageMessage $
-                "Either login name or password were not correct or you are " ++
-                "not yet validated, please try again"
-              redirectController lasturl >>= getPage
+    userResult <- getUserByLoginData loginname cryptpasswd
+    case userResult of
+      Just user -> do
+        let role = userRole user
+        loginToSession loginname role
+        ctime <- getClockTime
+        runT (updateUser (setUserLastLogin user (Just ctime)))
+        setPageMessage $
+          "Logged in as: " ++ loginname ++ " / role: " ++ role
+        redirectController lasturl >>= getPage
+      Nothing -> do
+        setPageMessage $
+          "Either login name or password were not correct or you are " ++
+          "not yet validated, please try again"
+        redirectController lasturl >>= getPage
     --nextInProcessOr (redirectController "?") Nothing >>= getPage
 
   logoutHandler _ = do
