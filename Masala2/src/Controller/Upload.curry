@@ -149,7 +149,9 @@ uploadByName login passwd packagetxt publish force = do
                                                     case publishResult of 
                                                         Left err ->
                                                             return ("Package successfully uploaded, but publishing failed: " ++ err)
-                                                        Right msg ->
-                                                            -- runT $ updateVersion (setVersionPublished vsn True)
-                                                            return ("Package successfully uploaded and published: " ++ msg)
+                                                        Right msg -> do
+                                                            vsnResult <- runT $ updateVersion (setVersionPublished vsn True)
+                                                            case vsnResult of
+                                                                Left _ -> return "Package successfully uploaded but something went wrong publishing it"
+                                                                Right _ -> return ("Package successfully uploaded and published: " ++ msg)
                                                 else return "Package successfully uploaded"
