@@ -483,7 +483,7 @@ smallMutedText s = htmlStruct "small" [("class","text-muted")] [htxt s]
 userWhiteIcon :: HTML h => h
 userWhiteIcon =
   image "bt4/img/user-white.svg" "User"
-    `addAttrs` [("width","32"), ("height","32")]
+    `addAttrs` [("width","16"), ("height","16")]
 
 --- Drowdown icon:
 dropDownIcon :: HTML h => h

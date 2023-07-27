@@ -56,8 +56,10 @@ loginView (currlogin,lurl) =
               setPageMessage $
                 "Logged in as: " ++ loginname ++ " / role: " ++ role
               redirectController lasturl >>= getPage
-      else do setPageMessage "Either login name or password were not correct or you are not yet validated, please try again"
-              redirectController "?login" >>= getPage
+      else do setPageMessage $
+                "Either login name or password were not correct or you are " ++
+                "not yet validated, please try again"
+              redirectController lasturl >>= getPage
     --nextInProcessOr (redirectController "?") Nothing >>= getPage
 
   logoutHandler _ = do
