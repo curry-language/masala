@@ -52,6 +52,15 @@ userToDetailsView user =
       ,[stringToHtml (userEmail user)]
       ,[stringToHtml (userPublicEmail user)]]
 
+userToDetailsViewLess :: HTML h => User -> [h]
+userToDetailsViewLess user =
+  [spTable
+    (map (\(label,value) -> [label,value]) (zip userLabelListLess detailedView))]
+  where
+    detailedView =
+      [[stringToHtml (userPublicName user)]
+      ,[stringToHtml (userPublicEmail user)]]
+
 --- The detailed view of a User entity in HTML format.
 --- It also takes associated entities for every associated entity type.
 userToDetailsViewAdmin :: HTML h => User -> [h]
@@ -105,6 +114,11 @@ userLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Login Name"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Public Name"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Email"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Public Email"]]
+
+userLabelListLess :: HTML h => [[h]]
+userLabelListLess =
+  [[textstyle "spicey_label spicey_label_for_type_string" "Public Name"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Public Email"]]
 
 userLabelListAdmin :: HTML h => [[h]]

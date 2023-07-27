@@ -3,7 +3,7 @@ module View.User
   , wUserEdit, tuple2UserEdit, user2TupleEdit, wUserEditType
   , wUserEditAdmin, tuple2UserEditAdmin, user2TupleEditAdmin, wUserEditTypeAdmin
   , wPasswordEdit
-  , showUserView, showUserViewAdmin, listUserView )
+  , showUserView, showUserViewAdmin, showUserViewLess, listUserView )
 where
 
 import Data.List
@@ -305,6 +305,12 @@ showUserView _ user =
    ++ [hrefPrimSmButton (showRoute user ++ "/Maintaining") [htxt "Maintained Packages"]]
    ++ [hrefPrimSmButton (showRoute user ++ "/Watching") [htxt "Watched Packages"]]
 -}
+
+showUserViewLess
+  :: UserSessionInfo -> User -> [BaseHtml]
+showUserViewLess _ user =
+  userToDetailsViewLess user ++
+  [ hrefPrimSmButton (showRoute user ++ "/Maintaining") [htxt "Maintained Packages"]]
 
 --- Supplies a view to show the details of a User for the admin.
 showUserViewAdmin

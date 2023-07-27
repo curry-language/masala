@@ -306,8 +306,12 @@ showUserController user =
       if isAdminSession sinfo
         then return
           (showUserViewAdmin sinfo user)
-        else return 
-          (showUserView sinfo user)
+        else 
+          if loggedInAsUserSession user sinfo
+            then return
+              (showUserView sinfo user)
+            else return
+              (showUserViewLess sinfo user)
         )
 
 controllerOnCurrentUser :: (User -> Controller) -> Controller

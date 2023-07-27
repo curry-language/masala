@@ -28,9 +28,11 @@ userOperationAllowed at sinfo =
   case at of
     ListEntities -> checkAdmin sinfo
     NewEntity    -> return AccessGranted
-    ShowEntity user -> adminOrLoggedInAsUser user sinfo
+    ShowEntity _ -> isLoggedIn
     UpdateEntity user -> adminOrLoggedInAsUser user sinfo
     _            -> checkAdmin sinfo
+
+
 
 adminOrLoggedInAsUser :: User -> UserSessionInfo -> IO AccessResult
 adminOrLoggedInAsUser user sinfo =
