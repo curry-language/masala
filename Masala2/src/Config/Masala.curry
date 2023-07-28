@@ -25,7 +25,7 @@ baseCGI = "spicey.cgi"
 --- (used to generate external URLs for modules and master programs):
 baseURL :: String
 baseURL | testSystem = "http://localhost/~mh/masala2"
-        | otherwise  = "https://www-ps.informatik.uni-kiel.de/~masala/masala2"
+        | otherwise  = "https://www-ps.informatik.uni-kiel.de/~masala"
 
 --- The URL of the main script of the module system
 --- (used to generate external URLs for modules and master programs):
