@@ -44,10 +44,10 @@ getRoutes =
       ,("New Category",Prefix "Category" "new",CategoryController)
       ,("List CurryModule",Prefix "CurryModule" "list",CurryModuleController)
       ,("New CurryModule",Prefix "CurryModule" "new",CurryModuleController)
-      ,("Send Mail",Prefix "Mail" "new", MailController) ] ++
+      ,("Send Mail",Prefix "Mail" "new", MailController)
+      ,("List User",Prefix "User" "list",UserController) ] ++
       (if admin
-         then [("List User",Prefix "User" "list",UserController)
-              ,("New User",Prefix "User" "new",UserController)
+         then [("New User",Prefix "User" "new",UserController)
               ,("List ValidationToken"
                ,Prefix "ValidationToken" "list" ,ValidationTokenController)
               ,("New ValidationToken"
