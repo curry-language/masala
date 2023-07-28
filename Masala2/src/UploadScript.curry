@@ -75,5 +75,4 @@ callUploadBy login passwd publish force pkgtxt = do
               string2urlencoded (show publish) ++ "/" ++
               string2urlencoded (show force) ++ "/" ++
               string2urlencoded pkgtxt
-  getContentsOfURL upurl >>= putStr
-
+  getContentsOfURL upurl >>= putStrLn

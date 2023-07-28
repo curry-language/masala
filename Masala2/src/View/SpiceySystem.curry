@@ -30,7 +30,8 @@ loginView :: (Maybe String, String) -> [HtmlExp]
 loginView (currlogin,lurl) =
   case currlogin of
    Nothing -> [h3 [htxt "Login as:"],
-               htxt "Login name:", nbsp, textField loginfield "", nbsp,
+               htxt "Login name:", nbsp, 
+               textField loginfield "" `addAttr` ("autofocus",""), nbsp,
                htxt "Password:", nbsp, password passwdfield, nbsp,
                primSmButton "Login" loginHandler, nbsp,
                primSmButton "Forgot Password?" forgottenPasswordHandler]

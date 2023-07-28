@@ -276,12 +276,13 @@ getCurryModulePattern mname = runQ
                Satisfies v exports m And
                Satisfies v versionOf p;''
 
--- Gets package versions containing a given string in the description.
+-- Gets package versions containing a given string in the name or description.
 getPackageVersionsByPattern :: String -> IO [(String,String)]
 getPackageVersionsByPattern s = runQ
   ``sql* Select p.Name, v.Version
          From Version as v, Package as p
-         Where v.Description Like { "%" ++ s ++ "%" } And
-               Satisfies v versionOf p;''
+         Where (v.Description Like { "%" ++ s ++ "%" } Or
+                p.Name Like { "%" ++ s ++ "%" } )
+               And Satisfies v versionOf p;''
 
 -----------------------------------------------------------------------
