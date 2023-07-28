@@ -14,7 +14,8 @@ import Data.Maybe
 import Data.Time
 
 import Config.UserProcesses
-import Controller.Version (deleteVersionT)
+import Controller.Version ( deleteVersionT )
+import Controller.Mail ( sendNotificationEmail )
 import System.Processes
 import System.SessionInfo
 import System.Spicey
@@ -67,8 +68,10 @@ uploadPackage loginName packageJson jsonData adminConfirmation = do
           uncurry6 (uploadPackageAction user time adminConfirmation) jsonData
         case result of 
           Left (DBError _ msg) -> displayError msg
-          Right (pkg, _) -> do
+          Right (pkg, vsn) -> do
             storePackageSpec (jsonName jsonData) (jsonVersion jsonData) packageJson
+            watchingUsers <- getWatchingUsers pkg
+            mapM_ (sendNotificationEmail pkg vsn) watchingUsers
             return $ displaySuccess pkg (jsonVersion jsonData)
   where
     displaySuccess :: Package -> String -> ViewBlock

@@ -2,7 +2,8 @@
 
 module Controller.Mail
   ( mailController, adminMailController, mailFormDef
-  , sendMail, sendValidationMail, sendPasswordMail )
+  , sendMail, sendValidationMail, sendPasswordMail
+  , sendNotificationEmail )
  where
 
 import Control.Monad  ( unless )
@@ -16,6 +17,7 @@ import HTML.Session
 import System.Authentication
 import System.Spicey
 import View.Mail
+import Model.Masala2
 
 ------------------------------------------------------------------------------
 --- Controller for login/logout.
@@ -129,3 +131,9 @@ sendValidationMail to token = do
 -}
 
 ------------------------------------------------------------------------------
+
+sendNotificationEmail :: Package -> Version -> User -> IO ()
+sendNotificationEmail pkg vsn user = do
+  let subject = packageName pkg ++ ": New Version " ++ versionVersion vsn ++ " uploaded"
+  let contents = "A new version " ++ versionVersion vsn ++ " for the package " ++ packageName pkg ++ " has been uploaded."
+  sendMail adminEmail (userEmail user) subject contents
