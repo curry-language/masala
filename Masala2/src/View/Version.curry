@@ -1,7 +1,8 @@
 module View.Version
   ( wVersion, tuple2Version, version2Tuple, wVersionType
   , showStandardVersionView, showVersionView, allVersionsView
-  , listVersionView, leqVersion ) where
+  , listVersionView, leqVersion, leqPkgVersion, leqPkgVersionUpload )
+ where
 
 import Data.List
 import Data.Time
@@ -247,8 +248,8 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
      [htxt (publicText (versionPublished version)), nbsp] ++ togglePublicButton)
   , ("Deprecated",
      [htxt (if versionDepr then "yes" else "no")] ++ toggleDeprButton)
-  , ("JobStatus", [htxt $ versionJobStatus version])
-  , ("Downloads", [htxt $ show $ versionDownloads version])
+  --, ("JobStatus", [htxt $ versionJobStatus version])
+  --, ("Downloads", [htxt $ show $ versionDownloads version])
   ]
  where
   canEditMaintainers = case userLoginOfSession sinfo of
@@ -343,19 +344,30 @@ leqVersion v1 v2 = readVersionString v1 <= readVersionString v2
   readN s | all isDigit s = read s
           | otherwise     = 0
 
---- A view for a given list of Package entities.
+--- Compares two Package/Version entities by alphabetical order of the
+--- package name and, if equal, by the version order.
+leqPkgVersion :: (Package, Version) -> (Package, Version) -> Bool
+leqPkgVersion (p1,v1) (p2,v2) =
+  leqPackage p1 p2 || (packageName p1 == packageName p2 && leqVersion v1 v2)
+
+--- Compares two Package/Version entities by upload time of the version.
+leqPkgVersionUpload :: (Package, Version) -> (Package, Version) -> Bool
+leqPkgVersionUpload (_,v1) (_,v2) =
+  versionUploadDate v1 >= versionUploadDate v2
+
+--- A view for a given list of Package/Version entities.
 allVersionsView :: UserSessionInfo -> String -> [(Package,Version)] -> [BaseHtml]
 allVersionsView _ title pkgversions =
   [ h1 [htxt title]
-  , par (intersperse nbsp (map listVersion (sortBy leqPkgVersion pkgversions)))]
+  , par (intersperse nbsp (map listVersion pkgversions))]
  where
   listVersion (pkg,version) =
-      (if packageAbandoned pkg then hrefScndBadge else hrefPrimBadge)
-        (showRoute version)
-        [htxt (packageName pkg ++ "-" ++ versionVersion version)]
+    (if packageAbandoned pkg || versionDeprecated version
+       then hrefScndBadge
+       else hrefPrimBadge)
+     (showRoute version)
+     [htxt (packageName pkg ++ "-" ++ versionVersion version)]
 
-  leqPkgVersion (p1,v1) (p2,v2) =
-    leqPackage p1 p2 || (packageName p1 == packageName p2 && leqVersion v1 v2)
 
 --- Supplies a list view for a given list of Version entities.
 --- Shows also show/edit/delete buttons if the user is logged in.
@@ -367,9 +379,6 @@ listVersionView sinfo pkgversions =
     ([[textstyle "spicey_label" "Package"] : take 8 versionLabelList]
       ++ map listVersion (sortBy leqPkgVersion pkgversions))]
  where
-  leqPkgVersion (p1,v1) (p2,v2) =
-    leqPackage p1 p2 || (packageName p1 == packageName p2 && leqVersion v1 v2)
-
   listVersion (pkg,version) =
       packageVersionToListView (pkg,version)
        ++ (if userLoginOfSession sinfo == Nothing

@@ -42,6 +42,7 @@ getRoutes =
       ,("Categories",Prefix "Category" "list",CategoryController)
       ,("Packages by category",Prefix "Category" "listpkgs",CategoryController)
       ,("New Category",Prefix "Category" "new",CategoryController)
+      ,("Packages by upload",Prefix "Version" "upload",VersionController)
       ,("List CurryModule",Prefix "CurryModule" "list",CurryModuleController)
       ,("New CurryModule",Prefix "CurryModule" "new",CurryModuleController)
       ,("Send Mail",Prefix "Mail" "new", MailController)

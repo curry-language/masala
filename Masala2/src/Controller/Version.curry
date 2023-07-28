@@ -3,6 +3,7 @@ module Controller.Version
   , showVersionController, deleteVersionT ) where
 
 import Control.Monad        ( unless )
+import Data.List            ( sortBy )
 import Data.Time
 import HTML.Base
 import HTML.Session
@@ -43,6 +44,7 @@ mainVersionController = do
   case args of
     [] -> listVersionController
     ["list"] -> listVersionController
+    ["upload"] -> allVersionUploadController
     ["unpublished"] -> allUnpublishedController
     ["new"] -> newVersionController
     ["shows",s] -> controllerOnKey s showStandardVersionController
@@ -281,24 +283,33 @@ deleteVersionT version =
      mapM_ (\cat -> removeCategorizes [version] cat) cats
      deleteVersion version
 
+--- Lists all versions of all packages.
+allVersionUploadController :: Controller
+allVersionUploadController =
+  checkAuthorization (packageOperationAllowed ListEntities) $ \sinfo -> do
+    versions <- runQ queryAllVersions
+    pkgs     <- runQ (mapM getVersioningPackage versions)
+    return $ allVersionsView sinfo
+               "All package versions sorted by upload time (newest first)"
+               (sortBy leqPkgVersionUpload (zip pkgs versions))
+
 --- Lists all private versions of packages.
 allUnpublishedController :: Controller
 allUnpublishedController =
-  checkAuthorization (packageOperationAllowed ListEntities)
-   $ (\sinfo ->
-     do versions <- getUnpublishedVersions
-        pkgversions <- mapM (\v -> runJustT (getVersioningPackage v) >>= \p -> return (p,v)) versions
-        return (allVersionsView sinfo "All unpublished package versions" pkgversions))
+  checkAuthorization (packageOperationAllowed ListEntities) $ \sinfo -> do
+    versions <- getUnpublishedVersions
+    pkgs     <- runQ (mapM getVersioningPackage versions)
+    return $ allVersionsView sinfo "All unpublished package versions"
+                             (sortBy leqPkgVersion (zip pkgs versions))
 
 --- Lists all Version entities with buttons to show, delete,
 --- or edit an entity.
 listVersionController :: Controller
 listVersionController =
-  checkAuthorization (versionOperationAllowed ListEntities)
-   $ (\sinfo ->
-     do versions <- runQ queryAllVersions
-        pkgs <- runQ (mapM getVersioningPackage versions)
-        return (listVersionView sinfo (zip pkgs versions)))
+  checkAuthorization (versionOperationAllowed ListEntities) $ \sinfo -> do
+    versions <- runQ queryAllVersions
+    pkgs <- runQ (mapM getVersioningPackage versions)
+    return (listVersionView sinfo (zip pkgs versions))
 
 --- Shows a Version entity in the standard Spicey-generated layout.
 showStandardVersionController :: Version -> Controller

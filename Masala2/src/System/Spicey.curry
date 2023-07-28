@@ -19,7 +19,7 @@ module System.Spicey (
   userDefinedToHtml, maybeUserDefinedToHtml,
   spTable, smallMutedText,
   setPageMessage, getPageMessage,
-  saveLastUrl, getLastUrl, getLastUrls
+  saveLastUrl, getLastUrl, getLastUrls, searchForm
   ) where
 
 import Data.Char           ( isSpace, isDigit, toLower )
@@ -36,6 +36,8 @@ import HTML.WUI
 
 import Config.Roles
 import Config.UserProcesses
+import Model.Masala2        ( showVersionKey )
+import Model.Queries
 import System.Routes
 import System.Processes
 import System.Authentication
@@ -311,7 +313,7 @@ getPage viewblock = case viewblock of
     lasturl    <- getLastUrl
     withSessionCookie $ bootstrapPage2 favIcon cssIncludes jsIncludes
       spiceyTitle spiceyHomeBrand
-      (addNavItemClass routemenu) (rightTopMenu login)
+      (addNavItemClass $ routemenu) (rightTopMenu login ++ [("nav-item", searchElem)])
       0 []
       [h1 [htxt "Masala: ",
            smallMutedText "The Repository of Curry Packages (TEST VERSION!)"]]
@@ -370,12 +372,13 @@ dropDownMenu title ddmenu =
 --- The menu for a user if it he is logged in.
 userMenu :: [(String,[BaseHtml])]
 userMenu =
-  [ ("?User/profile",     [htxt "Show profile"])
-  , ("?User/editprofile", [htxt "Change profile"])
-  , ("?User/password",    [htxt "Change password"])
+  [ ("?Upload",           [strong [htxt "Upload a new package (version)"]])
   , ("?User/maintaining", [htxt "Maintained packages"])
   , ("?User/watching",    [htxt "Watched packages"])
-  , ("?Mail/admin",       [htxt "Send mail to admin"])
+  , ("?User/profile",     [htxt "Show profile"])
+  , ("?User/editprofile", [htxt "Change profile"])
+  , ("?User/password",    [htxt "Change password"])
+  , ("?Mail/admin",       [htxt "Send email to admin"])
   , ("?login",            [htxt "Logout"])
   ]
 
@@ -531,5 +534,56 @@ saveLastUrl :: String -> IO ()
 saveLastUrl url = do
   urls <- getLastUrls
   putSessionData lastUrls (url:urls)
+
+--------------------------------------------------------------------------
+--- The form (shown in the top navigation bar) to search in packages.
+searchElem :: [BaseHtml]
+searchElem =
+  [formElemWithAttrs searchForm
+     [("class","form-inline mt-1 mt-md-0"), --my-2 my-lg-0"
+      ("title","Search in package names and descriptions")]]
+
+--- A form with a field to search modules containing a string.
+searchForm :: HtmlFormDef ()
+searchForm =
+  formDefWithID "System.Spicey.searchForm"
+    (toFormReader $ return ()) (searchView searchPackages)
+
+--- Controller for searching modules in the module database.
+searchPackages :: String -> Controller
+searchPackages pat = do
+  descs <- getPackageVersionsByPattern pat
+  dbtns <- mapM getRef2PkgVers (nub descs)
+  mods <- getCurryModulePattern pat
+  mbtns <- mapM getRef2PkgVers (nub (map (\ (_,p,v) -> (p,v)) mods))
+  return $
+    [h1 [htxt $ "Results for: " ++ pat]] ++
+    (if null descs
+       then []
+       else [h3 [htxt "Found in names or descriptions of packages"],
+             par (intersperse nbsp dbtns)]) ++
+    (if null mods
+       then []
+       else [h3 [htxt "Found in module names of packages"],
+             par (intersperse nbsp mbtns)])
+ where
+  getRef2PkgVers (pkg,vers) =
+    getPackageVersionByName pkg vers >>= return .
+    maybe (htxt pkgvers)
+          (\v -> hrefPrimBadge ("?Version/show/" ++ showVersionKey v)
+                               [htxt pkgvers])
+   where pkgvers = pkg ++ "-" ++ vers
+
+searchView :: (String -> Controller) -> () -> [HtmlExp]
+searchView searchcontroller _ =
+  [textField scode "" `addAttrs`
+     [("class","form-control mr-sm-0"),("placeholder","Search")],
+   button "Search" searchHandler
+     `addClass` "btn btn-outline-success my-0 my-sm0"]
+
+ where
+  scode free
+
+  searchHandler env = searchcontroller (map toLower (env scode)) >>= getPage
 
 --------------------------------------------------------------------------
