@@ -101,6 +101,12 @@ getUserValidationToken user = fmap listToMaybe $ runQ
          From ValidationToken as vt
          Where vt.UserValidatingKey = { userKey user };''
 
+getWatchingUsers :: Package -> IO [User]
+getWatchingUsers pkg = fmap (fmap fst) $ runQ
+  ``sql* Select *
+         From User as u, Package as p
+         Where p.Key = { packageKey pkg } And Satisfies u watches p;''
+
 {-
 -- Requires currypp of 07/06/2023 or newer:
 addUser :: String -> String -> String -> String -> DBAction ()
