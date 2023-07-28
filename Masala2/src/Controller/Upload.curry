@@ -125,13 +125,13 @@ uploadByName :: String -> String -> String -> Bool -> Bool -> IO String
 uploadByName login passwd packagetxt publish force = do
     userResult <- getUserByLoginData login passwd
     case userResult of 
-        Nothing -> return ("User " ++ login ++ " does not exist")
+        Nothing -> return $ "Upload failed: user " ++ login ++ " does not exist"
         Just user -> do
             case force && userRole user /= roleAdmin of
-                True -> return "'force' can only be used by an Admin"
+                True -> return "Upload failed: 'force' can only be used by an Admin"
                 False -> do
                     case publish && userRole user /= roleAdmin && userRole user /= roleTrusted of
-                        True -> return "'publish' can only be used by an Admin or Trusted User"
+                        True -> return "Upload failed: 'publish' can only be used by an Admin or Trusted User"
                         False -> do
                             jsonResult <- readPackageData packagetxt
                             case jsonResult of
@@ -142,7 +142,8 @@ uploadByName login passwd packagetxt publish force = do
                                     case uploadResult of
                                         Left (DBError _ msg) -> return msg
                                         Right (pkg, vsn) -> do
-                                            if publish
+                                              storePackageSpec (jsonName json) (jsonVersion json) packagetxt
+                                              if publish
                                                 then do
                                                     publishResult <- publishPackageVersion
                                                         (packageName pkg) (versionVersion vsn)
