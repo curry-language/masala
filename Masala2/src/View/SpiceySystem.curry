@@ -14,6 +14,7 @@ import HTML.Base
 import HTML.Styles.Bootstrap4 ( hrefScndSmButton, primSmButton, scndButton )
 import HTML.WUI
 
+import Config.Roles
 import Config.UserProcesses
 import System.Processes
 import System.Spicey
@@ -56,7 +57,7 @@ loginView (currlogin,lurl) =
         ctime <- getClockTime
         runT (updateUser (setUserLastLogin user (Just ctime)))
         setPageMessage $
-          "Logged in as: " ++ loginname ++ " / role: " ++ role
+          "Logged in as '" ++ loginname ++ "' (" ++showRole role ++ ")"
         redirectController lasturl >>= getPage
       Nothing -> do
         setPageMessage $
