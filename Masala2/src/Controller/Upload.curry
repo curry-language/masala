@@ -73,7 +73,7 @@ uploadJsonForm =
                                     case userLoginOfSession sinfo of 
                                         Nothing -> displayError "User not logged in"
                                         Just (login, _) -> do
-                                            uploadPackage login json jsonData False
+                                            uploadPackageView login json jsonData False
                 )
             )
             (\sinfo -> renderWUI sinfo "Upload Package" "Upload" "?Upload" ())
@@ -140,13 +140,10 @@ uploadByName login passwd packagetxt publish force = do
                 Left err -> return err
                 Right json -> do
                   time <- getClockTime
-                  uploadResult <- runT $ uncurry6 (uploadPackageAction user time force) json
+                  uploadResult <- uncurry6 (uploadPackage packagetxt user time force) json
                   case uploadResult of
-                    Left (DBError _ msg) -> return msg
-                    Right (pkg, vsn) -> do
-                      storePackageSpec (jsonName json) (jsonVersion json) packagetxt
-                      watchingUsers <- getWatchingUsers pkg
-                      mapM_ (sendNotificationEmail pkg vsn) watchingUsers
+                    Left msg -> return msg
+                    Right (pkg, vsn) ->
                       if publish
                         then do
                           publishResult <- publishPackageVersion

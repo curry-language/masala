@@ -142,6 +142,10 @@ getNumberOfMaintainers :: Package -> IO Int
 getNumberOfMaintainers = fmap length . runQ . queryMaintainersOfPackage
 
 -- Gets the Maintainers of the given Package.
+getMaintainersOfPackage :: Package -> IO [User]
+getMaintainersOfPackage = runQ . queryMaintainersOfPackage
+
+-- Gets the Maintainers of the given Package.
 queryMaintainersOfPackage :: Package -> DBAction [User]
 queryMaintainersOfPackage package = fmap (map fst) $
   ``sql* Select *

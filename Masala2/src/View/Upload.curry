@@ -1,5 +1,5 @@
 module View.Upload
-  ( wUploadJson, wUploadCheck, uploadPackage, uploadPackageAction )
+  ( wUploadJson, wUploadCheck, uploadPackage, uploadPackageView )
  where
 
 import HTML.Base
@@ -58,7 +58,7 @@ wUploadCheck (msg, packageJson, jsonMaybe) =
             case jsonMaybe of 
               Nothing -> displayError "No json data" >>= getPage
               Just jsonData -> do
-                uploadPackage login packageJson jsonData True >>= getPage
+                uploadPackageView login packageJson jsonData True >>= getPage
 
       cancelHandler _ = redirectController "?Upload" >>= getPage
 
@@ -68,28 +68,53 @@ wUploadCheck (msg, packageJson, jsonMaybe) =
 --- @param jsonData - The tuple read from the json string
 --- @param adminConfirmation - A confirmation from an Admin whether to overwrite
 ---                            an existing Version or to create non-existing Categories
-uploadPackage :: String -> String -> PackageJSON -> Bool -> IO [BaseHtml]
-uploadPackage loginName packageJson jsonData adminConfirmation = do
+uploadPackageView :: String -> String -> PackageJSON -> Bool -> IO [BaseHtml]
+uploadPackageView loginName packagetxt jsonData adminConfirmation = do
     userResult <- getUserByName loginName
     case userResult of 
       Nothing -> displayError ("User " ++ loginName ++ " does not exist, although logged in")
       Just user -> do 
         time <- getClockTime        
-        result <- runT $ 
-          uncurry6 (uploadPackageAction user time adminConfirmation) jsonData
+        result <- uncurry6 (uploadPackage packagetxt user time adminConfirmation) jsonData
         case result of 
-          Left (DBError _ msg) -> displayError msg
+          Left msg -> displayError msg
           Right (pkg, vsn) -> do
-            storePackageSpec (jsonName jsonData) (jsonVersion jsonData) packageJson
-            watchingUsers <- getWatchingUsers pkg
-            mapM_ (sendNotificationEmail pkg vsn) watchingUsers
             setPageMessage $ successMsg pkg (jsonVersion jsonData)
             redirectController (showRoute vsn)
   where
    successMsg pkg vers = 
      "Package '" ++ packageName pkg ++ "-" ++ vers ++ "' successfully uploaded!"
 
---- This action uploads a new Version for a Package
+--- This function uploads a new Version for a Package.
+--- When the upload is successfull, the package specification
+--- will be stored and a notification email will be send to all
+--- watching users and maintainers.
+--- @param user - The User uploading the new Version
+--- @param time - The current time
+--- @param adminConfirmation - A confirmation from an Admin whether to overwrite
+---                            an existing Version or to create non-existing Categories
+--- @param name - The name of the Package
+--- @param version - The version number
+--- @param description - The description of the Version
+--- @param dependencies - The list of dependencies
+--- @param curryModules - The modules being exported
+--- @param categories - The list of categories
+uploadPackage 
+  :: String -> User -> ClockTime -> Bool -> String -> String -> String -> [String]
+  -> [String] -> [String] -> IO (Either String (Package, Version))
+uploadPackage packagetxt user time adminConfirmation name version description dependencies curryModules categories = do
+  -- Upload package
+  result <- runT $ uploadPackageAction user time adminConfirmation name version description dependencies curryModules categories
+  case result of
+    Left (DBError _ msg) -> return (Left msg)
+    Right (pkg, vsn) -> do
+      storePackageSpec name version packagetxt
+      watchingUsers <- getWatchingUsers pkg
+      maintainers <- getMaintainersOfPackage pkg
+      mapM_ (sendNotificationEmail pkg vsn) (union watchingUsers maintainers)
+      return $ Right (pkg, vsn)
+
+--- This action uploads a new Version for a Package.
 --- @param user - The User uploading the new Version
 --- @param time - The current time
 --- @param adminConfirmation - A confirmation from an Admin whether to overwrite
