@@ -19,7 +19,7 @@ adminEmail = "masala@curry-lang.org"
 
 --- The name of the main script of the Masala system.
 baseCGI :: String
-baseCGI = "spicey.cgi"
+baseCGI = "run.cgi"
 
 --- The URL of the main script of the module system
 --- (used to generate external URLs for modules and master programs):

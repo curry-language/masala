@@ -73,7 +73,7 @@ run:
 .PHONY: deploy
 deploy: checkdeploy
 	mkdir -p $(WEBSERVERDIR)
-	$(MAKE) $(WEBSERVERDIR)/spicey.cgi
+	$(MAKE) $(WEBSERVERDIR)/run.cgi
 	# copy other files (style sheets, images,...)
 	cp -r public/* $(WEBSERVERDIR)
 	chmod -R go+rX $(WEBSERVERDIR)
@@ -86,7 +86,7 @@ deploy: checkdeploy
 	cp data/htaccess $(WEBSERVERDIR)/sessiondata/.htaccess
 	chmod 700 $(WEBSERVERDIR)/sessiondata
 
-$(WEBSERVERDIR)/spicey.cgi: src/*.curry src/*/*.curry
+$(WEBSERVERDIR)/run.cgi: src/*.curry src/*/*.curry
 	$(CPM) exec $(CURRY2CGI) --system="$(SYSTEM)" \
 	  -i Controller.SpiceySystem \
 	  -i Controller.User \
@@ -110,4 +110,4 @@ clean:
 # clean everything, including the deployed files
 .PHONY: cleanall
 cleanall: clean
-	/bin/rm -f $(WEBSERVERDIR)/spicey.cgi*
+	/bin/rm -f $(WEBSERVERDIR)/run.cgi*

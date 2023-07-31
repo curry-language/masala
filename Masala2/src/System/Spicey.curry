@@ -34,6 +34,7 @@ import HTML.Session
 import HTML.Styles.Bootstrap4
 import HTML.WUI
 
+import Config.Masala        ( baseCGI )
 import Config.Roles
 import Config.UserProcesses
 import Model.Masala2        ( showVersionKey )
@@ -304,7 +305,7 @@ spiceyFooter =
 --- generates a redirection page.
 getPage :: ViewBlock -> IO HtmlPage
 getPage viewblock = case viewblock of
-  [BaseText ""]          -> return $ redirectPage "spicey.cgi"
+  [BaseText ""]          -> return $ redirectPage baseCGI
   [BaseText ('?':route)] -> return $ redirectPage ('?':route)
   _ -> do
     routemenu  <- getRouteMenu
