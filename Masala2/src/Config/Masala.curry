@@ -53,8 +53,8 @@ packageSpecDir = "data" </> "packages"
 --- The directory where the sources of uploaded packages are stored.
 --- If it is empty, the sources are not downloaded.
 downloadSourceDir :: String
-downloadSourceDir = "" -- do not download
---downloadSourceDir = "data" </> "downloads"
+downloadSourceDir | testSystem = "" -- do not download in test system
+                  | otherwise  = "data" </> "downloads"
 
 --- The directory where the tar files of the sources of uploaded packages
 --- are stored.

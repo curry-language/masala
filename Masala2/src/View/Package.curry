@@ -45,7 +45,7 @@ showNoVersionPackageView :: UserSessionInfo -> Package -> [BaseHtml]
 showNoVersionPackageView sinfo package =
   [ h1 $ [smallMutedText "Curry Package ", htxt $ packageName package] ++
          deleteButton
-  , h5 [htxt $ "This package has no versions."]]
+  , h5 [htxt $ "This package has no (visible) versions."]]
  where
   deleteButton =
     if isAdminSession sinfo
