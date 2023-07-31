@@ -99,6 +99,7 @@ $(WEBSERVERDIR)/spicey.cgi: src/*.curry src/*/*.curry
 	  -i Controller.Registration \
 	  -i Controller.Upload \
 	  -i Controller.Mail \
+	  -i System.Spicey \
 	  -o $@ Main.curry
 
 # clean up generated the package directory

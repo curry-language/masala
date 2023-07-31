@@ -14,6 +14,7 @@ import Model.Queries
 import Config.EntityRoutes
 import Config.Roles
 import Config.UserProcesses
+import Controller.Mail       ( sendNotificationEmail )
 import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
@@ -123,36 +124,54 @@ uploadCheckStore = sessionStore "uploadCheckStore"
 --- is allowed if the user as an admin.
 uploadByName :: String -> String -> String -> Bool -> Bool -> IO String
 uploadByName login passwd packagetxt publish force = do
-    userResult <- getUserByLoginData login passwd
-    case userResult of 
-        Nothing -> return $ "Upload failed: user " ++ login ++ " does not exist"
-        Just user -> do
-            case force && userRole user /= roleAdmin of
-                True -> return "Upload failed: 'force' can only be used by an Admin"
-                False -> do
-                    case publish && userRole user /= roleAdmin && userRole user /= roleTrusted of
-                        True -> return "Upload failed: 'publish' can only be used by an Admin or Trusted User"
-                        False -> do
-                            jsonResult <- readPackageData packagetxt
-                            case jsonResult of
-                                Left err -> return err
-                                Right json -> do
-                                    time <- getClockTime
-                                    uploadResult <- runT $ uncurry6 (uploadPackageAction user time force) json
-                                    case uploadResult of
-                                        Left (DBError _ msg) -> return msg
-                                        Right (pkg, vsn) -> do
-                                              storePackageSpec (jsonName json) (jsonVersion json) packagetxt
-                                              if publish
-                                                then do
-                                                    publishResult <- publishPackageVersion
-                                                        (packageName pkg) (versionVersion vsn)
-                                                    case publishResult of 
-                                                        Left err ->
-                                                            return ("Package successfully uploaded, but publishing failed: " ++ err)
-                                                        Right msg -> do
-                                                            vsnResult <- runT $ updateVersion (setVersionPublished vsn True)
-                                                            case vsnResult of
-                                                                Left _ -> return "Package successfully uploaded but something went wrong publishing it"
-                                                                Right _ -> return ("Package successfully uploaded and published: " ++ msg)
-                                                else return "Package successfully uploaded"
+  userResult <- getUserByLoginData login passwd
+  case userResult of 
+    Nothing -> return loginErrMsg
+    Just user -> do
+      case force && userRole user /= roleAdmin of
+        True -> return "Upload failed: 'force' can only be used by an Admin"
+        False -> do
+          case publish && 
+               userRole user /= roleAdmin && userRole user /= roleTrusted of
+            True -> return "Upload failed: 'publish' can only be used by an Admin or Trusted User"
+            False -> do
+              jsonResult <- readPackageData packagetxt
+              case jsonResult of
+                Left err -> return err
+                Right json -> do
+                  time <- getClockTime
+                  uploadResult <- runT $ uncurry6 (uploadPackageAction user time force) json
+                  case uploadResult of
+                    Left (DBError _ msg) -> return msg
+                    Right (pkg, vsn) -> do
+                      storePackageSpec (jsonName json) (jsonVersion json) packagetxt
+                      watchingUsers <- getWatchingUsers pkg
+                      mapM_ (sendNotificationEmail pkg vsn) watchingUsers
+                      if publish
+                        then do
+                          publishResult <- publishPackageVersion
+                                          (packageName pkg) (versionVersion vsn)
+                          case publishResult of 
+                              Left err ->
+                                return ("Package successfully uploaded, but publishing failed: " ++ err)
+                              Right msg -> do
+                                vsnResult <- runT $ updateVersion (setVersionPublished vsn True)
+                                case vsnResult of
+                                  Left _  -> return setPublishErrMsg
+                                  Right _ -> return $ publishMessage msg
+                        else return uploadMessage
+ where
+  uploadMessage = "Package successfully uploaded but not yet published.\n" ++
+    "To publish it, go to the Masala web site (if you are a trusted user)\n" ++
+    "or ask the Masala admin for publishing."
+
+  publishMessage out =
+    "Package successfully uploaded and published.\n" ++
+    "Output from uploader:\n" ++ out
+
+  setPublishErrMsg =
+    "Package successfully uploaded but something went wrong publishing it"
+  
+  loginErrMsg =
+    "Upload failed: Masala login failed (wrong login name or password?)"
+    

@@ -20,7 +20,7 @@ data Options = Options
   }
 
 defaultOptions :: Options
-defaultOptions = Options "" "" False False
+defaultOptions = Options "" "" True False
 
 main :: IO ()
 main = do
@@ -31,7 +31,7 @@ processArgs :: [String] -> Options -> IO ()
 processArgs args opts = case args of
   "--name":name:margs       -> processArgs margs (opts { optName = name })
   "--password":passwd:margs -> processArgs margs (opts { optPasswd = passwd })
-  "--publish":margs         -> processArgs margs (opts { optPublish = True })
+  "--nopublish":margs       -> processArgs margs (opts { optPublish = False })
   "--force":margs           -> processArgs margs (opts { optForce = True })
   [pkg]                     -> mainWithOpts opts pkg
   _ -> putStrLn $ "Illegal arguments: " ++ unwords args ++ "\n" ++ helpText
@@ -42,7 +42,7 @@ helpText = unlines
   , ""
   , "--name <loginname>      provide login name (otherwise: ask)"
   , "--password <password>   provide password (otherwise: ask)"
-  , "--publish               publish package (if allowed)"
+  , "--nopublish             do not publish package (only upload to Masala)"
   , "--force                 overwrite existing package version (if allowed)"
   ]
 
@@ -75,5 +75,4 @@ callUploadBy login passwd publish force pkgtxt = do
               string2urlencoded (show publish) ++ "/" ++
               string2urlencoded (show force) ++ "/" ++
               string2urlencoded pkgtxt
-  getContentsOfURL upurl >>= putStr
-
+  getContentsOfURL upurl >>= putStrLn

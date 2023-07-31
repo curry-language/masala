@@ -1,8 +1,9 @@
 module Controller.Version
   ( mainVersionController, newVersionForm, editVersionForm
-  , showVersionController, deleteVersionT ) where
+  , showVersionController, deleteVersionT, isVisibleVersion ) where
 
 import Control.Monad        ( unless )
+import Data.List            ( sortBy )
 import Data.Time
 import HTML.Base
 import HTML.Session
@@ -43,6 +44,7 @@ mainVersionController = do
   case args of
     [] -> listVersionController
     ["list"] -> listVersionController
+    ["upload"] -> allVersionUploadController
     ["unpublished"] -> allUnpublishedController
     ["new"] -> newVersionController
     ["shows",s] -> controllerOnKey s showStandardVersionController
@@ -262,11 +264,12 @@ deleteVersionController version =
 destroyVersionController :: Version -> Controller
 destroyVersionController version =
   checkAuthorization (versionOperationAllowed (DeleteEntity version))
-   $ (\_ ->
+   $ \_ -> do
+     vpackage <- runQ $ getVersioningPackage version
      transactionController (runT (deleteVersionT version))
       (const
         (do setPageMessage "Version deleted"
-            redirectController (listRoute (failed::Package)))))
+            redirectController (showRoute vpackage)))
 
 --- Transaction to delete a given Version entity together with its relations
 --- to dependencies, exported modules, and categaries.
@@ -281,24 +284,40 @@ deleteVersionT version =
      mapM_ (\cat -> removeCategorizes [version] cat) cats
      deleteVersion version
 
+--- Lists all versions of all packages.
+allVersionUploadController :: Controller
+allVersionUploadController =
+  checkAuthorization (packageOperationAllowed ListEntities) $ \sinfo -> do
+    versions <- fmap (filter (isVisibleVersion sinfo)) $ runQ queryAllVersions
+    pkgs     <- runQ (mapM getVersioningPackage versions)
+    return $ allVersionsView sinfo
+               "All package versions sorted by upload time (newest first)"
+               (sortBy leqPkgVersionUpload (zip pkgs versions))
+
+--- Is a version visible w.r.t. current user session?
+isVisibleVersion :: UserSessionInfo -> Version -> Bool
+isVisibleVersion sinfo version =
+  maybe (versionPublished version)
+        (const True) -- logged in users can see all versions
+        (userLoginOfSession sinfo)
+
 --- Lists all private versions of packages.
 allUnpublishedController :: Controller
 allUnpublishedController =
-  checkAuthorization (packageOperationAllowed ListEntities)
-   $ (\sinfo ->
-     do versions <- getUnpublishedVersions
-        pkgversions <- mapM (\v -> runJustT (getVersioningPackage v) >>= \p -> return (p,v)) versions
-        return (allVersionsView sinfo "All unpublished package versions" pkgversions))
+  checkAuthorization (packageOperationAllowed ListEntities) $ \sinfo -> do
+    versions <- getUnpublishedVersions
+    pkgs     <- runQ (mapM getVersioningPackage versions)
+    return $ allVersionsView sinfo "All unpublished package versions"
+                             (sortBy leqPkgVersion (zip pkgs versions))
 
 --- Lists all Version entities with buttons to show, delete,
 --- or edit an entity.
 listVersionController :: Controller
 listVersionController =
-  checkAuthorization (versionOperationAllowed ListEntities)
-   $ (\sinfo ->
-     do versions <- runQ queryAllVersions
-        pkgs <- runQ (mapM getVersioningPackage versions)
-        return (listVersionView sinfo (zip pkgs versions)))
+  checkAuthorization (versionOperationAllowed ListEntities) $ \sinfo -> do
+    versions <- runQ queryAllVersions
+    pkgs <- runQ (mapM getVersioningPackage versions)
+    return (listVersionView sinfo (zip pkgs versions))
 
 --- Shows a Version entity in the standard Spicey-generated layout.
 showStandardVersionController :: Version -> Controller
@@ -322,7 +341,8 @@ showVersionController version =
    $ (\sinfo ->
      do uploadUser <- runJustT (getUploadUser version)
         package <- runJustT (getVersioningPackage version)
-        allversions <- getPackageVersions package
+        allversions <- fmap (filter (isVisibleVersion sinfo))
+                            (getPackageVersions package)
         dependingPackages <- runJustT (getDependingVersionPackages version)
         exportingCurryModules <- runJustT (getExportingVersionCurryModules version)
         cats <- runQ $ getPackageVersionCategories package version

@@ -14,6 +14,7 @@ import HTML.Base
 import HTML.Styles.Bootstrap4 ( hrefScndSmButton, primSmButton, scndButton )
 import HTML.WUI
 
+import Config.Roles
 import Config.UserProcesses
 import System.Processes
 import System.Spicey
@@ -30,7 +31,8 @@ loginView :: (Maybe String, String) -> [HtmlExp]
 loginView (currlogin,lurl) =
   case currlogin of
    Nothing -> [h3 [htxt "Login as:"],
-               htxt "Login name:", nbsp, textField loginfield "", nbsp,
+               htxt "Login name:", nbsp, 
+               textField loginfield "" `addAttr` ("autofocus",""), nbsp,
                htxt "Password:", nbsp, password passwdfield, nbsp,
                primSmButton "Login" loginHandler, nbsp,
                primSmButton "Forgot Password?" forgottenPasswordHandler]
@@ -55,7 +57,7 @@ loginView (currlogin,lurl) =
         ctime <- getClockTime
         runT (updateUser (setUserLastLogin user (Just ctime)))
         setPageMessage $
-          "Logged in as: " ++ loginname ++ " / role: " ++ role
+          "Logged in as '" ++ loginname ++ "' (" ++showRole role ++ ")"
         redirectController lasturl >>= getPage
       Nothing -> do
         setPageMessage $
