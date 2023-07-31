@@ -72,12 +72,11 @@ uploadPackage loginName packageJson jsonData adminConfirmation = do
             storePackageSpec (jsonName jsonData) (jsonVersion jsonData) packageJson
             watchingUsers <- getWatchingUsers pkg
             mapM_ (sendNotificationEmail pkg vsn) watchingUsers
-            return $ displaySuccess pkg (jsonVersion jsonData)
+            setPageMessage $ successMsg pkg (jsonVersion jsonData)
+            redirectController (showRoute vsn)
   where
-    displaySuccess :: Package -> String -> ViewBlock
-    displaySuccess pkg vers = 
-      [htxt $ "Package '" ++ packageName pkg ++ "-" ++ vers ++
-              "' successfully uploaded!"]
+   successMsg pkg vers = 
+     "Package '" ++ packageName pkg ++ "-" ++ vers ++ "' successfully uploaded!"
 
 uploadPackageAction
   :: User -> ClockTime -> Bool -> String -> String -> String -> [String]
