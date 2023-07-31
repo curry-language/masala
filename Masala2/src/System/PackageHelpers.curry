@@ -124,16 +124,29 @@ publishPackageVersion pname pvers = do
   if sfexists && tfexists
     then if testSystem
            then readFile specfile >>= uploadPackageToMasalaStore pname pvers
-           else readFile specfile >>= uploadPackageToCPM tarfile
+           else readFile specfile >>= uploadPackageToCPM
     else return $ Left $
            if sfexists then "Tar file missing"
                        else "Specification file missing"
 
+--- Uploads a package specification where the tar file is already stored
+--- in directory `downloadTarDir` to the CPM repository via the
+--- `cpm-upload-masala.cgi` script.
+--- Returns either an error message or the standard output.
+uploadPackageToCPM :: String -> IO (Either String String)
+uploadPackageToCPM pkgspec = do
+  let uploadURL = "https://www-ps.informatik.uni-kiel.de/~cpm/cpm-upload-masala.cgi"
+  (rc,out,err) <- evalCmd "curl"
+                          ["--data-binary", "@-", uploadURL ]
+                          pkgspec
+  return $ if rc == 0 then Right out
+                      else Left $ err ++ out
+
 --- Uploads a package specification with a given tar file containing the
 --- package source to the CPM repository via the `cpm-upload -t` command.
 --- Returns either an error message or the standard output.
-uploadPackageToCPM :: String -> String -> IO (Either String String)
-uploadPackageToCPM tarfile pkgspec = do
+uploadPackageToCPM' :: String -> String -> IO (Either String String)
+uploadPackageToCPM' tarfile pkgspec = do
   (rc,out,err) <- evalCmd "ssh"
                           [ "-p 55055", "cpm@cpm.informatik.uni-kiel.de"
                           , ".cpm/bin/cpm-upload", "-t"
