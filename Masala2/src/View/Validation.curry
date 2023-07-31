@@ -14,6 +14,8 @@ import HTML.Base
 import System.Spicey
 import View.EntitiesToHtml
 
+--- The WUI specification generate a new ValidationToken for a User.
+--- It can take a LoginName or an Email
 wValidation :: WuiSpec String -- LoginName or Email
 wValidation =
   withRendering

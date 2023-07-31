@@ -20,7 +20,6 @@ import View.EntitiesToHtml
 import View.Registration
 
 --- The WUI specification for the entity type User.
---- It also includes fields for associated entities.
 wUserEdit
   :: WuiSpec (String -- LoginName
              ,String -- PublicName
@@ -37,6 +36,8 @@ wUserEdit =
    )
    (renderLabels userLabelList)
 
+--- The WUI specification for the entity type User
+--- when the logged in User is an Admin.
 wUserEditAdmin
   :: String -- Current Role
   -> WuiSpec (String -- LoginName
@@ -60,6 +61,8 @@ wUserEditAdmin role =
               then [roleInvalid]
               else [roleNotTrusted, roleTrusted, roleAdmin]
 
+--- The WUI specification for the entity type User.
+--- It also includes fields for associated entities.
 wUser
   :: [Package]
   -> [Package]
@@ -92,32 +95,6 @@ wUser maintainerPackageList watchingPackageList =
       watchingPackageList) -- Watching
    )
    (renderLabels userLabelList)
-{-
-wUserEdit
-  :: [Package]
-  -> [Package]
-  -> WuiSpec ( String
-             , String
-             , String
-             , String
-             , [Package]
-             , [Package]
-             )
-wUserEdit maintainerPackageList watchingPackageList = 
-  withRendering
-    (w6Tuple
-      (wConstant stringToHtml)  -- LoginName
-      wRequiredString           -- PublicName
-      (wConstant stringToHtml)  -- Email
-      wString                   -- PublicEmail
-      (wMultiCheckSelect (\package -> [htxt (packageToShortView package)])
-        maintainerPackageList) -- Maintains
-      (wMultiCheckSelect (\package -> [htxt (packageToShortView package)])
-        watchingPackageList) -- Watching
-    )
-    (renderLabels userEditLabelList)
--}
-
 
 --- Transformation from data of a WUI form to entity type User.
 tuple2User
@@ -153,32 +130,6 @@ tuple2User
   ,maintainerPackages
   ,watchingPackages)
 
-{-
-tuple2UserEdit
-  :: User
-  -> (String
-     ,String
-     ,String
-     ,String
-     ,[Package]
-     ,[Package])
-  -> (User,[Package],[Package])
-tuple2UserEdit
-    userToUpdate
-    (loginName,publicName,email,publicEmail,maintainerPackages,watchingPackages) =
-  (setUserLoginName
-    (setUserPublicName
-      (setUserEmail
-        (setUserPublicEmail
-          userToUpdate
-          publicEmail)
-        email)
-      publicName)
-    loginName
-  ,maintainerPackages
-  ,watchingPackages)
--}
-
 --- Transformation from entity type User to a tuple
 --- which can be used in WUI specifications.
 user2Tuple
@@ -205,24 +156,8 @@ user2Tuple (user,maintainerPackages,watchingPackages) =
   ,maintainerPackages
   ,watchingPackages)
 
-{-
-user2TupleEdit
-  :: (User,[Package],[Package])
-  -> (String
-     ,String
-     ,String
-     ,String
-     ,[Package]
-     ,[Package])
-user2TupleEdit (user,maintainerPackages,watchingPackages) =
-  (userLoginName user
-  ,userPublicName user
-  ,userEmail user
-  ,userPublicEmail user
-  ,maintainerPackages
-  ,watchingPackages)
--}
-
+--- Transformation from data of a WUI form to entity type User
+--- when editing an User.
 tuple2UserEdit
   :: User
   -> (String, String, String, String)
@@ -232,6 +167,8 @@ tuple2UserEdit user (_, publicName, _, publicEmail) =
     (setUserPublicName user publicName)
     publicEmail
 
+--- Transformation from data of a WUI form to entity type User
+--- when editing an User as an Admin.
 tuple2UserEditAdmin
   :: User
   -> (String, String, String, String, String)
@@ -243,6 +180,9 @@ tuple2UserEditAdmin user (_, publicName, _, publicEmail, role) =
       publicEmail)
     role
 
+--- Transformation from entity type User to a tuple
+--- which can be used in WUI specifications
+--- when editing an User.
 user2TupleEdit
   :: User
   -> (String, String, String, String)
@@ -252,6 +192,9 @@ user2TupleEdit user =
   ,userEmail user
   ,userPublicEmail user)
 
+--- Transformation from entity type User to a tuple
+--- which can be used in WUI specifications
+--- when editing an User as an Admin.
 user2TupleEditAdmin
   :: User
   -> (String, String, String, String, String)
@@ -262,32 +205,20 @@ user2TupleEditAdmin user =
   ,userPublicEmail user
   ,userRole user)
 
---- WUI Type for editing or creating User entities.
---- Includes fields for associated entities.
+--- WUI Type for editing User entities.
 wUserEditType :: User -> WuiSpec User
 wUserEditType user =
   transformWSpec (tuple2UserEdit user, user2TupleEdit) wUserEdit
 
+--- WUI Type for editing User entities as an Admin.
 wUserEditTypeAdmin :: User -> WuiSpec User
 wUserEditTypeAdmin user =
   transformWSpec
     (tuple2UserEditAdmin user, user2TupleEditAdmin)
     (wUserEditAdmin (userRole user))
 
-{-
-wUserType
-  :: User -> [Package] -> [Package] -> WuiSpec (User,[Package],[Package])
-wUserType user maintainerPackageList watchingPackageList =
-  transformWSpec (tuple2User user,user2Tuple)
-   (wUser maintainerPackageList watchingPackageList)
-
-wUserTypeEdit
-  :: User -> [Package] -> [Package] -> WuiSpec (User,[Package],[Package])
-wUserTypeEdit user maintainerPackageList watchingPackageList =
-  transformWSpec (tuple2UserEdit user,user2TupleEdit)
-    (wUserEdit maintainerPackageList watchingPackageList)
--}
-
+--- The WUI specification for editing the password of an User.
+--- User, old password, new password, new password (again)
 wPasswordEdit :: WuiSpec (User,String,String,String)
 wPasswordEdit =
   w4Tuple wHidden wMasalaPassword wMasalaPassword wMasalaPassword
@@ -300,12 +231,9 @@ showUserView
   :: UserSessionInfo -> User -> [BaseHtml]
 showUserView _ user =
   userToDetailsView user
-{- ++ [hrefPrimSmButton (editRoute user) [htxt "Change data"]]
-   ++ [hrefPrimSmButton (editRoute user ++ "/Password") [htxt "Change Password"]]
-   ++ [hrefPrimSmButton (showRoute user ++ "/Maintaining") [htxt "Maintained Packages"]]
-   ++ [hrefPrimSmButton (showRoute user ++ "/Watching") [htxt "Watched Packages"]]
--}
 
+--- Supplies a view to show the details of a User
+--- when not logged in as that User.
 showUserViewLess
   :: UserSessionInfo -> User -> [BaseHtml]
 showUserViewLess _ user =
@@ -321,16 +249,6 @@ showUserViewAdmin _ user =
   , hrefPrimSmButton (editRoute user ++ "/Password") [htxt "Change Password"], nbsp
   , hrefPrimSmButton (showRoute user ++ "/Maintaining") [htxt "Maintained Packages"], nbsp
   , hrefPrimSmButton (showRoute user ++ "/Watching") [htxt "Watched Packages"]]
-
-{-
-showUserView
-  :: UserSessionInfo -> User -> [Package] -> [Package] -> [BaseHtml]
-showUserView _ user maintainerPackages watchingPackages =
-  --userToDetailsView user maintainerPackages watchingPackages
-  userToDetailsViewLess user maintainerPackages watchingPackages
-   ++ [hrefPrimSmButton (editRoute user ++ "/Password") [htxt "Change Password"]]
-   ++ [hrefPrimSmButton (listRoute user) [htxt "To User list"]]
--}
 
 --- Compares two User entities. This order is used in the list view.
 leqUser :: User -> User -> Bool

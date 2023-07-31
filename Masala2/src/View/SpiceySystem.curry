@@ -71,6 +71,7 @@ loginView (currlogin,lurl) =
   forgottenPasswordHandler _ = do 
     redirectController "?login/forgotpassword" >>= getPage
 
+--- The WUI specification for resetting a forgotten password.
 wForgotPassword :: WuiSpec String
 wForgotPassword =
   withRendering

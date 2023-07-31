@@ -125,22 +125,26 @@ removeMaintainerView (Just (package, userName, user)) =
     cancelHandler _ = do
       redirectController (showRoute package) >>= getPage
 
+--- The WUI specification for adding a User as a Maintainer.
+--- Normal users must give the name of the new Maintainer.
 wAddMaintainer :: WuiSpec String
 wAddMaintainer =
   withRendering
     wRequiredString
     (renderLabels addMaintainerLabels)
 
+--- The WUI specification for adding a User as a Maintainer.
+--- An Admin gets a list of all possible users.
 wAddMaintainerAdmin :: [String] -> WuiSpec [String]
 wAddMaintainerAdmin users =
-  --withRendering 
-    wMultiCheckSelect (\user -> [htxt user]) users
-    --(renderLabels addMaintainerLabelsAdmin)
+  wMultiCheckSelect (\user -> [htxt user]) users
 
+--- WUI Type for adding a maintainer.
 wAddMaintainerType :: Package -> WuiSpec (Package, String)
 wAddMaintainerType package =
   transformWSpec (\name -> (package, name), \(_, name) -> name) wAddMaintainer
 
+--- WUI Type for adding a maintainer as an Admin.
 wAddMaintainerTypeAdmin :: Package -> [String] -> WuiSpec (Package, [String])
 wAddMaintainerTypeAdmin package userNames =
   transformWSpec (\names -> (package, names), snd) (wAddMaintainerAdmin userNames)
