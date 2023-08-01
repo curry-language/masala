@@ -115,60 +115,70 @@ uploadCheckStore = sessionStore "uploadCheckStore"
 --- specification (`package.json` file contents.
 --- Then it is checked whether the password is correct and the user
 --- is allowed to upload the package.
---- The result is either a message about the successful upload
---- or an error message.
+--- The result is either an error message (`Left`) or
+--- a message about the successful upload (`Right`).
 --- If the `publish` parameter is `True`, the package should directly
 --- be published (by calling `System.PackageHelpers.pubhlishPackageVersion`)
 --- if the user is an admin or a truested(!) maintainer of the package.
 --- If the `force` parameter is `True`, overwriting an existing version
 --- is allowed if the user as an admin.
-uploadByName :: String -> String -> String -> Bool -> Bool -> IO String
+uploadByName :: String -> String -> String -> Bool -> Bool
+             -> IO (Either String String)
 uploadByName login passwd packagetxt publish force = do
   userResult <- getUserByLoginData login passwd
   case userResult of 
-    Nothing -> return loginErrMsg
+    Nothing -> uploadFail loginErrMsg
     Just user -> do
       case force && userRole user /= roleAdmin of
-        True -> return "Upload failed: 'force' can only be used by an Admin"
+        True -> uploadFail "'force' can only be used by an Admin"
         False -> do
           case publish && 
                userRole user /= roleAdmin && userRole user /= roleTrusted of
-            True -> return "Upload failed: 'publish' can only be used by an Admin or Trusted User"
+            True -> do upmsg <- uploadByName login passwd packagetxt False force
+                       return $ either Left (\m -> Right $ noPublishCmt ++ m)
+                                       upmsg
             False -> do
               jsonResult <- readPackageData packagetxt
               case jsonResult of
-                Left err -> return err
+                Left err -> uploadFail err
                 Right json -> do
                   time <- getClockTime
-                  uploadResult <- uncurry6 (uploadPackage packagetxt user time force) json
+                  uploadResult <- uncurry6
+                                    (uploadPackage packagetxt user time force)
+                                    json
                   case uploadResult of
-                    Left msg -> return msg
+                    Left msg -> uploadFail msg
                     Right (pkg, vsn) ->
                       if publish
                         then do
                           publishResult <- publishPackageVersion
                                           (packageName pkg) (versionVersion vsn)
                           case publishResult of 
-                              Left err ->
-                                return ("Package successfully uploaded, but publishing failed: " ++ err)
+                              Left err -> uploadFail $
+                                "Package successfully uploaded, " ++
+                                "but publishing failed: " ++ err
                               Right msg -> do
-                                vsnResult <- runT $ updateVersion (setVersionPublished vsn True)
+                                vsnResult <- runT $ updateVersion $
+                                               setVersionPublished vsn True
                                 case vsnResult of
-                                  Left _  -> return setPublishErrMsg
-                                  Right _ -> return $ publishMessage msg
-                        else return uploadMessage
+                                  Left _  -> uploadFail setPublishErrMsg
+                                  Right _ -> return $ Right $ publishMessage msg
+                        else return $ Right uploadMessage
  where
-  uploadMessage = "Package successfully uploaded but not yet published.\n" ++
+  uploadFail msg = return $ Left $ "Upload failure: " ++ msg
+
+  uploadMessage = "Package is successfully uploaded but not yet published.\n" ++
     "To publish it, go to the Masala web site (if you are a trusted user)\n" ++
     "or ask the Masala admin for publishing."
 
   publishMessage out =
     "Package successfully uploaded and published.\n" ++
-    "Output from uploader:\n" ++ out
+    "Output from package uploader:\n" ++ out
 
+  noPublishCmt = "Publishing packages is only allowed for trusted users!\n"
+  
   setPublishErrMsg =
     "Package successfully uploaded but something went wrong publishing it"
   
-  loginErrMsg =
-    "Upload failed: Masala login failed (wrong login name or password?)"
+  loginErrMsg = "Masala login failed (wrong login name or password?)"
     

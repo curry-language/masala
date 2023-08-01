@@ -1,6 +1,7 @@
 module Controller.Version
   ( mainVersionController, newVersionForm, editVersionForm
-  , showVersionController, deleteVersionT, isVisibleVersion ) where
+  , showVersionController, deleteVersionT, isVisibleVersion
+  , getVersioningPackage ) where
 
 import Control.Monad        ( unless )
 import Data.List            ( sortBy )

@@ -1,6 +1,5 @@
 --------------------------------------------------------------------------
---- This module defines operations to support the handling of routes
---- to controllers.
+--- This module defines operations to support the uploading of packages.
 --------------------------------------------------------------------------
 
 module System.PackageHelpers
@@ -170,4 +169,5 @@ uploadPackageToMasalaStore pname pvers pkgspec = do
 packageSpecFile :: String
 packageSpecFile = "package.json"
 
+------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
