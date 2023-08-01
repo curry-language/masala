@@ -34,7 +34,7 @@ import HTML.Session
 import HTML.Styles.Bootstrap4
 import HTML.WUI
 
-import Config.Masala        ( baseCGI, testSystem )
+import Config.Masala        ( baseCGI )
 import Config.Roles
 import Config.UserProcesses
 import Model.Masala2        ( showVersionKey )
@@ -285,8 +285,7 @@ readMaybeFloat s =
 
 --- The title of this application (shown in the header).
 spiceyTitle :: String
-spiceyTitle = "Masala: The Repository of Curry Packages" ++
-  if testSystem then " (TEST VERSION!)" else ""
+spiceyTitle = "Masala: The Repository of Curry Packages"
 
 --- The home URL and brand shown at the left top of the main page.
 spiceyHomeBrand :: (String, [BaseHtml])
@@ -317,7 +316,7 @@ getPage viewblock = case viewblock of
       spiceyTitle spiceyHomeBrand
       (addNavItemClass $ routemenu) (rightTopMenu login ++ [("nav-item", searchElem)])
       0 []
-      [h1 [htxt "Masala: ", smallMutedText spiceyTitle]]
+      [h1 [htxt "Masala: ", smallMutedText "The Repository of Curry Packages"]]
       (messageLine msg lasturl : viewblock)
       spiceyFooter
  where
