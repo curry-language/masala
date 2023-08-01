@@ -68,7 +68,7 @@ loginView (currlogin,lurl) =
 
   logoutHandler _ = do
     logoutFromSession >> setPageMessage "Logged out"
-    nextInProcessOr (redirectController lasturl) Nothing >>= getPage
+    nextInProcessOr (redirectController "?") Nothing >>= getPage
   
   forgottenPasswordHandler _ = do 
     redirectController "?login/forgotpassword" >>= getPage
