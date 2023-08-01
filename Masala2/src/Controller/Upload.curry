@@ -76,7 +76,7 @@ uploadJsonForm =
                                             uploadPackageView login json jsonData False
                 )
             )
-            (\sinfo -> renderWUI sinfo "Upload Package" "Upload" "?Upload" ())
+            (\sinfo -> renderWUI sinfo "Upload Package" "Upload" "?" ())
     where
         errorMessage :: PackageJSON -> Bool -> [String] -> String
         errorMessage jd vsnExist nonExistingCats = unlines [vsnMsg, catMsg]

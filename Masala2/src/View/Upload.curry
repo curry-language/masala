@@ -36,7 +36,7 @@ uploadJsonLabelList =
 wUploadJson :: WuiSpec String
 wUploadJson = 
   withRendering
-    (wTextArea (20,60))
+    (wTextArea (15,60))
     (renderLabels uploadJsonLabelList)
 
 --- A confirmation page for an Admin when a version already exists or
@@ -60,7 +60,7 @@ wUploadCheck (msg, packageJson, jsonMaybe) =
               Just jsonData -> do
                 uploadPackageView login packageJson jsonData True >>= getPage
 
-      cancelHandler _ = redirectController "?Upload" >>= getPage
+      cancelHandler _ = redirectController "?" >>= getPage
 
 --- This function uploads a new Version for a Package and returns the next webpage.
 --- @param loginName - The name of the User uploading the Package
@@ -83,7 +83,8 @@ uploadPackageView loginName packagetxt jsonData adminConfirmation = do
             redirectController (showRoute vsn)
   where
    successMsg pkg vers = 
-     "Package '" ++ packageName pkg ++ "-" ++ vers ++ "' successfully uploaded!"
+     "Package '" ++ packageName pkg ++ "-" ++ vers ++
+     "' successfully uploaded (as a private package)"
 
 --- This function uploads a new Version for a Package.
 --- When the upload is successfull, the package specification
@@ -181,16 +182,19 @@ uploadPackageAction user time adminConfirmation name version description depende
                 -- We have admin confirmation, create missing Categories
                 newCats <- createNewCategories missingCats
                 -- Create categorizes
-                mapM_ (flip newCategorizes (versionKey vsn)) (map categoryKey (cats ++ newCats))
+                mapM_ (flip newCategorizes (versionKey vsn))
+                      (map categoryKey (cats ++ newCats))
 
                 return (pkg, vsn)
   where
     actionError msg = failDB (DBError UnknownError msg)
 
     dependencyCategoryError :: [String] -> [String] -> DBAction (Package, Version)
-    dependencyCategoryError missingDeps missingCats = let
-        msg = dependencyError missingDeps ++ "; " ++ categoryError missingCats
-      in actionError msg
+    dependencyCategoryError missingDeps missingCats = 
+      let derr = dependencyError missingDeps
+          cerr = categoryError missingCats
+      in actionError $
+           derr ++ (if null derr || null cerr then "" else " / ") ++ cerr
 
     dependencyError :: [String] -> String
     dependencyError missingDeps = case missingDeps of

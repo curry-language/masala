@@ -228,11 +228,17 @@ versionInfoAsHTML :: UserSessionInfo -> Package -> Version -> [Package]
                   -> [(String,[BaseHtml])]
 versionInfoAsHTML sinfo package version deppackages cats allversions uploader
                   maintainers exportedmods =
-  [("Categor" ++ if length cats == 1 then "y" else "ies",
+  [ ("Visibility",
+     [if versionPublished version
+        then blockstyle "badge badge-info"   [htxt "Public"]
+        else blockstyle "badge badge-danger" [htxt "Private"],
+      nbsp] ++ togglePublicButton)
+  , ("Categor" ++ plural cats "y" "ies",
     hitems $ map (\c -> hrefPrimBadge (showRoute c) [htxt $ categoryName c])
                  cats)] ++
-  [ ("Versions", hitems $ map (showPkgVersion version)
-                              (reverse (sortBy leqVersion allversions)))
+  [ ("Version" ++ plural allversions "" "s",
+     hitems $ map (showPkgVersion version)
+                  (reverse (sortBy leqVersion allversions)))
   , ("Dependencies", hitems $ map dep2html $ deppackages) ] ++
   expmods ++
   [ ("Uploaded by",
@@ -240,18 +246,18 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
       htxt $ "at " ++
              calendarTimeToString (toUTCTime (versionUploadDate version)) ++
              " (UTC)"])
-  , ("Maintainer" ++ if length maintainers > 1 then "s" else "",
+  , ("Maintainer" ++ plural maintainers "" "s",
      concatMap ((++ [breakline]) .
                 userToEntry (canEditMaintainers && length maintainers > 1))
                maintainers ++ maintainerControl)
-  , ("Visibility",
-     [htxt (publicText (versionPublished version)), nbsp] ++ togglePublicButton)
   , ("Deprecated",
      [htxt (if versionDepr then "yes" else "no")] ++ toggleDeprButton)
   --, ("JobStatus", [htxt $ versionJobStatus version])
   --, ("Downloads", [htxt $ show $ versionDownloads version])
   ]
  where
+  plural xs sg pl = if length xs > 1 then pl else sg
+
   canEditMaintainers = case userLoginOfSession sinfo of
     Nothing             -> False
     Just (loginname, _) -> isAdminSession sinfo ||
@@ -271,7 +277,6 @@ versionInfoAsHTML sinfo package version deppackages cats allversions uploader
       (entityRoute "removemaintainer" package ++ "/" ++ showUserKey u)
       [htxt "Remove"]
       
-  publicText b = if b then "Public" else "Private"
   versionDepr = versionDeprecated version
 
   userToRef u = hrefScndBadge (showRoute u) [htxt (userToShortView u)]
