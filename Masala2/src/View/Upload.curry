@@ -13,6 +13,7 @@ import Data.List
 import Data.Maybe
 import Data.Time
 
+import Config.Roles
 import Config.UserProcesses
 import Controller.Version ( deleteVersionT )
 import Controller.Mail ( sendNotificationEmail )
@@ -89,7 +90,7 @@ uploadPackageView loginName packagetxt jsonData adminConfirmation = do
 --- This function uploads a new Version for a Package.
 --- When the upload is successfull, the package specification
 --- will be stored and a notification email will be send to all
---- watching users and maintainers.
+--- watching users, maintainers, and the admin.
 --- @param user - The User uploading the new Version
 --- @param time - The current time
 --- @param adminConfirmation - A confirmation from an Admin whether to overwrite
@@ -100,19 +101,23 @@ uploadPackageView loginName packagetxt jsonData adminConfirmation = do
 --- @param dependencies - The list of dependencies
 --- @param curryModules - The modules being exported
 --- @param categories - The list of categories
-uploadPackage 
-  :: String -> User -> ClockTime -> Bool -> String -> String -> String -> [String]
-  -> [String] -> [String] -> IO (Either String (Package, Version))
-uploadPackage packagetxt user time adminConfirmation name version description dependencies curryModules categories = do
+uploadPackage :: String -> User -> ClockTime -> Bool -> String -> String
+              -> String -> [String] -> [String] -> [String]
+              -> IO (Either String (Package, Version))
+uploadPackage packagetxt user time adminConfirmation name version description
+              dependencies curryModules categories = do
   -- Upload package
-  result <- runT $ uploadPackageAction user time adminConfirmation name version description dependencies curryModules categories
+  result <- runT $ uploadPackageAction user time adminConfirmation name version
+                     description dependencies curryModules categories
   case result of
     Left (DBError _ msg) -> return (Left msg)
     Right (pkg, vsn) -> do
       storePackageSpec name version packagetxt
       watchingUsers <- getWatchingUsers pkg
-      maintainers <- getMaintainersOfPackage pkg
-      mapM_ (sendNotificationEmail pkg vsn) (union watchingUsers maintainers)
+      maintainers   <- getMaintainersOfPackage pkg
+      admin         <- fmap (maybe [] (:[])) $ getUserByName "admin"
+      mapM_ (sendNotificationEmail pkg vsn)
+            (union admin (union watchingUsers maintainers))
       return $ Right (pkg, vsn)
 
 --- This action uploads a new Version for a Package.
@@ -129,7 +134,8 @@ uploadPackage packagetxt user time adminConfirmation name version description de
 uploadPackageAction
   :: User -> ClockTime -> Bool -> String -> String -> String -> [String]
   -> [String] -> [String] -> DBAction (Package, Version)
-uploadPackageAction user time adminConfirmation name version description dependencies curryModules categories = do
+uploadPackageAction user time adminConfirmation name version description
+                    dependencies curryModules categories = do
     -- Find all dependencies
     depsResult <- getDependenciesWithNameAction dependencies
     let (missingDeps, deps) = partitionEithers depsResult
@@ -152,7 +158,7 @@ uploadPackageAction user time adminConfirmation name version description depende
           -- Package found
           Just pkg' -> return pkg'
         isMaintainer <- checkIfMaintainerAction pkg user
-        case isMaintainer of 
+        case isMaintainer || userRole user == roleAdmin of 
           False -> actionError "User is not a maintainer of this package"
           True -> do 
             vsnResult <- getPackageVersionByNameAction name version
