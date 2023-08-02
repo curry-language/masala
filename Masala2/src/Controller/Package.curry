@@ -15,7 +15,7 @@ import Model.Queries
 import Config.EntityRoutes
 import Config.Roles
 import Config.UserProcesses
-import Controller.Version   ( isVisibleVersion, showVersionController )
+import Controller.Version   ( showVersionController )
 import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
@@ -184,8 +184,17 @@ showPackageController :: Package -> Controller
 showPackageController package =
   checkAuthorization (packageOperationAllowed (ShowEntity package)) $
    \sinfo -> do
-      versions <- fmap (filter (isVisibleVersion sinfo))
-                       (getPackageVersions package)
+      allversions <- getPackageVersions package
+      allvisible <- case userLoginOfSession sinfo of
+                      Nothing -> return False
+                      Just (login,_) -> do
+                        mbuser <- getUserByName login
+                        case mbuser of
+                          Nothing   -> return False
+                          Just user -> checkIfMaintainer package user
+      let versions = if allvisible || isAdminSession sinfo
+                       then allversions
+                       else filter versionPublished allversions
       if null versions
         then return $ showNoVersionPackageView sinfo package
         else showVersionController (last (sortBy leqVersion versions))

@@ -58,26 +58,41 @@ adminOrMaintainer package sinfo =
     then return AccessGranted
     else do
       case userLoginOfSession sinfo of 
-        Nothing -> return $ AccessDenied "Operation not allowed!"
+        Nothing -> operationDenied
         Just (loginName, _) -> do 
           userResult <- getUserByName loginName
           case userResult of 
-            Nothing-> return $ AccessDenied "Operation not allowed!"
+            Nothing-> operationDenied
             Just user -> do 
               isMaintainer <- checkIfMaintainer package user
               case isMaintainer of 
-                False -> return $ AccessDenied "Operation not allowed!"
+                False -> operationDenied
                 True -> return AccessGranted
 
 --- Checks whether the application of an operation to a Version
 --- entity is allowed.
 versionOperationAllowed
   :: AccessType Version -> UserSessionInfo -> IO AccessResult
-versionOperationAllowed at sinfo =
-  case at of
-    ListEntities -> return AccessGranted
-    ShowEntity _ -> return AccessGranted
-    _            -> checkAdmin sinfo
+versionOperationAllowed at sinfo = case at of
+  ListEntities -> return AccessGranted
+  ShowEntity v ->
+    if versionPublished v || isAdminSession sinfo
+      then return AccessGranted
+      else case userLoginOfSession sinfo of
+              Nothing -> showDenied
+              Just (login,_) -> do
+                mbuser <- getUserByName login
+                case mbuser of
+                  Nothing -> showDenied
+                  Just user -> do
+                    pkg <- runQ $ getVersioningPackage v
+                    isMaintainer <- checkIfMaintainer pkg user
+                    case isMaintainer of
+                      False -> showDenied
+                      True  -> return AccessGranted
+  _            -> checkAdmin sinfo
+ where
+  showDenied = return $ AccessDenied "Version is not yet published"
 
 --- Checks whether the application of an operation to a Category
 --- entity is allowed.
@@ -106,3 +121,6 @@ validationTokenOperationAllowed
 validationTokenOperationAllowed at sinfo =
   case at of
     _            -> checkAdmin sinfo
+
+operationDenied :: IO AccessResult
+operationDenied = return $ AccessDenied "Operation not allowed!"

@@ -1,7 +1,7 @@
 module Controller.Version
   ( mainVersionController, newVersionForm, editVersionForm
-  , showVersionController, deleteVersionT, isVisibleVersion
-  , getVersioningPackage ) where
+  , showVersionController, deleteVersionT
+  ) where
 
 import Control.Monad        ( unless )
 import Data.List            ( sortBy )
@@ -345,7 +345,7 @@ showVersionController version =
         allversions <- fmap (filter (isVisibleVersion sinfo))
                             (getPackageVersions package)
         dependingPackages <- runJustT (getDependingVersionPackages version)
-        exportingCurryModules <- runJustT (getExportingVersionCurryModules version)
+        exportedModules <- runJustT (getExportingVersionCurryModules version)
         cats <- runQ $ getPackageVersionCategories package version
         maintainers <- getPackageMaintainers package
         currentUser <- case userLoginOfSession sinfo of 
@@ -356,7 +356,8 @@ showVersionController version =
           Just user -> checkUserWatches user package
         return
          (showVersionView sinfo version package uploadUser maintainers cats
-            allversions dependingPackages exportingCurryModules watchesPackage currentUser))
+            allversions dependingPackages exportedModules
+            watchesPackage currentUser))
 
 --- Associates given entities with the Version entity
 --- with respect to the `Depending` relation.
@@ -383,12 +384,3 @@ removeExporting :: [CurryModule] -> Version -> DBAction ()
 removeExporting curryModules version =
   mapM_ (\t -> deleteExporting (versionKey version) (curryModuleKey t))
    curryModules
-
---- Gets the associated User entity for a given Version entity.
-getUploadUser :: Version -> DBAction User
-getUploadUser vUser = getUser (versionUserUploadKey vUser)
-
---- Gets the associated Package entity for a given Version entity.
-getVersioningPackage :: Version -> DBAction Package
-getVersioningPackage vPackage =
-  getPackage (versionPackageVersioningKey vPackage)

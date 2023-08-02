@@ -17,7 +17,6 @@ import Text.CSV
 import Config.ControllerMapping
 import Config.RoutesData
 import Controller.Upload ( uploadByName )
-import Controller.Version ( getVersioningPackage )
 import Model.Masala2
 import Model.Queries
 import System.Routes
@@ -56,11 +55,10 @@ main = do
     _ ->  dispatcher
 
 -----------------------------------------------------------------------------
---- Saves the database as term files.
---- To invoke this operation, use the following command in the
---- web directory of Masala:
+--- Saves the database as term files in the `data` area of Masala.
+--- To invoke this operation from a shell, one can use the command
 ---
----     > export QUERY_STRING=savedb && ./run.cgi
+---     > curl -s "https://cpm.curry-lang.org/masala/run.cgi?savedb"
 ---
 saveMasalaDB :: IO HtmlPage
 saveMasalaDB = do

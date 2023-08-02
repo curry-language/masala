@@ -26,23 +26,24 @@ import Database.CDBI.Connection
 --- Shows a form to register a new User.
 validationController :: Controller
 validationController = do
-    args <- getControllerParams
-    case args of 
-        [] -> validationTokenController
-        [token] -> do 
-            result <- getValidationTokenWithToken token
-            case result of
-                Nothing -> displayError ("This validation token \"" ++ token ++ "\" does not exist.")
-                Just validationToken -> do
-                    deleteValidationTokenWithToken token
-                    validationResult <- validateUser (validationTokenUserValidatingKey validationToken)
-                    case validationResult of 
-                        Left err -> displayError $ "Validation failed (" ++
-                                                   show err ++ ")"
-                        Right _ -> do
-                            setPageMessage "Successfully validated"
-                            redirectController "?"
-        _ -> displayUrlError
+  args <- getControllerParams
+  case args of 
+    [] -> validationTokenController
+    [token] -> do 
+      result <- getValidationTokenWithToken token
+      case result of
+        Nothing -> displayError $ "This validation token \"" ++ token ++
+                                  "\" does not exist."
+        Just validationToken -> do
+          deleteValidationTokenWithToken token
+          validationResult <- validateUser (validationTokenUserValidatingKey validationToken)
+          case validationResult of 
+            Left err -> displayError $ "Validation failed (" ++ show err ++ ")"
+            Right _ -> do
+              setPageMessage
+                "Your new Masala account has been successfully validated"
+              redirectController "?"
+    _ -> displayUrlError
 
 validateUser :: UserID -> IO (SQLResult ())
 validateUser user = do
