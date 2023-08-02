@@ -296,3 +296,13 @@ getPackageVersionsByPattern s = runQ
                And Satisfies v versionOf p;''
 
 -----------------------------------------------------------------------
+--- Gets the associated User entity for a given Version entity.
+getUploadUser :: Version -> DBAction User
+getUploadUser vUser = getUser (versionUserUploadKey vUser)
+
+--- Gets the associated Package entity for a given Version entity.
+getVersioningPackage :: Version -> DBAction Package
+getVersioningPackage vPackage =
+  getPackage (versionPackageVersioningKey vPackage)
+
+-----------------------------------------------------------------------
