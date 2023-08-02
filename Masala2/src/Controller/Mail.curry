@@ -86,6 +86,7 @@ sendMailController emailInfo to subject contents = do
                   , verbatim mailtxt ]
     else return emailInfo
 
+-- Send an email with the new password after resetting it.
 sendPasswordMail :: String -> String -> Controller
 sendPasswordMail to password = do
   let subject = "Your password has been reset"
@@ -109,29 +110,8 @@ sendValidationMail to token = do
                       "following the link (URL) containing in an email " ++
                       "sent to '" ++ to ++ "'." ] ]
   sendMailController emailInfo to subject contents
-{-
-sendValidationMail :: String -> String -> Controller
-sendValidationMail to token = do
-  let subject  = "Please validate your email address"
-      contents = "To validate your email address, please go to the URL "++
-                 mainScriptURL ++ "?Validation/" ++ token
-  -- for testing:
-  let mailtxt = showSendMail adminEmail to subject contents
-  return $ emailInfo to ++
-           -- for testing only:
-           [ hrule,
-             h3 [htxt "Mail sent in the real system:"],
-             verbatim mailtxt ]
- where
-  emailInfo emailaddr =
-    [ h3 [htxt "Initial registration successful!"],
-      par [htxt $ "In order to use your account, please activate it by " ++
-                  "it by following the link (URL) containing in an email " ++
-                  "sent to '" ++ emailaddr ++ "'." ] ]
--}
 
-------------------------------------------------------------------------------
-
+-- Send an email notifying of a new upload to a package to a watching user or maintainer.
 sendNotificationEmail :: Package -> Version -> User -> IO ()
 sendNotificationEmail pkg vsn user = do
   let subject  = "[Masala]: Package " ++ packageName pkg ++ ": New Version " ++

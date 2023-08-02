@@ -44,14 +44,14 @@ validationController = do
                 "Your new Masala account has been successfully validated"
               redirectController "?"
     _ -> displayUrlError
+ where
+  validateUser :: UserID -> IO (SQLResult ())
+  validateUser user = runT $ validateUserAction user
 
-validateUser :: UserID -> IO (SQLResult ())
-validateUser user = do
-    runT (validateUserAction user)
-    where
-        validateUserAction key = do 
-            oldUser <- getUser key
-            updateUser (setUserRole oldUser roleNotTrusted)
+  validateUserAction :: UserID -> DBAction ()
+  validateUserAction key = do 
+    oldUser <- getUser key
+    updateUser (setUserRole oldUser roleNotTrusted)
 
 
 --- Shows a form to edit the given User entity.
@@ -60,6 +60,8 @@ validationTokenController = do
     setParWuiStore validationStore () ""
     return [formElem validationForm]
 
+--- A WUI form to issue a new ValidationToken for a User.
+--- The default values for the fields are stored in 'validationStore'.
 validationForm :: HtmlFormDef ((),WuiStore String)
 validationForm =
     pwui2FormDef "Controller.Validation.validationForm" validationStore
@@ -101,6 +103,7 @@ validationForm =
             "a new validation token which will be sent to your registered " ++
             "email address."
 
+--- The data stored for executing the "validation" WUI form.
 validationStore
   :: SessionStore ((),WuiStore String)
 validationStore = sessionStore "validationStore"

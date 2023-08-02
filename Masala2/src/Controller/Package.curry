@@ -199,6 +199,9 @@ showPackageController package =
         then return $ showNoVersionPackageView sinfo package
         else showVersionController (last (sortBy leqVersion versions))
 
+--- Shows a form to add maintainers to a package.
+--- An Admin selects users from a list.
+--- A Maintainer inputs the login name of the new maintainer.
 addMaintainerPackageController :: Package -> Controller
 addMaintainerPackageController package = 
   checkAuthorization (packageOperationAllowed (UpdateEntity package))
@@ -214,12 +217,16 @@ addMaintainerPackageController package =
             return [formElem addMaintainerPackageForm]
     )
 
+--- The data stored for executing the "addMaintainerPackage" WUI form when logged in as an admin.
 addMaintainerPackageStoreAdmin :: SessionStore ((UserSessionInfo,Package,[String]),WuiStore (Package,[String]))
 addMaintainerPackageStoreAdmin = sessionStore "addMaintainerPackageStoreAdmin"
 
+--- The data stored for executing the "addMaintainerPackage" WUI form.
 addMaintainerPackageStore :: SessionStore ((UserSessionInfo,Package),WuiStore (Package,String))
 addMaintainerPackageStore = sessionStore "addMaintainerPackageStore"
 
+--- A WUI form to add new maintainers to a package when logged in as an admin.
+--- The default values for the fields are stored in 'addMaintainerPackageStoreAdmin'.
 addMaintainerPackageFormAdmin :: HtmlFormDef ((UserSessionInfo,Package,[String]),WuiStore (Package,[String]))
 addMaintainerPackageFormAdmin =
   pwui2FormDef "Controller.Package.addMaintainerPackageFormAdmin" addMaintainerPackageStoreAdmin
@@ -245,6 +252,8 @@ addMaintainerPackageFormAdmin =
       renderWUI sinfo "Please choose the users you want to add as maintainers"
         "Add Maintainers" (showRoute entity) ())
 
+--- A WUI form to add new maintainers to a package when logged in as a maintainer.
+--- The default values for the fields are stored in 'addMaintainerPackageStore'.
 addMaintainerPackageForm :: HtmlFormDef ((UserSessionInfo,Package),WuiStore (Package, String))
 addMaintainerPackageForm =
   pwui2FormDef "Controller.Package.addMaintainerPackageForm" addMaintainerPackageStore
@@ -277,6 +286,8 @@ addMaintainerPackageForm =
         "Type in the login name of the user you want to add as maintainer"
         "Add Maintainer" (showRoute entity) ())
 
+--- Shows a form to remove a maintainer from a package.
+--- A maintainer can only be removed if they are not the only maintainer.
 removeMaintainerPackageController :: String -> Package -> Controller
 removeMaintainerPackageController maintainerKey package = do 
   checkAuthorization (packageOperationAllowed (UpdateEntity package))
@@ -295,20 +306,14 @@ removeMaintainerPackageController maintainerKey package = do
                 putSessionData removeMaintainerPackageStore
                   (Just (package, userLoginName user, userid))
                 return [formElem removeMaintainerPackageForm]
-                {-
-                result <- runT $ deleteMaintainer user (packageKey package)
-                case result of 
-                  Left _ -> do 
-                    setPageMessage "Something went wrong, please try again"
-                  Right _ -> do 
-                    setPageMessage "Maintainer has been removed"
-                redirectController (showRoute package)
-                -}
       )
 
+--- The data stored for executing the "removeMaintainerPackage" WUI form.
 removeMaintainerPackageStore :: SessionStore (Maybe (Package, String, UserID))
 removeMaintainerPackageStore = sessionStore "removeMaintainerPackageStore"
 
+--- A WUI form to remove a maintainer from a package.
+--- The default values for the fields are stored in 'removeMaintainerPackageForm'.
 removeMaintainerPackageForm :: HtmlFormDef (Maybe (Package, String, UserID))
 removeMaintainerPackageForm = formDefWithID "Controller.Package.removeMaintainerPackageForm"
   (getSessionData removeMaintainerPackageStore Nothing) removeMaintainerView

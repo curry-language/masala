@@ -48,6 +48,7 @@ loginController = do
     ["forgotpassword"] -> forgotPasswordController
     _ -> displayUrlError
 
+--- A WUI form to login.
 loginFormDef :: HtmlFormDef (Maybe String, String)
 loginFormDef = formDefWithID "Controller.SpiceySystem.loginFormDef"
   (getSessionData loginViewData (Nothing,"")) loginView
@@ -56,15 +57,18 @@ loginFormDef = formDefWithID "Controller.SpiceySystem.loginFormDef"
 loginViewData :: SessionStore (Maybe String, String)
 loginViewData = sessionStore "loginViewData"
 
+--- Controller for resetting a forgotten password.
 forgotPasswordController :: Controller
 forgotPasswordController = do
   setParWuiStore forgotPasswordStore () ""
   return [formElem forgotPasswordForm]
 
+--- The data processed by the 'forgotPasswordForm'.
 forgotPasswordStore
   :: SessionStore ((), WuiStore String)
 forgotPasswordStore = sessionStore "forgotPasswordStore"
 
+--- A WUI form to reset a forgotten password.
 forgotPasswordForm
   :: HtmlFormDef ((), WuiStore String)
 forgotPasswordForm =

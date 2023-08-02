@@ -117,7 +117,9 @@ editUserController userToEdit =
 
 --- A WUI form to edit a User entity.
 --- The default values for the fields are stored in 'editUserStore'.
-editUserForm :: HtmlFormDef ((UserSessionInfo,User), WuiStore User)
+editUserForm
+  :: HtmlFormDef ((UserSessionInfo,User)
+                 ,WuiStore User)
 editUserForm =
   pwui2FormDef "Controller.User.editUserForm" editUserStore
    (\(_,user) -> wUserEditType user)
@@ -143,70 +145,30 @@ editUserForm =
     , "If you want to change them, please contact the Masala administrator."
     ]
 
-editUserFormAdmin :: HtmlFormDef ((UserSessionInfo,User), WuiStore User)
+--- A WUI form to edit a User entity as an Admin.
+--- The default values for the fields are stored in 'editUserStore'.
+editUserFormAdmin
+  :: HtmlFormDef ((UserSessionInfo,User)
+                 ,WuiStore User)
 editUserFormAdmin =
   pwui2FormDef "Controller.User.editUserFormAdmin" editUserStore
    (\(_,user) -> wUserEditTypeAdmin user)
    (\_ userToEdit ->
      checkAuthorization (userOperationAllowed (UpdateEntity userToEdit))
-      (\_ -> do
-        pnameAvailable <- checkPublicNameAvailable (userPublicName userToEdit)
-        if pnameAvailable
-          then transactionController (runT (updateUser userToEdit)) $ const $ do
-            setPageMessage "User profile updated"
-            nextInProcessOr (redirectController (showRoute userToEdit))
-                            Nothing
-          else displayError "Public user name is already used!"))
+      (\_ ->
+        transactionController (runT (updateUser userToEdit))
+         (const
+           (do setPageMessage "User updated"
+               nextInProcessOr (redirectController (showRoute userToEdit))
+                Nothing))))
    (\(sinfo,entity) ->
-     renderWUI sinfo "Edit User Profile" "Change" (listRoute entity) ())
+     renderWUI sinfo "Edit User" "Change" (listRoute entity) ())
 
 --- The data stored for executing the edit WUI form.
 editUserStore
   :: SessionStore ((UserSessionInfo,User)
                   ,WuiStore User)
 editUserStore = sessionStore "editUserStore"
-
-{-        
---- Shows a form to edit the given User entity.
-editUserController :: User -> Controller
-editUserController userToEdit =
-  checkAuthorization (userOperationAllowed (UpdateEntity userToEdit))
-   $ (\sinfo ->
-     do allPackages <- runQ queryAllPackages
-        --allPackages <- runQ queryAllPackages
-        maintainerPackages <- runJustT (getMaintainerUserPackages userToEdit)
-        watchingPackages <- runJustT (getWatchingUserPackages userToEdit)
-        setParWuiStore editUserStore
-         (sinfo,userToEdit,allPackages,allPackages)
-         (userToEdit,maintainerPackages,watchingPackages)
-        return [formElem editUserForm])
-
---- A WUI form to edit a User entity.
---- The default values for the fields are stored in 'editUserStore'.
-editUserForm
-  :: HtmlFormDef ((UserSessionInfo,User,[Package],[Package])
-                 ,WuiStore (User,[Package],[Package]))
-editUserForm =
-  pwui2FormDef "Controller.User.editUserForm" editUserStore
-   (\(_,user,possibleMaintainerPackages,possibleWatchingPackages) ->
-     wUserTypeEdit user possibleMaintainerPackages possibleWatchingPackages)
-   (\_ entity@(userToEdit,_,_) ->
-     checkAuthorization (userOperationAllowed (UpdateEntity userToEdit))
-      (\_ ->
-        transactionController (runT (updateUserT entity))
-         (const
-           (do setPageMessage "User updated"
-               nextInProcessOr (redirectController (showRoute userToEdit))
-                Nothing))))
-   (\(sinfo,entity,_,_) ->
-     renderWUI sinfo "Edit User" "Change" (listRoute entity) ())
-
---- The data stored for executing the edit WUI form.
-editUserStore
-  :: SessionStore ((UserSessionInfo,User,[Package],[Package])
-                  ,WuiStore (User,[Package],[Package]))
-editUserStore = sessionStore "editUserStore"
--}
 
 --- Shows a form to edit the password of the given User entity.
 editPasswordController :: User -> Controller
@@ -334,6 +296,7 @@ controllerOnCurrentUser usercontroller = do
         Nothing -> displayError ("User " ++ loginName ++ " does not exist")
         Just user -> usercontroller user
 
+--- Shows the current User entity.
 showProfileController :: Controller
 showProfileController = do
   loginInfo <- getSessionLogin
@@ -345,6 +308,7 @@ showProfileController = do
         Nothing -> displayError ("User " ++ loginName ++ " does not exist")
         Just user -> showUserController user
 
+--- Lists all Package entities the current User either watches or maintains.
 showPackagesController :: String -> User -> Controller
 showPackagesController listName user = do
   checkAuthorization (userOperationAllowed (ShowEntity user))
@@ -359,6 +323,7 @@ showPackagesController listName user = do
           _ -> displayUrlError
       )
 
+-- Toggles the watching status of the given User on the given Package.
 toggleWatchingUserController :: String -> User -> Controller
 toggleWatchingUserController pkg user = do 
   checkAuthorization (userOperationAllowed (UpdateEntity user))
@@ -381,16 +346,6 @@ toggleWatchingUserController pkg user = do
                   setPageMessage "Not watching package anymore"
               redirectController (showRoute package)
     )
-{-
-showUserController :: User -> Controller
-showUserController user =
-  checkAuthorization (userOperationAllowed (ShowEntity user))
-   $ (\sinfo ->
-     do maintainerPackages <- runJustT (getMaintainerUserPackages user)
-        watchingPackages <- runJustT (getWatchingUserPackages user)
-        return
-         (showUserView sinfo user maintainerPackages watchingPackages))
--}
 
 --- Associates given entities with the User entity
 --- with respect to the `Maintainer` relation.
