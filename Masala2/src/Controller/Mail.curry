@@ -134,6 +134,12 @@ sendValidationMail to token = do
 
 sendNotificationEmail :: Package -> Version -> User -> IO ()
 sendNotificationEmail pkg vsn user = do
-  let subject = packageName pkg ++ ": New Version " ++ versionVersion vsn ++ " uploaded"
-  let contents = "A new version " ++ versionVersion vsn ++ " for the package " ++ packageName pkg ++ " has been uploaded."
+  let subject  = "[Masala]: Package " ++ packageName pkg ++ ": New Version " ++
+                 versionVersion vsn ++ " uploaded"
+      contents = "A new version " ++ versionVersion vsn ++ " of package '" ++
+                 packageName pkg ++ "' has been uploaded.\n\n" ++
+                 "---\n" ++
+                 "This email is sent to you since you are a maintainer or " ++
+                 "watching this package."
   sendMail adminEmail (userEmail user) subject contents
+  

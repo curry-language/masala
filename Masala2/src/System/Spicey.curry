@@ -378,7 +378,7 @@ userMenu =
   , ("?User/profile",     [htxt "Show profile"])
   , ("?User/editprofile", [htxt "Change profile"])
   , ("?User/password",    [htxt "Change password"])
-  , ("?Mail/admin",       [htxt "Send email to admin"])
+  , ("?Mail/admin",       [htxt "Contact the Masala administrator"])
   , ("?login",            [htxt "Logout"])
   ]
 

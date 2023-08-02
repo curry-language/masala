@@ -40,53 +40,62 @@ uploadJsonController =
             setParWuiStore uploadJsonStore sinfo ""
             return [formElem uploadJsonForm])
 
-uploadJsonForm :: HtmlFormDef (UserSessionInfo,WuiStore String)
+uploadJsonForm :: HtmlFormDef (UserSessionInfo, WuiStore String)
 uploadJsonForm =
-        pwui2FormDef "Controller.Upload.uploadJsonForm" uploadJsonStore
-            (\_ -> wUploadJson)
-            (\_ json -> 
-                checkAuthorization (packageOperationAllowed NewEntity)
-                (\sinfo -> do
-                    jsonResult <- readPackageData json
-                    case jsonResult of
-                        Left err -> displayError err
-                        Right jsonData -> do
-                            -- Check if version exists
-                            vsnExist <- do
-                                pkgResult <- getPackageWithName (jsonName jsonData)
-                                case pkgResult of 
-                                    Nothing -> return False
-                                    Just _ -> do
-                                        vsnResult <- getPackageVersionByName (jsonName jsonData) (jsonVersion jsonData)
-                                        return $ isJust vsnResult
-                            -- Check if some cats do not exist
-                            nonExistingCats <- do
-                                cats <- getCategoriesWithName (jsonCategories jsonData)
-                                return $ lefts cats
-                            let msg = errorMessage jsonData vsnExist nonExistingCats
-                            -- Check if admin
-                            if isAdminSession sinfo && (vsnExist || not (null nonExistingCats))
-                                then do
-                                    putSessionData uploadCheckStore (msg, json, Just jsonData)
-                                    redirectController "?Upload/check"
-                                else do 
-                                    case userLoginOfSession sinfo of 
-                                        Nothing -> displayError "User not logged in"
-                                        Just (login, _) -> do
-                                            uploadPackageView login json jsonData False
-                )
-            )
-            (\sinfo -> renderWUI sinfo "Upload Package" "Upload" "?" ())
-    where
-        errorMessage :: PackageJSON -> Bool -> [String] -> String
-        errorMessage jd vsnExist nonExistingCats = unlines [vsnMsg, catMsg]
-         where
-          vsnMsg = if vsnExist
-                     then "Version '" ++ jsonPackageID jd ++ "' already exists!"
-                     else ""
-          catMsg = if null nonExistingCats
-                     then "" 
-                     else "Some categories do not exist: " ++ unwords nonExistingCats
+  pwui2FormDef "Controller.Upload.uploadJsonForm" uploadJsonStore
+    (\_ -> wUploadJson)
+    (\_ json -> 
+      checkAuthorization (packageOperationAllowed NewEntity)
+      (\sinfo -> do
+        jsonResult <- readPackageData json
+        case jsonResult of
+          Left err -> displayError err
+          Right jsonData -> do
+            -- Check if version exists
+            vsnExist <- do
+              pkgResult <- getPackageWithName (jsonName jsonData)
+              case pkgResult of 
+                Nothing -> return False
+                Just _ -> do
+                  vsnResult <- getPackageVersionByName (jsonName jsonData)
+                                                       (jsonVersion jsonData)
+                  return $ isJust vsnResult
+            -- Check if some cats do not exist
+            nonExistingCats <- do
+              cats <- getCategoriesWithName (jsonCategories jsonData)
+              return $ lefts cats
+            let msg = errorMessage jsonData vsnExist nonExistingCats
+            -- Check if admin
+            if isAdminSession sinfo && (vsnExist || not (null nonExistingCats))
+              then do
+                putSessionData uploadCheckStore (msg, json, Just jsonData)
+                redirectController "?Upload/check"
+              else do 
+                case userLoginOfSession sinfo of 
+                  Nothing -> displayError "User not logged in"
+                  Just (login, _) -> uploadPackageView login json jsonData False
+    )
+    )
+    (\sinfo -> renderWUIWithText sinfo "Upload Package" "Upload"
+                                 [par [htxt explain]] "?")
+ where
+  explain = "Copy into the text area below the contents of the " ++
+            "'package.json' file of your package which you want to upload." ++
+            "Note that this package specification must contain a 'source' " ++
+            "field pointing to a git repository or http address containing " ++
+            "the source of your package. This source will be downloaded " ++
+            "and stored in Masala in order to make it later accessible " ++
+            "to other Curry programmers."
+
+  errorMessage :: PackageJSON -> Bool -> [String] -> String
+  errorMessage jd vsnExist nonExistingCats = unlines [vsnMsg, catMsg]
+   where
+    vsnMsg = if vsnExist
+               then "Version '" ++ jsonPackageID jd ++ "' already exists!"
+               else ""
+    catMsg = if null nonExistingCats
+               then "" 
+               else "Some categories do not exist: " ++ unwords nonExistingCats
 
 uploadJsonStore :: SessionStore (UserSessionInfo,WuiStore String)
 uploadJsonStore = sessionStore "uploadJsonStore"
@@ -172,7 +181,7 @@ uploadByName login passwd packagetxt publish force = do
     "or ask the Masala admin for publishing."
 
   publishMessage out =
-    "Package successfully uploaded and published.\n" ++
+    "Package successfully uploaded and scheduled for publishing.\n" ++
     "Output from package uploader:\n" ++ out
 
   noPublishCmt = "Publishing packages is only allowed for trusted users!\n"

@@ -44,6 +44,14 @@ deleteValidationTokenWithToken token = runQ
 checkUserNameAvailable :: String -> IO Bool
 checkUserNameAvailable = (fmap isNothing) . getUserByName
 
+-- Checks whether the given public user name is available, i.e.,
+-- not already used.
+checkPublicNameAvailable :: String -> IO Bool
+checkPublicNameAvailable publicname = fmap null $ runQ
+  ``sql* Select *
+         From User as u
+         Where u.PublicName = { publicname };''
+
 -- Checks whether the given email is available, i.e., not already used.
 checkEmailAvailable :: String -> IO Bool
 checkEmailAvailable email = fmap null $ runQ
@@ -58,7 +66,8 @@ getUserByLoginData :: String -> String -> IO (Maybe User)
 getUserByLoginData loginName password = fmap listToMaybe $ runQ
   ``sql* Select *
          From User as u
-         Where u.LoginName = { loginName } And u.Password = { password } And u.Role != { roleInvalid };''
+         Where u.LoginName = { loginName } And u.Password = { password }
+               And u.Role != { roleInvalid };''
 
 -- Gets a User with the given LoginName.
 getUserByName :: String -> IO (Maybe User)

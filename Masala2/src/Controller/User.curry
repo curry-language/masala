@@ -117,39 +117,48 @@ editUserController userToEdit =
 
 --- A WUI form to edit a User entity.
 --- The default values for the fields are stored in 'editUserStore'.
-editUserForm
-  :: HtmlFormDef ((UserSessionInfo,User)
-                 ,WuiStore User)
+editUserForm :: HtmlFormDef ((UserSessionInfo,User), WuiStore User)
 editUserForm =
   pwui2FormDef "Controller.User.editUserForm" editUserStore
    (\(_,user) -> wUserEditType user)
    (\_ userToEdit ->
      checkAuthorization (userOperationAllowed (UpdateEntity userToEdit))
-      (\_ ->
-        transactionController (runT (updateUser userToEdit))
-         (const
-           (do setPageMessage "User updated"
-               nextInProcessOr (redirectController (showRoute userToEdit))
-                Nothing))))
+      (\_ -> do
+        pnameAvailable <- checkPublicNameAvailable (userPublicName userToEdit)
+        if pnameAvailable
+          then transactionController (runT (updateUser userToEdit)) $ const $ do
+            setPageMessage "User profile updated"
+            nextInProcessOr (redirectController (showRoute userToEdit))
+                            Nothing
+          else displayError "Public user name is already used!"))
    (\(sinfo,entity) ->
-     renderWUI sinfo "Edit User" "Change" (showRoute entity) ())
+     renderWUIWithText sinfo "Edit User Profile" "Change"
+                       [par [htxt explain]] (showRoute entity))
+ where
+  explain = unlines
+    [ "You can update some data of your profile below."
+    , "The public name and, if provided, the public email is shown"
+    , "with your maintained packages so that other users might contact you."
+    , "Note that your login name and email address cannnot be changed."
+    , "If you want to change them, please contact the Masala administrator."
+    ]
 
-editUserFormAdmin
-  :: HtmlFormDef ((UserSessionInfo,User)
-                 ,WuiStore User)
+editUserFormAdmin :: HtmlFormDef ((UserSessionInfo,User), WuiStore User)
 editUserFormAdmin =
   pwui2FormDef "Controller.User.editUserFormAdmin" editUserStore
    (\(_,user) -> wUserEditTypeAdmin user)
    (\_ userToEdit ->
      checkAuthorization (userOperationAllowed (UpdateEntity userToEdit))
-      (\_ ->
-        transactionController (runT (updateUser userToEdit))
-         (const
-           (do setPageMessage "User updated"
-               nextInProcessOr (redirectController (showRoute userToEdit))
-                Nothing))))
+      (\_ -> do
+        pnameAvailable <- checkPublicNameAvailable (userPublicName userToEdit)
+        if pnameAvailable
+          then transactionController (runT (updateUser userToEdit)) $ const $ do
+            setPageMessage "User profile updated"
+            nextInProcessOr (redirectController (showRoute userToEdit))
+                            Nothing
+          else displayError "Public user name is already used!"))
    (\(sinfo,entity) ->
-     renderWUI sinfo "Edit User" "Change" (listRoute entity) ())
+     renderWUI sinfo "Edit User Profile" "Change" (listRoute entity) ())
 
 --- The data stored for executing the edit WUI form.
 editUserStore

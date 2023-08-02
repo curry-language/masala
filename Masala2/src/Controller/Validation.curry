@@ -90,8 +90,8 @@ validationForm =
                             setPageMessage "User is already validated"
                             redirectController "?Validation"
         )
-        (\_ ->
-            renderWUIWithText () "Validate:" "Send validation token"
+        (\sinfo->
+            renderWUIWithText sinfo "Validate:" "Send validation token"
               [par [htxt explain]] "?"
         )
  where

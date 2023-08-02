@@ -74,7 +74,12 @@ saveMasalaDB = do
  where
   show2 i = if i < 10 then '0' : show i else show i
 
---- Shows the database in CSV format as used when initializing Masala.
+--- Shows the database in CSV format as used when initializing Masala
+--- (see module `Model.Initialization`).
+--- For instance, one can write the current database into a CSV file by
+---
+---     > curl -s "https://cpm.curry-lang.org/masala/run.cgi?csv" > allpkgs.csv
+---
 showMasalaDBAsCSV :: IO HtmlPage
 showMasalaDBAsCSV = do
   versions <- runQ queryAllVersions

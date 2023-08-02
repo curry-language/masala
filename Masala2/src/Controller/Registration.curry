@@ -55,10 +55,9 @@ registrationForm =
       (\_ -> do
         cryptpasswd <- getUserHash loginName uncryptpasswd
         usernameAvailable <- checkUserNameAvailable loginName
+        publicnameAvailable <- checkPublicNameAvailable publicName
         emailAvailable <- checkEmailAvailable email
-        let check = usernameAvailable && emailAvailable
-
-        if check
+        if usernameAvailable && publicnameAvailable && emailAvailable
           then do
             userResult <- registerUser loginName publicName email cryptpasswd
             case userResult of 
@@ -73,52 +72,45 @@ registrationForm =
                     "Controller.Registration: Adding new token did not work, " ++
                     "although token should be free (error: " ++ show err ++ ")"
                   Right token -> sendValidationMail email (validationTokenToken token)
-            {-
-            time <- getClockTime
-            token <- generateValidationToken
-            connection <- connectSQLite sqliteDBFile
-            userResult <- runDBAction (newUser loginName publicName email "" "Invalid" cryptpasswd "" Nothing) connection
-            case userResult of 
-              Left err -> do 
-                disconnect connection
-                displayError "Controller.Registration: Adding new user did not work, although input data was correct."
-              Right user -> do 
-                tokenResult <- runDBAction (newValidationTokenWithUserValidatingKey token time (userKey user)) connection
-                disconnect connection
-                case tokenResult of 
-                  Left err -> displayError "Controller.Registration: Adding new token did not work, although token should be free."
-                  Right validationToken ->
-                    sendValidationMail email token
-                --addValidationToken token time (userKey user)
-                --validationToken <- getValidationTokenWithToken token
-            -}
-                 
-            {-
-            transactionControllerWith
-                 (runT
-                    (registrationT (loginName, publicName, email, cryptpasswd)))
-                 (\user -> nextInProcessOr (redirectController (showRoute user))
-                                           Nothing)
-                                          -}
-          else displayRegistrationError usernameAvailable emailAvailable))
-   (\sinfo ->
-     renderWUI sinfo "Register new User" "Register" "?Registration" ())
+          else displayRegistrationError usernameAvailable publicnameAvailable
+                                        emailAvailable))
+   (\sinfo -> renderWUIWithText sinfo "Register to Masala" "Register"
+                                [par [htxt explain]] "?Registration")
+ where
+  explain = unlines
+    [ "You can create a new account in order to upload your packages to Masala."
+    , "You need to provide a valid email address which is used to verify"
+    , "your account, sending lost passwords, etc."
+    , "This email address is not shown to other users of Masala."
+    , "You must also choose a public name which is shown in Masala"
+    , "with your uploaded packages."
+    , "Later you can also decide to add a public email address to your profile."
+    , "In this case, this email address will be shown to other users"
+    , "if they want to contact you."
+    ]
 
 registerUser :: String -> String -> String -> String -> IO (SQLResult User)
-registerUser loginName publicName email cryptpasswd =
-  runT (newUser loginName publicName email "" roleInvalid cryptpasswd "" Nothing)
+registerUser loginName publicName email cryptpasswd = runT $
+  newUser loginName publicName email "" roleInvalid cryptpasswd "" Nothing
 
-displayRegistrationError :: Bool -> Bool -> Controller
-displayRegistrationError usernameAvailable emailAvailable =
+displayRegistrationError :: Bool -> Bool -> Bool -> Controller
+displayRegistrationError usernameAvailable publicnameAvailable emailAvailable =
   let err1 = errorUsernameAvailable usernameAvailable
+      err2 = errorPublicnameAvailable publicnameAvailable
       err3 = errorEmailAvailable emailAvailable
-  in displayError (err1 ++ err3)
+  in displayError $ unlines $ filter (not . null) [err1, err2, err3]
   where
-    errorUsernameAvailable True = ""
-    errorUsernameAvailable False = "The given username is not available, please choose another one.\n"
+    errorUsernameAvailable True  = ""
+    errorUsernameAvailable False =
+      "The given login name is not available, please choose another one."
 
-    errorEmailAvailable True = ""
-    errorEmailAvailable False = "The given email address is already used, please choose another one.\n"
+    errorPublicnameAvailable True  = ""
+    errorPublicnameAvailable False =
+      "The given public user name is not available, please choose another one."
+
+    errorEmailAvailable True  = ""
+    errorEmailAvailable False =
+      "The given email address is already used, please choose another one."
 
 generateValidationToken :: ClockTime -> UserID -> IO (SQLResult ValidationToken)
 generateValidationToken time user = do
