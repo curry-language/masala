@@ -94,11 +94,12 @@ registerUser :: String -> String -> String -> String -> IO (SQLResult User)
 registerUser loginName publicName email cryptpasswd = runT $
   newUser loginName publicName email "" roleInvalid cryptpasswd "" Nothing
 
-displayRegistrationError :: Bool -> Bool -> Controller
-displayRegistrationError usernameAvailable emailAvailable =
+displayRegistrationError :: Bool -> Bool -> Bool -> Controller
+displayRegistrationError usernameAvailable publicnameAvailable emailAvailable =
   let err1 = errorUsernameAvailable usernameAvailable
+      err2 = errorPublicnameAvailable publicnameAvailable
       err3 = errorEmailAvailable emailAvailable
-  in displayError (err1 ++ err3)
+  in displayError $ unlines $ filter (not . null) [err1, err2, err3]
   where
     errorUsernameAvailable True  = ""
     errorUsernameAvailable False =
@@ -111,6 +112,7 @@ displayRegistrationError usernameAvailable emailAvailable =
     errorEmailAvailable True  = ""
     errorEmailAvailable False =
       "The given email address is already used, please choose another one."
+
 
 --- This function generates a random validation token and adds it to the database.
 generateValidationToken :: ClockTime -> UserID -> IO (SQLResult ValidationToken)
