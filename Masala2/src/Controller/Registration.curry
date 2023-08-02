@@ -38,7 +38,7 @@ registrationController =
      do setParWuiStore registrationStore sinfo ("","","","","")
         return [formElem registrationForm])
 
---- The data stored for executing the "new entity" WUI form.
+--- The data stored for executing the "registration" WUI form.
 registrationStore
   :: SessionStore (UserSessionInfo, WuiStore RegistrationInput)
 registrationStore = sessionStore "registrationStore"
@@ -89,16 +89,16 @@ registrationForm =
     , "if they want to contact you."
     ]
 
+--- This function registers a user by creating a new user entity in the database.
 registerUser :: String -> String -> String -> String -> IO (SQLResult User)
 registerUser loginName publicName email cryptpasswd = runT $
   newUser loginName publicName email "" roleInvalid cryptpasswd "" Nothing
 
-displayRegistrationError :: Bool -> Bool -> Bool -> Controller
-displayRegistrationError usernameAvailable publicnameAvailable emailAvailable =
+displayRegistrationError :: Bool -> Bool -> Controller
+displayRegistrationError usernameAvailable emailAvailable =
   let err1 = errorUsernameAvailable usernameAvailable
-      err2 = errorPublicnameAvailable publicnameAvailable
       err3 = errorEmailAvailable emailAvailable
-  in displayError $ unlines $ filter (not . null) [err1, err2, err3]
+  in displayError (err1 ++ err3)
   where
     errorUsernameAvailable True  = ""
     errorUsernameAvailable False =
@@ -112,6 +112,7 @@ displayRegistrationError usernameAvailable publicnameAvailable emailAvailable =
     errorEmailAvailable False =
       "The given email address is already used, please choose another one."
 
+--- This function generates a random validation token and adds it to the database.
 generateValidationToken :: ClockTime -> UserID -> IO (SQLResult ValidationToken)
 generateValidationToken time user = do
   token <- randomString 32
@@ -119,39 +120,3 @@ generateValidationToken time user = do
   if available
     then runT (newValidationTokenWithUserValidatingKey token time user)
     else generateValidationToken time user
-
-{-
---- Transaction to persist a new User entity to the database.
-registrationT :: RegistrationInput -> DBAction User
-registrationT (loginName,publicName,email,cryptpasswd) =
-    newUser loginName publicName email "" "Invalid" cryptpasswd "" Nothing
-
-checkIfUsernameAvailable :: Connection -> String -> IO Bool
-checkIfUsernameAvailable connection username = do
-  result <- runDBAction queryAllUsers connection
-  case result of 
-    Left err -> error "checkIfUsernameAvailable: queryAllUsers failed"
-    Right users -> return $ all (notUser username) users
-  where
-    notUser :: String -> User -> Bool
-    notUser username user = userLoginName user /= username
-
-checkEmailSyntax :: String -> Bool
-checkEmailSyntax email = True
-
-checkIfEmailAvailable :: Connection -> String -> IO Bool
-checkIfEmailAvailable connection email = do 
-  result <- runDBAction queryAllUsers connection
-  case result of 
-    Left err -> error "checkIfEmailAvailable: queryAllUsers failed"
-    Right users -> return $ all (notEmail email) users
-  where
-    notEmail :: String -> User -> Bool
-    notEmail email user = userEmail user /= email
-
-checkIfPasswordFine :: String -> Bool
-checkIfPasswordFine = checkPasswordLength
-
-checkPasswordLength :: String -> Bool
-checkPasswordLength uncryptpasswd = length uncryptpasswd >= 8
--}

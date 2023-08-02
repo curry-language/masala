@@ -32,7 +32,6 @@ mainCategoryController =
        ["new"] -> newCategoryController
        ["show",s] -> controllerOnKey s showCategoryController
        ["edit",s] -> controllerOnKey s editCategoryDescController
-       --["editversion",s] -> controllerOnKey s editCategoryController
        ["delete",s] -> controllerOnKey s deleteCategoryController
        ["destroy",s] -> controllerOnKey s destroyCategoryController
        _ -> displayUrlError
@@ -71,53 +70,6 @@ newCategoryStore = sessionStore "newCategoryStore"
 createCategoryT :: NewCategory -> DBAction Category
 createCategoryT (name,description) = newCategory name description
 
-{-
---- Shows a form to edit the given Category entity.
-editCategoryController :: Category -> Controller
-editCategoryController categoryToEdit =
-  checkAuthorization (categoryOperationAllowed (UpdateEntity categoryToEdit))
-   $ (\sinfo ->
-     do allVersions <- runQ queryAllVersions
-        categorizesVersions <- runJustT (getCategoryVersions categoryToEdit)
-        setParWuiStore editCategoryStore (sinfo,categoryToEdit,allVersions)
-         (categoryToEdit,categorizesVersions)
-        return [formElem editCategoryForm])
-
---- A WUI form to edit a Category entity.
---- The default values for the fields are stored in 'editCategoryStore'.
-editCategoryForm
-  :: HtmlFormDef ((UserSessionInfo,Category,[Version])
-                 ,WuiStore (Category,[Version]))
-editCategoryForm =
-  pwui2FormDef "Controller.Category.editCategoryForm" editCategoryStore
-   (\(_,category,possibleVersions) -> wCategoryType category possibleVersions)
-   (\_ entity@(categoryToEdit,_) ->
-     checkAuthorization
-      (categoryOperationAllowed (UpdateEntity categoryToEdit))
-      (\_ ->
-        transactionController (runT (updateCategoryT entity))
-         (const
-           (do setPageMessage "Category updated"
-               nextInProcessOr (redirectController (showRoute categoryToEdit))
-                Nothing))))
-   (\(sinfo,entity,_) ->
-     renderWUI sinfo "Edit Category" "Change" (listRoute entity) ())
-
---- The data stored for executing the edit WUI form.
-editCategoryStore
-  :: SessionStore ((UserSessionInfo,Category,[Version])
-                  ,WuiStore (Category,[Version]))
-editCategoryStore = sessionStore "editCategoryStore"
-
---- Transaction to persist modifications of a given Category entity
---- to the database.
-updateCategoryT :: (Category,[Version]) -> DBAction ()
-updateCategoryT (category,versionsCategorizes) =
-  do updateCategory category
-     oldCategorizesVersions <- getCategoryVersions category
-     removeCategorizes oldCategorizesVersions category
-     addCategorizes versionsCategorizes category
--}
 ------------------------------------------------------------------------------
 --- Shows a form to edit the description of the given Category entity.
 editCategoryDescController :: Category -> Controller

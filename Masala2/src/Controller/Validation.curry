@@ -26,28 +26,28 @@ import Database.CDBI.Connection
 --- Shows a form to register a new User.
 validationController :: Controller
 validationController = do
-    args <- getControllerParams
-    case args of 
-        [] -> validationTokenController
-        [token] -> do 
-            result <- getValidationTokenWithToken token
-            case result of
-                Nothing -> displayError ("This validation token \"" ++ token ++ "\" does not exist.")
-                Just validationToken -> do
-                    deleteValidationTokenWithToken token
-                    validationResult <- validateUser (validationTokenUserValidatingKey validationToken)
-                    case validationResult of 
-                        Left err -> displayError $ "Validation failed (" ++
-                                                   show err ++ ")"
-                        Right _ -> do
-                            setPageMessage "Successfully validated"
-                            redirectController "?"
-        _ -> displayUrlError
-
-validateUser :: UserID -> IO (SQLResult ())
-validateUser user = do
-    runT (validateUserAction user)
+        args <- getControllerParams
+        case args of 
+            [] -> validationTokenController
+            [token] -> do 
+                result <- getValidationTokenWithToken token
+                case result of
+                    Nothing -> displayError ("This validation token \"" ++ token ++ "\" does not exist.")
+                    Just validationToken -> do
+                        deleteValidationTokenWithToken token
+                        validationResult <- validateUser (validationTokenUserValidatingKey validationToken)
+                        case validationResult of 
+                            Left err -> displayError $ "Validation failed (" ++
+                                                    show err ++ ")"
+                            Right _ -> do
+                                setPageMessage "Successfully validated"
+                                redirectController "?"
+            _ -> displayUrlError
     where
+        validateUser :: UserID -> IO (SQLResult ())
+        validateUser user = do
+            runT (validateUserAction user)
+        validateUserAction :: UserID -> DBAction ()
         validateUserAction key = do 
             oldUser <- getUser key
             updateUser (setUserRole oldUser roleNotTrusted)
@@ -59,6 +59,8 @@ validationTokenController = do
     setParWuiStore validationStore () ""
     return [formElem validationForm]
 
+--- A WUI form to issue a new ValidationToken for a User.
+--- The default values for the fields are stored in 'validationStore'.
 validationForm :: HtmlFormDef ((),WuiStore String)
 validationForm =
     pwui2FormDef "Controller.Validation.validationForm" validationStore
@@ -100,6 +102,7 @@ validationForm =
             "a new validation token which will be sent to your registered " ++
             "email address."
 
+--- The data stored for executing the "validation" WUI form.
 validationStore
   :: SessionStore ((),WuiStore String)
 validationStore = sessionStore "validationStore"

@@ -25,6 +25,7 @@ import View.EntitiesToHtml
 import View.Upload
 import Database.CDBI.Connection
 
+--- Choose the controller for the Upload according to the URL parameter.
 uploadController :: Controller
 uploadController = do 
     args <- getControllerParams
@@ -33,6 +34,7 @@ uploadController = do
         ["check"] -> uploadCheckController
         _ -> displayUrlError
 
+--- Shows a form to upload a new Package with a json string.
 uploadJsonController :: Controller
 uploadJsonController =
     checkAuthorization (packageOperationAllowed NewEntity)
@@ -40,7 +42,9 @@ uploadJsonController =
             setParWuiStore uploadJsonStore sinfo ""
             return [formElem uploadJsonForm])
 
-uploadJsonForm :: HtmlFormDef (UserSessionInfo, WuiStore String)
+--- A WUI form to upload a new Package with a json string.
+--- The default values for the fields are stored in 'uploadJsonStore'.
+uploadJsonForm :: HtmlFormDef (UserSessionInfo,WuiStore String)
 uploadJsonForm =
   pwui2FormDef "Controller.Upload.uploadJsonForm" uploadJsonStore
     (\_ -> wUploadJson)
@@ -97,9 +101,12 @@ uploadJsonForm =
                then "" 
                else "Some categories do not exist: " ++ unwords nonExistingCats
 
+--- The data stored for executing the "uploadJson" WUI form.
 uploadJsonStore :: SessionStore (UserSessionInfo,WuiStore String)
 uploadJsonStore = sessionStore "uploadJsonStore"
 
+--- Shows a form to confirm an upload that requires overwriting an existing Version
+--- or create new Categories.
 uploadCheckController :: Controller
 uploadCheckController = do
     checkAuthorization
@@ -110,10 +117,14 @@ uploadCheckController = do
                 else displayUrlError
         )
 
+--- A WUI form to confirm an upload that requires overwriting an existing Version
+--- or create new Categories.
+--- The default values for the fields are stored in 'uploadJsonStore'.
 uploadCheckForm :: HtmlFormDef (String, String, Maybe PackageJSON)
 uploadCheckForm = formDefWithID "Controller.Upload.uploadCheckForm"
     (getSessionData uploadCheckStore ("", "", Nothing)) wUploadCheck
 
+--- The data stored for executing the "uploadCheckForm" WUI form.
 uploadCheckStore :: SessionStore (String, String, Maybe PackageJSON)
 uploadCheckStore = sessionStore "uploadCheckStore"
 
