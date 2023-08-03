@@ -7,8 +7,9 @@ module System.PackageHelpers
 
 import System.Directory
 import System.FilePath
-import System.IOExts      ( evalCmd )
+import System.IOExts      ( evalCmd, readCompleteFile )
 import System.Process     ( getPID, system )
+import Text.CSV           ( readCSV )
 
 import CPM.Package
 import CPM.ErrorLogger
@@ -16,6 +17,7 @@ import CPM.FileUtil
 import CPM.Package.Helpers ( installPackageSourceTo )
 
 import Config.Masala
+import qualified Model.Masala2 as Masala
 
 type PackageJSON = (String,String,String,[String],[String],[String])
 
@@ -153,9 +155,37 @@ uploadPackageToMasalaStore pname pvers pkgspec = do
 
 
 ------------------------------------------------------------------------------
+-- Auxiliaries to connect to CPM's data.
+
+--- The base directory where the CPM data is stored.
+cpmBaseDir :: String
+cpmBaseDir | testSystem = "/home/mh/public_html/curry/cpm"
+           | otherwise  = "/net/medoc/home/cpm/public_html"
+
+--- Checks whether the package has been tested by CPM.
+--- If yes, return an appropriate string, otherwise return `Nothing`.
+getVersionTestTime :: Masala.Package -> Masala.Version -> IO (Maybe String)
+getVersionTestTime pkg vers = do
+  let pkgid = Masala.packageName pkg ++ "-" ++ Masala.versionVersion vers
+      testfile = cpmBaseDir </> "TEST" </> pkgid ++ ".csv"
+  hastests <- doesFileExist testfile
+  if hastests
+    then do
+      tftime <- getModificationTime testfile
+      if tftime > Masala.versionUploadDate vers
+        then do
+          tinfos <- readCompleteFile testfile >>= return . readCSV
+          case tinfos of
+            [_, (_:ct:rc:_)] | rc == "0" -> return $ Just $
+                                              "Succesfully tested at " ++ ct
+            _                           -> return Nothing
+        else return Nothing
+    else return Nothing
+
+
+------------------------------------------------------------------------------
 -- The name of the package specification file.
 packageSpecFile :: String
 packageSpecFile = "package.json"
 
-------------------------------------------------------------------------------
 ------------------------------------------------------------------------------

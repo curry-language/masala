@@ -37,10 +37,11 @@ mainScriptURL = baseURL ++ "/" ++ baseCGI
 systemHashKey :: String
 systemHashKey = "3masala25" -- change this key for every spicey instance
 
---- Documentation URL of a package in the CPM repository.
-packageURLinCPM :: String -> String
-packageURLinCPM pkgname =
-  "https://cpm.curry-lang.org/pkgs/" ++ pkgname ++ ".html"
+--- Documentation URL of a package version in the CPM repository.
+packageURLinCPM :: String -> String -> String
+packageURLinCPM pkgname version =
+  let pkgid = pkgname ++ if null version then "" else '-' : version
+  in "https://cpm.curry-lang.org/pkgs/" ++ pkgid ++ ".html"
 
 --- Log file for emails.
 emailLogFile :: String

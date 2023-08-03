@@ -41,9 +41,11 @@ main :: IO HtmlPage
 main = do
   params <- fmap (splitOn "/") getUrlParameter
   case params of
-    ["csv"] -> showMasalaDBAsCSV
-    ["savedb"] -> saveMasalaDB
-    ["About"] -> readHtmlFile "about.html" >>= getPage
+    ["csv"]     -> showMasalaDBAsCSV
+    ["savedb"]  -> saveMasalaDB
+    ["about"]   -> readFile "about.html" >>= getPage . (:[]) . BaseText
+    ["imprint"] -> readFile "imprint.html" >>= getPage . (:[]) . BaseText
+    ["privacy"] -> readFile "privacy.html" >>= getPage . (:[]) . BaseText
     ["UploadBy",login,passwd,publish,force,package]
       -> do upmsg <- uploadByName (urlencoded2string login)
                                   (urlencoded2string passwd)

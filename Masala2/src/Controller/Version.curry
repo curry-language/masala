@@ -19,7 +19,7 @@ import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
 import System.Spicey
-import System.PackageHelpers ( publishPackageVersion )
+import System.PackageHelpers ( getVersionTestTime, publishPackageVersion )
 import System.PreludeHelpers
 import View.EntitiesToHtml
 import View.Version
@@ -332,8 +332,7 @@ showStandardVersionController version =
                                   (getExportingVersionCurryModules version)
         return
          (showStandardVersionView sinfo version uploadUser versioningPackage
-           dependingPackages
-           exportingCurryModules))
+           dependingPackages exportingCurryModules))
 
 --- Shows a Version entity.
 showVersionController :: Version -> Controller
@@ -354,10 +353,11 @@ showVersionController version =
         watchesPackage <- case currentUser of 
           Nothing -> return False
           Just user -> checkUserWatches user package
+        tested <- getVersionTestTime package version
         return
          (showVersionView sinfo version package uploadUser maintainers cats
             allversions dependingPackages exportedModules
-            watchesPackage currentUser))
+            watchesPackage currentUser tested))
 
 --- Associates given entities with the Version entity
 --- with respect to the `Depending` relation.
