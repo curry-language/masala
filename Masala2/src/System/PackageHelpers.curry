@@ -17,8 +17,9 @@ import CPM.FileUtil
 import CPM.Package.Helpers ( installPackageSourceTo )
 
 import Config.Masala
-import qualified Model.Masala2 as Masala
 
+------------------------------------------------------------------------------
+--- The information extracted from a CPM package specfication passed to Masala.
 type PackageJSON = (String,String,String,[String],[String],[String])
 
 jsonDependencies :: PackageJSON -> [String]
@@ -136,9 +137,8 @@ publishPackageVersion pname pvers = do
 --- Returns either an error message or the standard output.
 uploadPackageToCPM :: String -> IO (Either String String)
 uploadPackageToCPM pkgspec = do
-  let uploadURL = "https://www-ps.informatik.uni-kiel.de/~cpm/cpm-upload-masala.cgi"
   (rc,out,err) <- evalCmd "curl"
-                          ["--data-binary", "@-", uploadURL ]
+                          ["--data-binary", "@-", cpmUploadURL ]
                           pkgspec
   return $ if rc == 0 then Right out
                       else Left $ err ++ out
@@ -148,40 +148,10 @@ uploadPackageToCPM pkgspec = do
 uploadPackageToMasalaStore :: String -> String -> String
                            -> IO (Either String String)
 uploadPackageToMasalaStore pname pvers pkgspec = do
-  let pubdir = "data" </> "published" </> pname ++ "-" ++ pvers
+  let pubdir = masalaDataDir </> "published" </> pname ++ "-" ++ pvers
   recreateDirectory pubdir
   writeFile (pubdir </> packageSpecFile) pkgspec
   return $ Right "Package stored in published packages"
-
-
-------------------------------------------------------------------------------
--- Auxiliaries to connect to CPM's data.
-
---- The base directory where the CPM data is stored.
-cpmBaseDir :: String
-cpmBaseDir | testSystem = "/home/mh/public_html/curry/cpm"
-           | otherwise  = "/net/medoc/home/cpm/public_html"
-
---- Checks whether the package has been tested by CPM.
---- If yes, return an appropriate string, otherwise return `Nothing`.
-getVersionTestTime :: Masala.Package -> Masala.Version -> IO (Maybe String)
-getVersionTestTime pkg vers = do
-  let pkgid = Masala.packageName pkg ++ "-" ++ Masala.versionVersion vers
-      testfile = cpmBaseDir </> "TEST" </> pkgid ++ ".csv"
-  hastests <- doesFileExist testfile
-  if hastests
-    then do
-      tftime <- getModificationTime testfile
-      if tftime > Masala.versionUploadDate vers
-        then do
-          tinfos <- readCompleteFile testfile >>= return . readCSV
-          case tinfos of
-            [_, (_:ct:rc:_)] | rc == "0" -> return $ Just $
-                                              "Succesfully tested at " ++ ct
-            _                           -> return Nothing
-        else return Nothing
-    else return Nothing
-
 
 ------------------------------------------------------------------------------
 -- The name of the package specification file.

@@ -34,7 +34,7 @@ import HTML.Session
 import HTML.Styles.Bootstrap4
 import HTML.WUI
 
-import Config.Masala        ( baseCGI )
+import Config.Masala        ( baseCGI, testSystem )
 import Config.Roles
 import Config.UserProcesses
 import Model.Masala2        ( showVersionKey )
@@ -301,8 +301,7 @@ spiceyFooter =
         htxt "Framework", nbsp, nbsp, nbsp,
         hrefInfoBadge "?about"   [htxt "About Masala"], nbsp,
         hrefInfoBadge "?imprint" [htxt "Imprint"], nbsp,
-        hrefInfoBadge "?privacy" [htxt "Data Privacy"]]
-    `addAttr` ("style","text-align:center")]
+        hrefInfoBadge "?privacy" [htxt "Data Privacy"]]]
 
 --- Transforms a view into an HTML form by adding the basic page layout.
 --- If the view is an empty text or a text starting with "?",
@@ -320,7 +319,9 @@ getPage viewblock = case viewblock of
       spiceyTitle spiceyHomeBrand
       (addNavItemClass $ routemenu) (rightTopMenu login ++ [("nav-item", searchElem)])
       0 []
-      [h1 [htxt "Masala: ", smallMutedText "The Repository of Curry Packages"]]
+      [h1 [htxt "Masala: ",
+          smallMutedText $ "The Repository of Curry Packages" ++
+                           if testSystem then " (TEST SYSTEM)" else ""]]
       (messageLine msg lasturl : viewblock)
       spiceyFooter
  where

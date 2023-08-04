@@ -18,8 +18,9 @@ import Controller.Mail
 import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
+import System.CPM            ( getVersionTestTime )
 import System.Spicey
-import System.PackageHelpers ( getVersionTestTime, publishPackageVersion )
+import System.PackageHelpers ( publishPackageVersion )
 import System.PreludeHelpers
 import View.EntitiesToHtml
 import View.Version
