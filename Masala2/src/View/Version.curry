@@ -363,7 +363,8 @@ leqVersion v1 v2 = readVersionString v1 <= readVersionString v2
 --- package name and, if equal, by the version order.
 leqPkgVersion :: (Package, Version) -> (Package, Version) -> Bool
 leqPkgVersion (p1,v1) (p2,v2) =
-  leqPackage p1 p2 || (packageName p1 == packageName p2 && leqVersion v1 v2)
+  (packageName p1 < packageName p2) ||
+  (packageName p1 == packageName p2 && leqVersion v1 v2)
 
 --- Compares two Package/Version entities by upload time of the version.
 leqPkgVersionUpload :: (Package, Version) -> (Package, Version) -> Bool

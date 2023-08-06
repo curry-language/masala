@@ -309,7 +309,10 @@ allUnpublishedController =
   checkAuthorization (packageOperationAllowed ListEntities) $ \sinfo -> do
     versions <- getUnpublishedVersions
     pkgs     <- runQ (mapM getVersioningPackage versions)
-    return $ allVersionsView sinfo "All unpublished package versions"
+    return $
+      if null versions
+        then allVersionsView sinfo "There are no unpublished packages" []
+        else allVersionsView sinfo "All unpublished package versions:"
                              (sortBy leqPkgVersion (zip pkgs versions))
 
 --- Lists all Version entities with buttons to show, delete,
