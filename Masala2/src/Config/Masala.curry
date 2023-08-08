@@ -1,6 +1,6 @@
--------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- Global configurations for the Masala system
--------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 
 module Config.Masala
  where
@@ -8,9 +8,12 @@ module Config.Masala
 import System.FilePath ( (</>) )
 import Data.Time
 
+------------------------------------------------------------------------------
 --- Is the current installation a test system?
 --- In a test systems, mails are not really sent but its contents is
 --- just shown in the web page which sent it (see `Controller.Mail`).
+--- Moreover, the source files of packages are not downloaded and
+--- nothing is sent to CPM when a package is published.
 testSystem :: Bool
 testSystem = True
 
@@ -38,24 +41,27 @@ mainScriptURL = baseURL ++ "/" ++ baseCGI
 systemHashKey :: String
 systemHashKey = "3masala25" -- change this key for every spicey instance
 
---- Documentation URL of a package in the CPM repository.
-packageURLinCPM :: String -> String
-packageURLinCPM pkgname =
-  "https://cpm.curry-lang.org/pkgs/" ++ pkgname ++ ".html"
+--- The data directory where the private data of Masala is stored.
+masalaDataDir :: String
+masalaDataDir = "data"
+
+--- The SQLite3 database file of Masala.
+masalaDBFile :: String
+masalaDBFile = masalaDataDir </> "Masala2.db"
 
 --- Log file for emails.
 emailLogFile :: String
-emailLogFile = "data" </> "EMAILLOG.txt"
+emailLogFile = masalaDataDir </> "EMAILLOG.txt"
 
 --- The directory where the package specifications (`package.json`) are stored.
 packageSpecDir :: String
-packageSpecDir = "data" </> "packages"
+packageSpecDir = masalaDataDir </> "packages"
 
 --- The directory where the sources of uploaded packages are stored.
 --- If it is empty, the sources are not downloaded.
 downloadSourceDir :: String
 downloadSourceDir | testSystem = "" -- do not download in test system
-                  | otherwise  = "data" </> "downloads"
+                  | otherwise  = masalaDataDir </> "downloads"
 
 --- The directory where the tar files of the sources of uploaded packages
 --- are stored.
@@ -68,3 +74,26 @@ invalidTime :: IO ClockTime
 invalidTime = do
   ctime <- getClockTime
   return $ addMinutes (-10) ctime
+
+------------------------------------------------------------------------------
+-- Access to the CPM repository manager:
+
+--- The URL to upload a package specification to CPM so that other
+--- programmers can use them. The package specification must be provided
+--- on stdin and the package's tar file must exist in the `downloadTarDir`.
+cpmUploadURL :: String
+cpmUploadURL =
+  "https://www-ps.informatik.uni-kiel.de/~cpm/cpm-upload-masala.cgi"
+
+--- The base directory where the data of CPM is stored.
+cpmBaseDir :: String
+cpmBaseDir | testSystem = "/home/mh/public_html/curry/cpm"
+           | otherwise  = "/net/medoc/home/cpm/public_html"
+
+--- Documentation URL of a package version in the CPM repository.
+packageURLinCPM :: String -> String -> String
+packageURLinCPM pkgname version =
+  let pkgid = pkgname ++ if null version then "" else '-' : version
+  in "https://cpm.curry-lang.org/pkgs/" ++ pkgid ++ ".html"
+
+------------------------------------------------------------------------------

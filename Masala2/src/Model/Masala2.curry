@@ -13,6 +13,8 @@ import qualified Database.CDBI.Criteria
 import qualified Database.CDBI.Connection
 import qualified Database.CDBI.Description
 
+import Config.Masala ( masalaDBFile )
+
 data Categorizes = Categorizes CategoryID VersionID
  deriving (Eq,Show,Read)
 
@@ -81,7 +83,7 @@ data ValidationTokenID = ValidationTokenID Int
 
 --- The name of the SQLite database file.
 sqliteDBFile :: String
-sqliteDBFile = "data/Masala2.db"
+sqliteDBFile = masalaDBFile
 
 --- The ER description of the `Categorizes` entity.
 categorizes_CDBI_Description

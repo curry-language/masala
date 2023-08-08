@@ -48,7 +48,7 @@ wUploadCheck (msg, packageJson, jsonMaybe) =
   , par [htxt $ "To upload the new package anyways, an already existing " ++
                 "version might be overwritten or new categories may be " ++
                 "created. Please confirm or cancel the upload."]
-  , primSmButton "Upload" uploadHandler, nbsp
+  , primSmButton "Force upload" uploadHandler, nbsp
   , scndSmButton "Cancel" cancelHandler]
     where
       uploadHandler _ = do

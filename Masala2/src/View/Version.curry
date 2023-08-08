@@ -155,9 +155,10 @@ showStandardVersionView _ version relatedUser relatedPackage packages
 showVersionView
   :: UserSessionInfo
   -> Version -> Package -> User -> [User] -> [Category] -> [Version]
-  -> [Package] -> [CurryModule] -> Bool -> Maybe User -> [BaseHtml]
+  -> [Package] -> [CurryModule] -> Bool -> Maybe User -> Maybe String 
+  -> [BaseHtml]
 showVersionView sinfo version package uploader maintainers cats allversions
-                deppackages exportedmods watchesPackage currentUser =
+                deppackages exportedmods watchesPackage currentUser tested =
   [blockstyle "container-fluid"
      ([blockstyle "row"
         ([blockstyle (bsCols 4)
@@ -184,17 +185,26 @@ showVersionView sinfo version package uploader maintainers cats allversions
        (map (\ (t,c) -> (h5 [htxt t] : c))
             (versionInfoAsHTML sinfo package version deppackages cats allversions
                                uploader maintainers exportedmods))] ++
-    [if versionTested version
-       then blockstyle "badge badge-success" [htxt "Successfully tested"]
-       else blockstyle "badge badge-secondary" [htxt "not tested"]]
+    -- as long as Masala does not test packages, use the CPM test information:
+    [maybe (blockstyle "badge badge-secondary" [htxt "not tested"])
+           (\s -> blockstyle "badge badge-success" [htxt s])
+           tested]
+    --[if versionTested version
+    --   then blockstyle "badge badge-success" [htxt "Successfully tested"]
+    --   else blockstyle "badge badge-secondary" [htxt "not tested"]]
 
   pkgAbandoned = packageAbandoned package
 
   contents =
     [ par [htxt $ versionDescription version]
-    , par [eTarget $ hrefInfoButton (packageURLinCPM (packageName package))
-             [htxt "Detailed package information"],
-           htxt " (available when the package has been published)"]
+    , par [let doctxt = "Detailed package documentation"
+           in if versionPublished version
+                then eTarget $ hrefInfoButton
+                        (packageURLinCPM (packageName package)
+                                         (versionVersion version))
+                        [htxt doctxt]
+                else textstyle "btn btn-secondary" doctxt,
+           htxt " (available shortly after this version has been published)"]
     ] ++
     ( case currentUser of 
         Nothing -> []
@@ -353,7 +363,8 @@ leqVersion v1 v2 = readVersionString v1 <= readVersionString v2
 --- package name and, if equal, by the version order.
 leqPkgVersion :: (Package, Version) -> (Package, Version) -> Bool
 leqPkgVersion (p1,v1) (p2,v2) =
-  leqPackage p1 p2 || (packageName p1 == packageName p2 && leqVersion v1 v2)
+  (packageName p1 < packageName p2) ||
+  (packageName p1 == packageName p2 && leqVersion v1 v2)
 
 --- Compares two Package/Version entities by upload time of the version.
 leqPkgVersionUpload :: (Package, Version) -> (Package, Version) -> Bool
@@ -361,7 +372,8 @@ leqPkgVersionUpload (_,v1) (_,v2) =
   versionUploadDate v1 >= versionUploadDate v2
 
 --- A view for a given list of Package/Version entities.
-allVersionsView :: UserSessionInfo -> String -> [(Package,Version)] -> [BaseHtml]
+allVersionsView :: UserSessionInfo -> String -> [(Package,Version)]
+                -> [BaseHtml]
 allVersionsView _ title pkgversions =
   [ h1 [htxt title]
   , par (intersperse nbsp (map listVersion pkgversions))]

@@ -119,14 +119,17 @@ listCategoryView sinfo categorys =
 allCategoriesView :: UserSessionInfo -> [Category] -> [BaseHtml]
 allCategoriesView sinfo categorys =
   [ h1 [htxt "All categories"]
-  , par (intersperse nbsp (map listCategory (sortBy leqCategory categorys)))] ++
+  , spTable $ [[[htxt "Category name"], [htxt "Description"]]] ++
+              map listCategory (sortBy leqCategory categorys)
+  ] ++
   if isAdminSession sinfo
     then [ breakline
          , hrefWarnSmButton "?Category/new" [htxt "Add a new category"]]
     else []
   where
-    listCategory category =
-      hrefPrimBadge (showRoute category) [htxt (categoryName category)]
+   listCategory category =
+     [[hrefPrimSmBlock (showRoute category) [htxt (categoryName category)]]
+     , [htxt (categoryDescription category)]]
 
 --- A view for a given list of Category entities.
 allCategoriesPackagesView :: UserSessionInfo -> [(Category,[Package])]
@@ -143,10 +146,9 @@ allCategoriesPackagesView sinfo catpkgs =
     showCatPkgs (category,pkgs) =
       [h3 [hrefInfoBadge (showRoute category)
                          [htxt (categoryName category)]]] ++
-      (if null catdesc then [] else [par [italic [htxt catdesc, hrule]]]) ++ 
+      (if null catdesc then [] else [par [italic [htxt catdesc]]]) ++ 
   
-      [ par [htxt "Packages in this category:"]
-      , par (intersperse nbsp
+      [ par (intersperse nbsp
                (map listPackage (sortBy leqPackage pkgs)))
       , hrule
       ]

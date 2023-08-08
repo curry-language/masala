@@ -8,18 +8,15 @@ import Data.List
 
 import Data.Time
 import HTML.Base
-import HTML.Parser ( readHtmlFile )
-import HTML.WUI
 import System.Directory
 import System.FilePath ( (</>) )
 import Text.CSV
 
 import Config.ControllerMapping
-import Config.RoutesData
+import Config.Masala
 import Controller.Upload ( uploadByName )
 import Model.Masala2
 import Model.Queries
-import System.Routes
 import System.Processes
 import System.Spicey
 import View.Version       ( leqPkgVersion )
@@ -41,9 +38,11 @@ main :: IO HtmlPage
 main = do
   params <- fmap (splitOn "/") getUrlParameter
   case params of
-    ["csv"] -> showMasalaDBAsCSV
-    ["savedb"] -> saveMasalaDB
-    ["About"] -> readHtmlFile "about.html" >>= getPage
+    ["csv"]     -> showMasalaDBAsCSV
+    ["savedb"]  -> saveMasalaDB
+    ["about"]   -> showHtmlFile "about.html"
+    ["imprint"] -> showHtmlFile "imprint.html"
+    ["privacy"] -> showHtmlFile "privacy.html"
     ["UploadBy",login,passwd,publish,force,package]
       -> do upmsg <- uploadByName (urlencoded2string login)
                                   (urlencoded2string passwd)
@@ -53,6 +52,8 @@ main = do
             return $ answerEncText "utf-8" $
               either ("ERROR: " ++) id upmsg
     _ ->  dispatcher
+ where
+  showHtmlFile f = readFile f >>= \s -> getPage [BaseText s]
 
 -----------------------------------------------------------------------------
 --- Saves the database as term files in the `data` area of Masala.
@@ -65,7 +66,7 @@ saveMasalaDB = do
   lt <- getLocalTime
   let times = concatMap show2 [ctYear lt, ctMonth lt, ctDay lt] ++ "-" ++
               concatMap show2 [ctHour lt, ctMin lt, ctSec lt]
-      savedir = "data" </> "SAVED" </> times
+      savedir = masalaDataDir </> "SAVED" </> times
   createDirectoryIfMissing True savedir
   saveDBTo savedir
   return $ answerEncText "utf-8" $ "Database saved into '" ++ savedir ++ "'.\n"

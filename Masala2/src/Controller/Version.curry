@@ -18,6 +18,7 @@ import Controller.Mail
 import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
+import System.CPM            ( getVersionTestTime )
 import System.Spicey
 import System.PackageHelpers ( publishPackageVersion )
 import System.PreludeHelpers
@@ -308,7 +309,10 @@ allUnpublishedController =
   checkAuthorization (packageOperationAllowed ListEntities) $ \sinfo -> do
     versions <- getUnpublishedVersions
     pkgs     <- runQ (mapM getVersioningPackage versions)
-    return $ allVersionsView sinfo "All unpublished package versions"
+    return $
+      if null versions
+        then allVersionsView sinfo "There are no unpublished packages" []
+        else allVersionsView sinfo "All unpublished package versions:"
                              (sortBy leqPkgVersion (zip pkgs versions))
 
 --- Lists all Version entities with buttons to show, delete,
@@ -332,8 +336,7 @@ showStandardVersionController version =
                                   (getExportingVersionCurryModules version)
         return
          (showStandardVersionView sinfo version uploadUser versioningPackage
-           dependingPackages
-           exportingCurryModules))
+           dependingPackages exportingCurryModules))
 
 --- Shows a Version entity.
 showVersionController :: Version -> Controller
@@ -354,10 +357,11 @@ showVersionController version =
         watchesPackage <- case currentUser of 
           Nothing -> return False
           Just user -> checkUserWatches user package
+        tested <- getVersionTestTime package version
         return
          (showVersionView sinfo version package uploadUser maintainers cats
             allversions dependingPackages exportedModules
-            watchesPackage currentUser))
+            watchesPackage currentUser tested))
 
 --- Associates given entities with the Version entity
 --- with respect to the `Depending` relation.

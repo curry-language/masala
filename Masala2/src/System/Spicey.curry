@@ -34,7 +34,7 @@ import HTML.Session
 import HTML.Styles.Bootstrap4
 import HTML.WUI
 
-import Config.Masala        ( baseCGI )
+import Config.Masala        ( baseCGI, testSystem )
 import Config.Roles
 import Config.UserProcesses
 import Model.Masala2        ( showVersionKey )
@@ -298,7 +298,10 @@ spiceyFooter =
         href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
              [image "bt4/img/spicey-logo.png" "Spicey"]
           `addAttr` ("target","_blank"),
-        htxt "Framework"]]
+        htxt "Framework", nbsp, nbsp, nbsp,
+        hrefInfoBadge "?about"   [htxt "About Masala"], nbsp,
+        hrefInfoBadge "?imprint" [htxt "Imprint"], nbsp,
+        hrefInfoBadge "?privacy" [htxt "Data Privacy"]]]
 
 --- Transforms a view into an HTML form by adding the basic page layout.
 --- If the view is an empty text or a text starting with "?",
@@ -316,7 +319,9 @@ getPage viewblock = case viewblock of
       spiceyTitle spiceyHomeBrand
       (addNavItemClass $ routemenu) (rightTopMenu login ++ [("nav-item", searchElem)])
       0 []
-      [h1 [htxt "Masala: ", smallMutedText "The Repository of Curry Packages"]]
+      [h1 [htxt "Masala: ",
+          smallMutedText $ "The Repository of Curry Packages" ++
+                           if testSystem then " (TEST SYSTEM)" else ""]]
       (messageLine msg lasturl : viewblock)
       spiceyFooter
  where
@@ -541,7 +546,7 @@ searchElem :: [BaseHtml]
 searchElem =
   [formElemWithAttrs searchForm
      [("class","form-inline mt-1 mt-md-0"), --my-2 my-lg-0"
-      ("title","Search in package names and descriptions")]]
+      ("title","Search in package names, descriptions, and module names")]]
 
 --- A form with a field to search modules containing a string.
 searchForm :: HtmlFormDef ()
@@ -564,7 +569,7 @@ searchPackages pat = do
              par (intersperse nbsp dbtns)]) ++
     (if null mods
        then []
-       else [h3 [htxt "Found in module names of packages"],
+       else [h3 [htxt "Found in exported module names of packages"],
              par (intersperse nbsp mbtns)])
  where
   getRef2PkgVers (pkg,vers) =

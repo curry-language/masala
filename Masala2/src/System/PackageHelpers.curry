@@ -7,8 +7,9 @@ module System.PackageHelpers
 
 import System.Directory
 import System.FilePath
-import System.IOExts      ( evalCmd )
+import System.IOExts      ( evalCmd, readCompleteFile )
 import System.Process     ( getPID, system )
+import Text.CSV           ( readCSV )
 
 import CPM.Package
 import CPM.ErrorLogger
@@ -17,6 +18,8 @@ import CPM.Package.Helpers ( installPackageSourceTo )
 
 import Config.Masala
 
+------------------------------------------------------------------------------
+--- The information extracted from a CPM package specfication passed to Masala.
 type PackageJSON = (String,String,String,[String],[String],[String])
 
 jsonDependencies :: PackageJSON -> [String]
@@ -134,9 +137,8 @@ publishPackageVersion pname pvers = do
 --- Returns either an error message or the standard output.
 uploadPackageToCPM :: String -> IO (Either String String)
 uploadPackageToCPM pkgspec = do
-  let uploadURL = "https://www-ps.informatik.uni-kiel.de/~cpm/cpm-upload-masala.cgi"
   (rc,out,err) <- evalCmd "curl"
-                          ["--data-binary", "@-", uploadURL ]
+                          ["--data-binary", "@-", cpmUploadURL ]
                           pkgspec
   return $ if rc == 0 then Right out
                       else Left $ err ++ out
@@ -146,16 +148,14 @@ uploadPackageToCPM pkgspec = do
 uploadPackageToMasalaStore :: String -> String -> String
                            -> IO (Either String String)
 uploadPackageToMasalaStore pname pvers pkgspec = do
-  let pubdir = "data" </> "published" </> pname ++ "-" ++ pvers
+  let pubdir = masalaDataDir </> "published" </> pname ++ "-" ++ pvers
   recreateDirectory pubdir
   writeFile (pubdir </> packageSpecFile) pkgspec
   return $ Right "Package stored in published packages"
-
 
 ------------------------------------------------------------------------------
 -- The name of the package specification file.
 packageSpecFile :: String
 packageSpecFile = "package.json"
 
-------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
