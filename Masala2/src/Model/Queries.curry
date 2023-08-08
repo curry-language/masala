@@ -13,6 +13,7 @@ import Model.Masala2
 
 import Data.Time
 
+import Config.Masala ( invalidTime )
 import Config.Roles
 
 import System.PreludeHelpers
@@ -26,17 +27,27 @@ checkValidationTokenAvailable token = fmap null $ runQ
          From ValidationToken as vt
          Where vt.Token = { token };''
 
--- Gets the corresponding ValidationToken for the given String.
+-- Gets the corresponding ValidationToken for the given String if it is still valid (i.e. not too old).
 getValidationTokenWithToken :: String -> IO (Maybe ValidationToken)
-getValidationTokenWithToken token = fmap listToMaybe $ runQ
-  ``sql* Select *
-         From ValidationToken as vt
-         Where vt.Token = { token };''
+getValidationTokenWithToken token = do
+  itime <- invalidTime
+  fmap listToMaybe $ runQ
+    ``sql* Select *
+           From ValidationToken as vt
+           Where vt.Token = { token } And vt.ValidSince >= { itime };''
 
 -- Deletes the corresponding ValidationToken for the given String.
 deleteValidationTokenWithToken :: String -> IO ()
 deleteValidationTokenWithToken token = runQ
   ``sql* Delete From ValidationToken Where Token = { token };''
+
+-- Delete all ValidationToken that are older then the cutoff time for valid tokens.
+deleteOldValidationToken :: IO ()
+deleteOldValidationToken = do
+  itime <- invalidTime
+  runQ
+    ``sql* Delete From ValidationToken
+           Where ValidSince < { itime };''
 
 -----------------------------------------------------------------------
 -- Checks whether the given user login name is available, i.e.,

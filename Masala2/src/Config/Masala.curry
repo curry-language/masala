@@ -6,6 +6,7 @@ module Config.Masala
  where
 
 import System.FilePath ( (</>) )
+import Data.Time
 
 --- Is the current installation a test system?
 --- In a test systems, mails are not really sent but its contents is
@@ -60,3 +61,10 @@ downloadSourceDir | testSystem = "" -- do not download in test system
 --- are stored.
 downloadTarDir :: String
 downloadTarDir = "TARFILES"
+
+--- This function returns the time, to which every validation token older than
+--- that is invalid and supposed to be deleted.
+invalidTime :: IO ClockTime
+invalidTime = do
+  ctime <- getClockTime
+  return $ addMinutes (-10) ctime

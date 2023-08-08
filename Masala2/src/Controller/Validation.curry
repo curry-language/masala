@@ -6,6 +6,7 @@ import HTML.Session
 import HTML.WUI
 import Model.Masala2
 import Model.Queries
+import Config.Masala (invalidTime)
 import Config.EntityRoutes
 import Config.UserProcesses
 import Config.Roles
@@ -24,8 +25,11 @@ import View.Validation
 import Database.CDBI.Connection
 
 --- Shows a form to register a new User.
+--- Deletes too old validation token as a side effect
+--- before looking for the given validation token.
 validationController :: Controller
 validationController = do
+  deleteOldValidationToken
   args <- getControllerParams
   case args of 
     [] -> validationTokenController

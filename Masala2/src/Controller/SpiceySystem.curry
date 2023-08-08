@@ -14,6 +14,7 @@ module Controller.SpiceySystem
 
 import Numeric
 
+import Config.Masala (invalidTime)
 import Config.UserProcesses
 import Controller.Mail
 import System.Spicey
@@ -37,8 +38,10 @@ welcomeController = do
 
 -----------------------------------------------------------------------------
 --- Controller for login/logout.
+--- Too old validation tokens are also deleted as a side effect
 loginController :: Controller
 loginController = do
+  deleteOldValidationToken
   login <- getSessionLoginName
   lasturl <- getLastUrl
   putSessionData loginViewData (login, lasturl)
