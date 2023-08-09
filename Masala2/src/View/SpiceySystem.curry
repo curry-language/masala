@@ -47,7 +47,6 @@ loginView (currlogin,lurl) =
   loginHandler env = do
     let loginname = env loginfield
         passwdtxt = env passwdfield
-    -- In the real system, you should also verify a password here.
     cryptpasswd <- getUserHash loginname passwdtxt
     userResult <- getUserByLoginData loginname cryptpasswd
     case userResult of
@@ -64,7 +63,6 @@ loginView (currlogin,lurl) =
           "Either login name or password were not correct or you are " ++
           "not yet validated, please try again"
         redirectController lasturl >>= getPage
-    --nextInProcessOr (redirectController "?") Nothing >>= getPage
 
   logoutHandler _ = do
     logoutFromSession >> setPageMessage "Logged out"

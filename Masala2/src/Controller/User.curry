@@ -61,8 +61,6 @@ newUserController =
   checkAuthorization (userOperationAllowed NewEntity)
    $ (\sinfo ->
      do allPackages <- runQ queryAllPackages
-        --allPackages <- runQ queryAllPackages
-        --ctime <- getClockTime
         setParWuiStore newUserStore (sinfo,allPackages,allPackages)
          ("","","","","","","",Nothing,[],[])
         return [formElem newUserForm])

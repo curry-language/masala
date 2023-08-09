@@ -72,6 +72,7 @@ isNotTrustedUserSession :: UserSessionInfo -> Bool
 isNotTrustedUserSession sinfo =
   maybe False ((== roleNotTrusted) . snd) (userLoginOfSession sinfo)
 
+--- Is the current user logged in as the given user?
 loggedInAsUserSession :: User -> UserSessionInfo -> Bool
 loggedInAsUserSession user sinfo =
   maybe False ((== userLoginName user) . fst) (userLoginOfSession sinfo)

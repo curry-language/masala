@@ -88,7 +88,6 @@ wUser maintainerPackageList watchingPackageList =
     wHidden -- Password
     wHidden -- Token
     wHidden -- LastLogin
-    --(wUncheckMaybe (toClockTime (CalendarTime 2018 1 1 0 0 0 0)) wDateType) -- LastLogin
     (wMultiCheckSelect (\package -> [htxt (packageToShortView package)])
       maintainerPackageList) -- Maintains
     (wMultiCheckSelect (\package -> [htxt (packageToShortView package)])

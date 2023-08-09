@@ -22,15 +22,19 @@ import Config.Masala
 --- The information extracted from a CPM package specfication passed to Masala.
 type PackageJSON = (String,String,String,[String],[String],[String])
 
+--- The list of dependencies.
 jsonDependencies :: PackageJSON -> [String]
 jsonDependencies (_,_,_,deps,_,_) = deps
 
+--- The list of categories.
 jsonCategories :: PackageJSON -> [String]
 jsonCategories (_,_,_,_,_,cats) = cats
 
+--- The package name.
 jsonName :: PackageJSON -> String
 jsonName (name,_,_,_,_,_) = name
 
+--- The package version.
 jsonVersion :: PackageJSON -> String
 jsonVersion (_,vsn,_,_,_,_) = vsn
 

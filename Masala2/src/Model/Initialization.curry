@@ -19,13 +19,17 @@ import Database.CDBI.Description
 import System.Authentication ( getUserHash )
 import System.Directory      ( removeFile )
 
+-- DBAction to create an admin in a database.
 createAdmin :: String -> String -> String -> String -> DBAction User
 createAdmin loginname publicname email cryptpasswd =
   newUser loginname publicname email email "Admin" cryptpasswd "" Nothing
 
+-- DBAction to create a category in a database.
 createCategory :: String -> DBAction Category
 createCategory category = newCategory category ""
 
+-- This function inserts categories into a database
+-- from a list of lines read from a csv file.
 insertCategories :: Connection -> [[String]]
                  -> IO [Either DBError (String, CategoryID)]
 insertCategories connection lines = do 
@@ -33,9 +37,12 @@ insertCategories connection lines = do
     results <- mapM (flip runDBAction connection . createCategory) cats
     return $ zipWith (\cat result -> fmap ((,) cat) result) cats (map (fmap categoryKey) results)
 
+-- DBAction to create a module in a database.
 createModule :: String -> DBAction CurryModule
 createModule = newCurryModule
 
+-- This function inserts modules into a database
+-- from a list of lines read from a csv file.
 insertModules :: Connection -> [[String]]
            -> IO [Either DBError (String, CurryModuleID)]
 insertModules connection lines = do 
@@ -43,21 +50,27 @@ insertModules connection lines = do
     results <- mapM (flip runDBAction connection . createModule) mods
     return $ zipWith (\mod result -> fmap ((,) mod) result) mods (map (fmap curryModuleKey) results)
 
+-- DBAction to create a package in a database.
 createPackage :: String -> DBAction Package
 createPackage package = newPackage package False
 
+-- This function inserts packages into a database
+-- from a list of lines read from a csv file.
 insertPackages :: Connection -> [[String]] -> IO [Either DBError (String, PackageID)]
 insertPackages connection lines = do 
     let pkgs = nub $ drop 1 $ concatMap (take 1) lines
     results <- mapM (flip runDBAction connection . createPackage) pkgs
     return $ zipWith (\pkg result -> fmap ((,) pkg) result) pkgs (map (fmap packageKey) results)
 
+-- This function transform a list with 4 values into a tuple.
 listTo4Tuple :: [a] -> (a, a, a, a)
 listTo4Tuple [a, b, c, d] = (a, b, c, d)
 
+-- uncurry for a tuple with length 4.
 uncurry4 :: (a -> b -> c -> d -> e) -> (a, b, c, d) -> e
 uncurry4 f (a, b, c, d) = f a b c d
 
+-- DBAction to create a version in a database.
 createVersion :: [(String, PackageID)] -> UserID -> ClockTime -> String
               -> String -> String -> String -> DBAction Version
 createVersion packages admin ctime package version description uploadtimeS =
@@ -71,6 +84,8 @@ createVersion packages admin ctime package version description uploadtimeS =
            description "" 0 uptime False packageID admin)
     (lookup package packages)
 
+-- This function inserts versions into a database
+-- from a list of lines read from a csv file.
 insertVersion :: Connection -> [[String]] -> [(String, PackageID)] -> UserID
               -> ClockTime -> IO [Either DBError ((String, String), VersionID)]
 insertVersion connection lines packages admin currtime = do
@@ -82,26 +97,18 @@ insertVersion connection lines packages admin currtime = do
                      versions
                      (map (fmap versionKey) results)
 
+-- DBAction to make a user a maintainer for a package.
 createMaintainer :: UserID -> PackageID -> DBAction ()
 createMaintainer = newMaintainer
 
+-- This function inserts maintainers into a database.
 insertMaintainer :: Connection -> [(String, PackageID)] -> UserID
                  -> IO [Either DBError ()]
 insertMaintainer connection packageKeys admin = do
     let dbactions = map (createMaintainer admin) (map snd packageKeys) :: [DBAction ()]
     mapM (flip runDBAction connection) dbactions
 
-{-
-createDepending :: [(String, PackageID)] -> [((String, String), VersionID)] -> [String] -> DBAction ()
-createDepending packageKeys versionKeys line
-    | lookup (line !! 0, line !! 1) versionKeys == Just (versionKey::VersionID)
-        = foldl1 (>+)
-        $ map (newDepending versionKey)
-        $ map fromJust
-        $ filter isJust
-        $ map (flip lookup packageKeys) ((read::String -> [String]) $ line !! 3)
-    where versionKey free
--}
+-- DBAction to make a version depend on a package.
 createDepending :: [(String, PackageID)] -> [((String, String), VersionID)] -> [String] -> DBAction ()
 createDepending packageKeys versionKeys line =
   case lookup (line !! 0, line !! 1) versionKeys of 
@@ -112,7 +119,7 @@ createDepending packageKeys versionKeys line =
         $ map (flip lookup packageKeys) ((read::String -> [String]) $ line !! 4)
     Nothing -> error "createDepending: no version key found"
 
-
+-- This function inserts dependency relationships into a database.
 insertDependings :: Connection -> [(String, PackageID)]
                  -> [((String, String), VersionID)] -> [[String]]
                  -> IO [Either DBError ()]
@@ -120,6 +127,7 @@ insertDependings connection packageKeys versionKeys lines = do
     let dbactions = map (createDepending packageKeys versionKeys) lines
     mapM (flip runDBAction connection) dbactions
 
+-- DBAction to make a version export a module.
 createExporting :: [((String, String), VersionID)] -> [(String, CurryModuleID)] -> [String] -> DBAction ()
 createExporting versionKeys moduleKeys line = case lookup (line !! 0, line !! 1) versionKeys of 
         Just versionKey -> foldl (>+) (returnDB (Right ()))
@@ -129,12 +137,14 @@ createExporting versionKeys moduleKeys line = case lookup (line !! 0, line !! 1)
             $ map (flip lookup moduleKeys) (read $ line !! 5)
         Nothing -> error "createExporting: no version key found"
 
+-- This function inserts exporting relationships into a database.
 insertExportings :: Connection -> [((String, String), VersionID)] -> [(String, CurryModuleID)] -> [[String]]
                  -> IO [Either DBError ()]
 insertExportings connection versionKeys moduleKeys lines = do
     let dbactions = map (createExporting versionKeys moduleKeys) lines
     mapM (flip runDBAction connection) dbactions
 
+-- DBAction to make a version use a category.
 createCategorizes :: [((String, String), VersionID)] -> [(String, CategoryID)] -> [String] -> DBAction ()
 createCategorizes versionKeys categoryKeys line = case lookup (line !! 0, line !! 1) versionKeys of 
         Just versionKey -> foldl (>+) (returnDB (Right ()))
@@ -144,13 +154,14 @@ createCategorizes versionKeys categoryKeys line = case lookup (line !! 0, line !
             $ map (flip lookup categoryKeys) (read $ line !! 6)
         Nothing -> error "createExporting: no version key found"
 
+-- This function inserts categorizes relationships into a database.
 insertCategorizes :: Connection -> [((String, String), VersionID)] -> [(String, CategoryID)] -> [[String]]
                  -> IO [Either DBError ()]
 insertCategorizes connection versionKeys moduleKeys lines = do
     let dbactions = map (createCategorizes versionKeys moduleKeys) lines
     mapM (flip runDBAction connection) dbactions
 
-
+-- This function deletes a sql file and creates a new one.
 resetDatabase :: IO ()
 resetDatabase = do
     putStrLn $ "Reset database '" ++ sqliteDBFile ++ "'..."

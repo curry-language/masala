@@ -204,12 +204,15 @@ instance (Read a, Read b, Read c, Read d, Read e, Read f, Read g, Read h,
 
 ------------------------------------------------------------------------------
 
+--- Converts Maybe into Either with a left value if Nothing.
 taggedMaybe :: a -> Maybe b -> Either a b
 taggedMaybe a Nothing  = Left a
 taggedMaybe _ (Just b) = Right b
 
+--- Converts the result of a DBAction from Maybe to Either with a tag.
 taggedDBAction :: Functor f => (a -> f (Maybe b)) -> a -> f (Either a b)
 taggedDBAction action tag = fmap (taggedMaybe tag) (action tag)
 
+--- uncurry for a tuple with length 6.
 uncurry6 :: (a -> b -> c -> d -> e -> f -> g) -> (a,b,c,d,e,f) -> g
 uncurry6 func (a,b,c,d,e,f) = func a b c d e f

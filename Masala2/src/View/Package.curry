@@ -100,6 +100,7 @@ allPackagesView _ title packages =
         (showRoute package)
         [htxt (packageName package)]
 
+--- A form to confirm to delete a maintainer from a package.
 removeMaintainerView :: Maybe (Package, String, UserID) -> [HtmlExp]
 removeMaintainerView Nothing = [ h3 [htxt "Something went wrong!"]]
 removeMaintainerView (Just (package, userName, user)) =

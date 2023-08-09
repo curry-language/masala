@@ -33,7 +33,7 @@ userOperationAllowed at sinfo =
     _            -> checkAdmin sinfo
 
 
-
+--- Checks whether the current user is either an admin or the given User.
 adminOrLoggedInAsUser :: User -> UserSessionInfo -> IO AccessResult
 adminOrLoggedInAsUser user sinfo =
   return $ if isAdminSession sinfo || loggedInAsUserSession user sinfo 
@@ -52,6 +52,7 @@ packageOperationAllowed at sinfo =
     NewEntity    -> isLoggedIn
     _            -> checkAdmin sinfo
 
+--- Checks whether the current user is an admin or a maintainer of the given Package.
 adminOrMaintainer :: Package -> UserSessionInfo -> IO AccessResult
 adminOrMaintainer package sinfo =
   if isAdminSession sinfo

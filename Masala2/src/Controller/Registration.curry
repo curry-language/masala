@@ -94,6 +94,7 @@ registerUser :: String -> String -> String -> String -> IO (SQLResult User)
 registerUser loginName publicName email cryptpasswd = runT $
   newUser loginName publicName email "" roleInvalid cryptpasswd "" Nothing
 
+--- Shows a error message for a user registration.
 displayRegistrationError :: Bool -> Bool -> Bool -> Controller
 displayRegistrationError usernameAvailable publicnameAvailable emailAvailable =
   let err1 = errorUsernameAvailable usernameAvailable

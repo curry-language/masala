@@ -64,12 +64,13 @@ uploadJsonForm =
                   vsnResult <- getPackageVersionByName (jsonName jsonData)
                                                        (jsonVersion jsonData)
                   return $ isJust vsnResult
-            -- Check if some cats do not exist
+            -- Check if some categories do not exist
             nonExistingCats <- do
               cats <- getCategoriesWithName (jsonCategories jsonData)
               return $ lefts cats
             let msg = errorMessage jsonData vsnExist nonExistingCats
-            -- Check if admin
+            -- Check if admin and a confirmation is needed
+            -- (i.e. some categories do not exist/version already exists)
             if isAdminSession sinfo && (vsnExist || not (null nonExistingCats))
               then do
                 putSessionData uploadCheckStore (msg, json, Just jsonData)
@@ -149,9 +150,11 @@ uploadByName login passwd packagetxt publish force = do
   case userResult of 
     Nothing -> uploadFail loginErrMsg
     Just user -> do
+      -- Check if upload should be forced and user is allowed to force it
       case force && userRole user /= roleAdmin of
         True -> uploadFail "'force' can only be used by an Admin"
         False -> do
+          -- Check if package should be published and user is allowed to publish
           case publish && 
                userRole user /= roleAdmin && userRole user /= roleTrusted of
             True -> do upmsg <- uploadByName login passwd packagetxt False force
