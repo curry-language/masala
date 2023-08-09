@@ -106,8 +106,8 @@ sendValidationMail to token = do
                  mainScriptURL ++ "?Validation/" ++ token
       emailInfo = [ h3 [htxt "Initial registration successful!"],
                     par [htxt $
-                      "In order to use your account, please activate it by " ++
-                      "following the link (URL) containing in an email " ++
+                      "In order to use your account, please activate it now " ++
+                      "by following the link (URL) containing in an email " ++
                       "sent to '" ++ to ++ "'." ] ]
   sendMailController emailInfo to subject contents
 

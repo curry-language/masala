@@ -36,11 +36,11 @@ validationController = do
     [token] -> do 
       result <- getValidationTokenWithToken token
       case result of
-        Nothing -> displayError $ "This validation token \"" ++ token ++
-                                  "\" does not exist."
+        Nothing -> displayError $ errorNoToken token
         Just validationToken -> do
           deleteValidationTokenWithToken token
-          validationResult <- validateUser (validationTokenUserValidatingKey validationToken)
+          validationResult <- validateUser
+                             (validationTokenUserValidatingKey validationToken)
           case validationResult of 
             Left err -> displayError $ "Validation failed (" ++ show err ++ ")"
             Right _ -> do
@@ -49,6 +49,11 @@ validationController = do
               redirectController "?"
     _ -> displayUrlError
  where
+  errorNoToken token =
+    "This validation token \"" ++ token ++ "\" does not exist. " ++
+    "If you have already registered, you can request a new validation " ++
+    "token using \"Validate your account\" in Masala's registration menu."
+
   validateUser :: UserID -> IO (SQLResult ())
   validateUser user = runT $ validateUserAction user
 
