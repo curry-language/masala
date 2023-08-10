@@ -3,7 +3,7 @@ module Controller.Version
   , showVersionController, deleteVersionT
   ) where
 
-import Control.Monad        ( unless )
+import Control.Monad        ( unless, filterM )
 import Data.List            ( sortBy )
 import Data.Time
 import HTML.Base
@@ -285,6 +285,9 @@ deleteVersionT version =
      cats <- getPackageVersionCategories versioningPackage version
      mapM_ (\cat -> removeCategorizes [version] cat) cats
      deleteVersion version
+     -- Delete now unused curry modules
+     unusedCurryModules <- filterM checkIfModuleUnusedAction oldExportingCurryModules
+     mapM_ deleteCurryModule unusedCurryModules
 
 --- Lists all versions of all packages.
 allVersionUploadController :: Controller
