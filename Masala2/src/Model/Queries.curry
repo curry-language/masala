@@ -306,12 +306,14 @@ getPackageVersionsByPattern s = runQ
                 p.Name Like { "%" ++ s ++ "%" } )
                And Satisfies v versionOf p;''
 
---- Checks if the given curry module is exported by any package/version.
+--- Checks if the given Curry module is exported by any package/version.
 checkIfModuleUnusedAction :: CurryModule -> DBAction Bool
 checkIfModuleUnusedAction curryMod = fmap null $
   ``sql* Select *
          From CurryModule as cm, Version as v
-         Where cm.Key = { curryModuleKey curryMod } And Satisfies v exports cm;''
+         Where cm.Key = { curryModuleKey curryMod } And
+               Satisfies v exports cm;''
+
 -----------------------------------------------------------------------
 --- Gets the associated User entity for a given Version entity.
 getUploadUser :: Version -> DBAction User

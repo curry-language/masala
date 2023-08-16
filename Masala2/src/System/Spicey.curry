@@ -33,6 +33,7 @@ import HTML.Base
 import HTML.Session
 import HTML.Styles.Bootstrap4
 import HTML.WUI
+import System.Directory
 
 import Config.Masala        ( baseCGI, testSystem )
 import Config.Roles
@@ -292,9 +293,10 @@ spiceyHomeBrand :: (String, [BaseHtml])
 spiceyHomeBrand = ("?", [htxt " Masala"])
 
 --- The standard footer of the Spicey page.
-spiceyFooter :: [BaseHtml]
-spiceyFooter =
-  [par [htxt "powered by",
+spiceyFooter :: Maybe ClockTime -> [BaseHtml]
+spiceyFooter mbitime =
+  [par [htxt installinfo,
+        htxt "powered by",
         href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
              [image "bt4/img/spicey-logo.png" "Spicey"]
           `addAttr` ("target","_blank"),
@@ -302,6 +304,11 @@ spiceyFooter =
         hrefInfoBadge "?about"   [htxt "About Masala"], nbsp,
         hrefInfoBadge "?imprint" [htxt "Imprint"], nbsp,
         hrefInfoBadge "?privacy" [htxt "Data Privacy"]]]
+ where
+  installinfo =
+    maybe ""
+          (\t -> "Deployed at " ++ toDayString (toUTCTime t) ++ ", ")
+          mbitime
 
 --- Transforms a view into an HTML form by adding the basic page layout.
 --- If the view is an empty text or a text starting with "?",
@@ -315,6 +322,10 @@ getPage viewblock = case viewblock of
     msg        <- getPageMessage
     login      <- getSessionLogin
     lasturl    <- getLastUrl
+    let installfile = "INSTALLED"
+    installtime <- do exif <- doesFileExist installfile
+                      if exif then fmap Just $ getModificationTime installfile
+                              else return Nothing
     withSessionCookie $ bootstrapPage2 favIcon cssIncludes jsIncludes
       spiceyTitle spiceyHomeBrand
       (addNavItemClass $ routemenu) (rightTopMenu login ++ [("nav-item", searchElem)])
@@ -323,7 +334,7 @@ getPage viewblock = case viewblock of
           smallMutedText $ "The Repository of Curry Packages" ++
                            if testSystem then " (TEST SYSTEM)" else ""]]
       (messageLine msg lasturl : viewblock)
-      spiceyFooter
+      (spiceyFooter installtime)
  where
   addNavItemClass = map (\i -> ("nav-item", i))
 

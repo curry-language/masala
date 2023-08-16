@@ -285,8 +285,9 @@ deleteVersionT version =
      cats <- getPackageVersionCategories versioningPackage version
      mapM_ (\cat -> removeCategorizes [version] cat) cats
      deleteVersion version
-     -- Delete now unused curry modules
-     unusedCurryModules <- filterM checkIfModuleUnusedAction oldExportingCurryModules
+     -- Delete now unused Curry modules
+     unusedCurryModules <- filterM checkIfModuleUnusedAction
+                                   oldExportingCurryModules
      mapM_ deleteCurryModule unusedCurryModules
 
 --- Lists all versions of all packages.
