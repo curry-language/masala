@@ -322,9 +322,9 @@ getPage viewblock = case viewblock of
     msg        <- getPageMessage
     login      <- getSessionLogin
     lasturl    <- getLastUrl
-    let installfile = "INSTALLED"
-    installtime <- do exif <- doesFileExist installfile
-                      if exif then fmap Just $ getModificationTime installfile
+    let execfile = "run.cgi.bin"
+    installtime <- do exif <- doesFileExist execfile
+                      if exif then fmap Just $ getModificationTime execfile
                               else return Nothing
     withSessionCookie $ bootstrapPage2 favIcon cssIncludes jsIncludes
       spiceyTitle spiceyHomeBrand

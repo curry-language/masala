@@ -74,8 +74,6 @@ run:
 deploy: checkdeploy
 	mkdir -p $(WEBSERVERDIR)
 	$(MAKE) $(WEBSERVERDIR)/run.cgi
-	# touch INSTALLED file to set installation date
-	touch public/INSTALLED
 	# copy other files (style sheets, images,...)
 	cp -r public/* $(WEBSERVERDIR)
 	chmod -R go+rX $(WEBSERVERDIR)
