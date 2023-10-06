@@ -1,3 +1,6 @@
 *~
 .curry
 .cpm
+
+# generated:
+src/Model/Queries.curry
