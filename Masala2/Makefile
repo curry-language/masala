@@ -27,11 +27,8 @@ ifeq ("$(CURRYPP)","")
 $(error Executable 'currypp' not found! Install it by 'cypm install currypp' and add '~/.cpm/bin' to your PATH)
 endif
 
-# The root directory of the sources of the Spicey application:
-SRCDIR := $(CURDIR)/src
-
-# The load path for the Spicey application:
-export CURRYPATH := $(SRCDIR):$(SRCDIR)/Model
+# all Curry source files used by the implementation
+SOURCES := $(shell find src -name "*.curry") src/Model/Queries.curry
 
 ############################################################################
 
@@ -51,21 +48,31 @@ checkdeploy:
 	   echo "Installing required executable 'curry2cgi'..." ; \
            $(CPM) install html2 ; fi
 
+# Generate pure Curry module Model.Queries with CurryPP:
+src/Model/Queries.curry: src/Model/Queries.curry.pp
+	@if [ ! -x "$(CURRYPP)" ] ; then \
+		echo "REQUIRED EXECUTABLE 'currypp' NOT FOUND!" ; \
+		echo "Install it by > cypm install currypp" ; \
+		exit 1 ; fi
+	rm -f $@ && cd src/Model && ln -s Queries.curry.pp Queries.curry
+	$(CURRYBIN)/curry $(CURRYOPTIONS) :load Model.Queries :quit
+	rm $@ && mv src/Model/Queries.curry.CURRYPP $@
+
 # Compile the generated Spicey application:
 .PHONY: compile
-compile:
+compile: $(SOURCES)
 	$(CURRYBIN)/curry $(CURRYOPTIONS) :load Main :quit
 
 # Load the generated Spicey application into the Curry system so that
 # one can evaluate some expressions:
 .PHONY: load
-load:
+load: $(SOURCES)
 	$(CURRYBIN)/curry $(CURRYOPTIONS) :load Main
 
 # Runs the generated Spicey application by evaluating the main expression.
 # This might be useful to test only the initial web page without a web server
 .PHONY: run
-run:
+run: $(SOURCES)
 	$(CURRYBIN)/curry $(CURRYOPTIONS) :load Main :eval main :q
 
 # Deploy the generated Spicey application, i.e., install it in the
@@ -86,7 +93,7 @@ deploy: checkdeploy
 	cp data/htaccess $(WEBSERVERDIR)/sessiondata/.htaccess
 	chmod 700 $(WEBSERVERDIR)/sessiondata
 
-$(WEBSERVERDIR)/run.cgi: src/*.curry src/*/*.curry
+$(WEBSERVERDIR)/run.cgi: $(SOURCES)
 	$(CPM) exec $(CURRY2CGI) --system="$(SYSTEM)" \
 	  -i Controller.SpiceySystem \
 	  -i Controller.User \
