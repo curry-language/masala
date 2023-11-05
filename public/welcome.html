@@ -20,10 +20,36 @@ on a local machine.
 <h5>Uploading packages</h5>
 <p>
 Before uploading a new package or a new version of an existing package,
-one has to register and then log in (see the buttons/links
-in the top-right corner).
-When you upload a new package (use the <code>Upload</code> button in the
-right-top user menu), you are the <b>maintainer</b> of this package.
+one has to register to Masala in order to get a validated account.
+If you have a Masala account, there are two ways to upload a package:
+<ol>
+<li>
+Via this web page:
+Log in into Masala (see the buttons/links in the top-right part
+of the web page).
+After logging in, select "Upload a new package (version)"
+in your user menu (top-right part of the web page).
+Then you get a web page with a text area into which
+you can copy the contents of the <code>package.json</code>
+file of your package which you want to upload.
+</li>
+<li>
+Via the Curry Package Manager CPM (version 3.2.0 or higher):
+This is the preferred and simpler way:
+Go into the source code of your package and
+use the command <code>cypm upload</code> to upload this package.
+This command first tests the package and, if this is successful,
+uploads the package to Masala (you will be asked for your
+login name and password of your Masala account).
+</li>
+</ol>
+In both cases, the package specification must contain a
+<code>source</code> field pointing to a git repository
+or http address containing the source of your package.
+This source will be downloaded and stored in Masala.
+</p>
+<p>
+When you upload a new package, you are the <b>maintainer</b> of this package.
 Later, you can also invite other registered users as maintainers
 of your package. Note that only maintainers of a package
 can upload new versions of the same package.
