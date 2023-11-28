@@ -9,7 +9,7 @@ is uploaded to Masala, some checks are performed
 2. Is the 'source' field either `Http _` or a `Git url ...`?
 
 If these checks are satisfied, the package source is downloaded
-in the local Masala directory (which is the main directory of
+into the local Masala directory (which is the main directory of
 the web application, i.e., `/var/www/masala` at server
 `cpm@informatik.uni-kiel.de`):
 
@@ -33,7 +33,7 @@ which is done by the command
     cat package.json | curl --data-binary @- .../cpm-upload-masala.cgi
 
 The script `cpm-upload-masala.cgi` basically calls the command `cpm-upload`
-for the user `cpm`, i.e., it implemented by
+for the user `cpm`, i.e., it is implemented by
 
     ssh -p 55055 cpm@cpm.informatik.uni-kiel.de .cpm/bin/cpm-upload --masala
 

@@ -142,8 +142,8 @@ publishPackageVersion pname pvers = do
 uploadPackageToCPM :: String -> IO (Either String String)
 uploadPackageToCPM pkgspec = do
   (rc,out,err) <- evalCmd "curl"
-                          ["--data-binary", "@-", cpmUploadURL ]
-                          pkgspec
+                    ["--max-time", "30", "--data-binary", "@-", cpmUploadURL ]
+                    pkgspec
   return $ if rc == 0 then Right out
                       else Left $ err ++ out
 
