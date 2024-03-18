@@ -8,7 +8,7 @@ module System.Processes
   , nextControllerRefInProcessOrForUrl
   ) where
 
-import Control.AllValues    ( getOneValue )
+import Control.Search.AllValues ( getOneValue )
 import HTML.Base
 import HTML.Session
 
