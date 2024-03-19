@@ -99,9 +99,12 @@ listRoute a = let xs = split (=='/') (showRoute a)
 --- Reads an entity for a given key and applies a controller to it.
 applyControllerOn :: Maybe enkey -> (enkey -> IO en)
                   -> (en -> Controller) -> Controller
-applyControllerOn Nothing        _       _              = displayUrlError
-applyControllerOn (Just userkey) getuser usercontroller =
-  getuser userkey >>= usercontroller
+applyControllerOn Nothing      _         _                = displayUrlError
+applyControllerOn (Just enkey) getentity entitycontroller =
+  -- enforce evaluation of entity to catch "unknown entity" error
+  catch (getentity enkey >>= \en -> (return . Just) $! en)
+        (\_ -> return Nothing) >>=
+  maybe (displayError "Illegal URL (unknown entity)") entitycontroller
 
 --- A controller to redirect to an URL starting with "?"
 --- (see implementation of `getPage`).
