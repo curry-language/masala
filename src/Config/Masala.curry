@@ -5,17 +5,23 @@
 module Config.Masala
  where
 
-import System.FilePath ( (</>) )
+import System.Environment ( getEnv )
+
+import System.FilePath    ( (</>) )
 import Data.Time
 
 ------------------------------------------------------------------------------
 --- Is the current installation a test system?
+--- As a default, it is a test system unless the environment variable
+--- `MASALATEST` has value `no`.
 --- In a test systems, mails are not really sent but its contents is
 --- just shown in the web page which sent it (see `Controller.Mail`).
 --- Moreover, the source files of packages are not downloaded and
 --- nothing is sent to CPM when a package is published.
-testSystem :: Bool
-testSystem = True
+isTestSystem :: IO Bool
+isTestSystem = do
+  masalatest <- getEnv "MASALATEST"
+  return $ masalatest /= "no"
 
 --- Email address of administrator:
 adminEmail :: String
@@ -27,14 +33,16 @@ baseCGI = "run.cgi"
 
 --- The URL of the main script of the module system
 --- (used to generate external URLs for modules and master programs):
-baseURL :: String
-baseURL | testSystem = "http://localhost/~mh/masala2"
-        | otherwise  = "https://cpm.curry-lang.org/masala"
+getBaseURL :: IO String
+getBaseURL = do
+  testsys <- isTestSystem
+  return $ if testsys then "http://localhost/~mh/masala"
+                      else "https://cpm.curry-lang.org/masala"
 
 --- The URL of the main script of the module system
 --- (used to generate external URLs for modules and master programs):
-mainScriptURL :: String
-mainScriptURL = baseURL ++ "/" ++ baseCGI
+getMainScriptURL :: IO String
+getMainScriptURL = fmap (++ ("/" ++ baseCGI)) getBaseURL
 
 --- The system hash key used to encode passwords
 --- (compare `System.Authentication`).
@@ -59,9 +67,11 @@ packageSpecDir = masalaDataDir </> "packages"
 
 --- The directory where the sources of uploaded packages are stored.
 --- If it is empty, the sources are not downloaded.
-downloadSourceDir :: String
-downloadSourceDir | testSystem = "" -- do not download in test system
-                  | otherwise  = masalaDataDir </> "downloads"
+getDownloadSourceDir :: IO String
+getDownloadSourceDir = do
+  testsys <- isTestSystem
+  return $ if testsys then "" -- do not download in test system
+                      else masalaDataDir </> "downloads"
 
 --- The directory where the tar files of the sources of uploaded packages
 --- are stored.
@@ -86,9 +96,11 @@ cpmUploadURL =
   "https://www-ps.informatik.uni-kiel.de/~cpm/cpm-upload-masala.cgi"
 
 --- The base directory where the data of CPM is stored.
-cpmBaseDir :: String
-cpmBaseDir | testSystem = "/home/mh/public_html/curry/cpm"
-           | otherwise  = "/net/medoc/home/cpm/public_html"
+getCPMBaseDir :: IO String
+getCPMBaseDir = do
+  testsys <- isTestSystem
+  return $ if testsys then "/home/mh/public_html/curry/cpm"
+                      else "/net/medoc/home/cpm/public_html"
 
 --- Documentation URL of a package version in the CPM repository.
 packageURLinCPM :: String -> String -> String

@@ -20,7 +20,8 @@ import Model.Masala2
 getVersionTestTime :: Package -> Version -> IO (Maybe String)
 getVersionTestTime pkg vers = do
   let pkgid = packageName pkg ++ "-" ++ versionVersion vers
-      testfile = cpmBaseDir </> "TEST" </> pkgid ++ ".csv"
+  cpmbasedir <- getCPMBaseDir
+  let testfile = cpmbasedir </> "TEST" </> pkgid ++ ".csv"
   hastests <- doesFileExist testfile
   if hastests
     then do

@@ -9,7 +9,7 @@ import System.Environment ( getArgs )
 import System.Process     ( system )
 import System.URL
 
-import Config.Masala         ( mainScriptURL )
+import Config.Masala         ( getMainScriptURL )
 import System.Authentication ( getUserHash )
 
 data Options = Options
@@ -69,7 +69,8 @@ mainWithOpts opts0 pkgfile = do
 --- Calls the upload batch URL of Masala.
 callUploadBy :: String -> String -> Bool -> Bool -> String -> IO ()
 callUploadBy login passwd publish force pkgtxt = do
-  let upurl = mainScriptURL ++ "?UploadBy/" ++
+  masalaurl <- getMainScriptURL
+  let upurl = masalaurl ++ "?UploadBy/" ++
               string2urlencoded login ++ "/" ++
               string2urlencoded passwd ++ "/" ++
               string2urlencoded (show publish) ++ "/" ++

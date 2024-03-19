@@ -69,22 +69,25 @@ checkPackageForUpload pkg = case source pkg of
 --- Tries to download the source of the package. If this is not possible,
 --- return `Left errormsg`, otherwise return the package.
 downloadSource :: Package -> PackageSource -> IO (Either String Package)
-downloadSource pkg pkgsrc =
-  if null downloadSourceDir
+downloadSource pkg pkgsrc = do
+  downloadsrcdir <- getDownloadSourceDir
+  if null downloadsrcdir
     then return $ Right pkg
     else do
-      recreateDirectory $ downloadSourceDir </> packageId pkg
+      recreateDirectory $ downloadsrcdir </> packageId pkg
       (msgs,ires) <- fromErrorLoggerMsgs Info $
-                       installPackageSourceTo pkg pkgsrc downloadSourceDir
+                       installPackageSourceTo pkg pkgsrc downloadsrcdir
       let downloaderr = "COULD NOT DOWNLOAD PACKAGE SOURCE:\n"
-      maybe (return $ Left $ downloaderr ++ msgs) (const createTarFile) ires
+      maybe (return $ Left $ downloaderr ++ msgs)
+            (const (createTarFile downloadsrcdir))
+            ires
  where
-  createTarFile = do
+  createTarFile downloadsrcdir = do
     createDirectoryIfMissing True downloadTarDir
     let pkgid = packageId pkg
     tarfile <- getAbsolutePath $ downloadTarDir </> pkgid ++ ".tar.gz"
     system $ unwords [ "rm", "-f", tarfile]
-    let cmd = unwords [ "cd", downloadSourceDir </> pkgid, "&&"
+    let cmd = unwords [ "cd", downloadsrcdir </> pkgid, "&&"
                       , "tar", "czf", tarfile, ".", "&&"
                       , "chmod", "644", tarfile
                       ]
@@ -127,8 +130,9 @@ publishPackageVersion pname pvers = do
       tarfile  = downloadTarDir </> pname ++ "-" ++ pvers ++ ".tar.gz"
   sfexists <- doesFileExist specfile
   tfexists <- doesFileExist tarfile
-  if sfexists && (testSystem || tfexists)
-    then if testSystem
+  testsys  <- isTestSystem
+  if sfexists && (testsys || tfexists)
+    then if testsys
            then readFile specfile >>= uploadPackageToMasalaStore pname pvers
            else readFile specfile >>= uploadPackageToCPM
     else return $ Left $

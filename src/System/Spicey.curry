@@ -35,7 +35,7 @@ import HTML.Styles.Bootstrap4
 import HTML.WUI
 import System.Directory
 
-import Config.Masala        ( baseCGI, testSystem )
+import Config.Masala        ( baseCGI, isTestSystem )
 import Config.Roles
 import Config.UserProcesses
 import Model.Masala2        ( showVersionKey )
@@ -326,13 +326,14 @@ getPage viewblock = case viewblock of
     installtime <- do exif <- doesFileExist execfile
                       if exif then fmap Just $ getModificationTime execfile
                               else return Nothing
+    testsystem <- isTestSystem
     withSessionCookie $ bootstrapPage2 favIcon cssIncludes jsIncludes
       spiceyTitle spiceyHomeBrand
       (addNavItemClass $ routemenu) (rightTopMenu login ++ [("nav-item", searchElem)])
       0 []
       [h1 [htxt "Masala: ",
           smallMutedText $ "The Repository of Curry Packages" ++
-                           if testSystem then " (TEST SYSTEM)" else ""]]
+                           if testsystem then " (TEST SYSTEM)" else ""]]
       (messageLine msg lasturl : viewblock)
       (spiceyFooter installtime)
  where

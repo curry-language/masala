@@ -69,7 +69,8 @@ sendMail from to subject contents = do
   exclusiveIO (emailLogFile ++ ".LOCK") $
     appendFile emailLogFile
                (line ++ "\nSent at " ++ ctime ++ " (UTC)\n" ++ mailtxt)
-  unless testSystem $ System.Mail.sendMail from to subject contents
+  testsys <- isTestSystem
+  unless testsys $ System.Mail.sendMail from to subject contents
 
 --- A controller which sends an email to a given recipient with
 --- given subject and contents. After sending, the info document
@@ -78,7 +79,8 @@ sendMailController :: [BaseHtml] -> String -> String -> String -> Controller
 sendMailController emailInfo to subject contents = do
   let mailtxt = System.Mail.showSendMail adminEmail to subject contents
   sendMail adminEmail to subject contents
-  if testSystem
+  testsys <- isTestSystem
+  if testsys
     then return $ emailInfo ++
                   -- for testing only
                   [ hrule
@@ -100,10 +102,11 @@ sendPasswordMail to password = do
 
 -- Send an email to request the validation of the registered email address.
 sendValidationMail :: String -> String -> Controller
-sendValidationMail to token = do 
+sendValidationMail to token = do
+  masalaurl <- getMainScriptURL
   let subject  = "Please validate your email address"
       contents = "To validate your email address, please go to the URL\n"++
-                 mainScriptURL ++ "?Validation/" ++ token
+                 masalaurl ++ "?Validation/" ++ token
       emailInfo = [ h3 [htxt "Initial registration successful!"],
                     par [htxt $
                       "In order to use your account, please activate it now " ++

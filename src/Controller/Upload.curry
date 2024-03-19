@@ -109,17 +109,15 @@ uploadJsonStore = sessionStore "uploadJsonStore"
 --- Shows a form to confirm an upload that requires overwriting an existing Version
 --- or create new Categories.
 uploadCheckController :: Controller
-uploadCheckController = do
-    checkAuthorization
-        (packageOperationAllowed NewEntity)
-        (\sinfo ->
-            if isAdminSession sinfo
-                then return [formElem uploadCheckForm]
-                else displayUrlError
-        )
+uploadCheckController =
+  checkAuthorization
+    (packageOperationAllowed NewEntity)
+    (\sinfo -> if isAdminSession sinfo
+                 then return [formElem uploadCheckForm]
+                 else displayUrlError )
 
---- A WUI form to confirm an upload that requires overwriting an existing Version
---- or create new Categories.
+--- A WUI form to confirm an upload that requires overwriting an existing
+--- Version or create new Categories.
 --- The default values for the fields are stored in 'uploadJsonStore'.
 uploadCheckForm :: HtmlFormDef (String, String, Maybe PackageJSON)
 uploadCheckForm = formDefWithID "Controller.Upload.uploadCheckForm"
