@@ -25,6 +25,7 @@ import Model.Masala2
 import Model.Queries
 import System.Processes
 import System.Authentication
+import System.SessionInfo    ( UserSessionInfo, getUserSessionInfo )
 import View.SpiceySystem
 
 -----------------------------------------------------------------------------
@@ -63,17 +64,16 @@ loginViewData = sessionStore "loginViewData"
 --- Controller for resetting a forgotten password.
 forgotPasswordController :: Controller
 forgotPasswordController = do
-  setParWuiStore forgotPasswordStore () ""
+  sinfo <- getUserSessionInfo
+  setParWuiStore forgotPasswordStore sinfo ""
   return [formElem forgotPasswordForm]
 
 --- The data processed by the 'forgotPasswordForm'.
-forgotPasswordStore
-  :: SessionStore ((), WuiStore String)
+forgotPasswordStore :: SessionStore (UserSessionInfo, WuiStore String)
 forgotPasswordStore = sessionStore "forgotPasswordStore"
 
 --- A WUI form to reset a forgotten password.
-forgotPasswordForm
-  :: HtmlFormDef ((), WuiStore String)
+forgotPasswordForm :: HtmlFormDef (UserSessionInfo, WuiStore String)
 forgotPasswordForm =
   pwui2FormDef "Controller.SpiceySystem.forgotPasswordForm" forgotPasswordStore
     (\_ -> wForgotPassword)

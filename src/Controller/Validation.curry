@@ -66,12 +66,13 @@ validationController = do
 --- Shows a form to edit the given User entity.
 validationTokenController :: Controller
 validationTokenController = do
-    setParWuiStore validationStore () ""
-    return [formElem validationForm]
+  sinfo <- getUserSessionInfo
+  setParWuiStore validationStore sinfo ""
+  return [formElem validationForm]
 
 --- A WUI form to issue a new ValidationToken for a User.
 --- The default values for the fields are stored in 'validationStore'.
-validationForm :: HtmlFormDef ((),WuiStore String)
+validationForm :: HtmlFormDef (UserSessionInfo, WuiStore String)
 validationForm =
     pwui2FormDef "Controller.Validation.validationForm" validationStore
         (\_ -> wValidation)
@@ -113,6 +114,5 @@ validationForm =
             "email address."
 
 --- The data stored for executing the "validation" WUI form.
-validationStore
-  :: SessionStore ((),WuiStore String)
+validationStore :: SessionStore (UserSessionInfo,WuiStore String)
 validationStore = sessionStore "validationStore"
