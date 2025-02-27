@@ -9,7 +9,7 @@ written in the declarative multi-paradigm language
 
 The initial version of this implementation has been generated
 with the web framework
-[Spicey](https://www.informatik.uni-kiel.de/~pakcs/spicey/).
+[Spicey](https://cpm.curry-lang.org/pkgs/spicey.html).
 
 IMPORTANT NOTES:
 ----------------

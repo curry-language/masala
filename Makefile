@@ -94,7 +94,7 @@ deploy: checkdeploy
 	chmod 700 $(WEBSERVERDIR)/sessiondata
 
 $(WEBSERVERDIR)/run.cgi: $(SOURCES)
-	$(CPM) exec $(CURRY2CGI) --system="$(SYSTEM)" \
+	$(CURRY2CGI) --cpm="$(CPM)" --system="$(SYSTEM)" \
 	  -i Controller.SpiceySystem \
 	  -i Controller.User \
 	  -i Controller.Package \
