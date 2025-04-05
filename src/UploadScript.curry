@@ -4,7 +4,7 @@
 --- Install this script by `pakcs :l UploadScript :save :q`.
 ------------------------------------------------------------------------------
 
-module UploadScript where
+module UploadScript ( main ) where
 
 import Network.URL        ( string2urlencoded )
 import System.Environment ( getArgs )

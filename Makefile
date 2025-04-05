@@ -1,6 +1,9 @@
 # Generic Makefile for Spicey applications
 
-# Definition of the root of the Curry system to be used:
+# tar file to be generated with the complete web application
+TARFILE := $(CURDIR)/MASALA.tgz
+
+# Definition of the root of the Curry system used to compile the webapp:
 SYSTEM=/opt/pakcs
 
 # Curry bin directory to be used:
@@ -10,12 +13,12 @@ CURRYOPTIONS=:set -time
 
 # Target directory where the compiled cgi programs, style sheets, etc
 # should be stored, e.g.: $(HOME)/public_html
-WEBSERVERDIR = $(HOME)/public_html/masala
+WEBDIR = $(HOME)/public_html/masala
 
 # Directory containing Masala data:
-DATADIR=$(WEBSERVERDIR)/data
+DATADIR=$(WEBDIR)/data
 
-# Executable of the Curry Package Manager CPM:
+# Executable of the Curry Package Manager to instal the webapp:
 CPM := $(CURRYBIN)/cypm
 
 # Executable of the curry2cgi:
@@ -34,12 +37,15 @@ SOURCES := $(shell find src -name "*.curry") src/Model/Queries.curry
 
 .PHONY: all
 all:
-	@echo "make: deploy install compile load run clean?"
+	@echo "make: deploy install tar compile load run clean?"
 
-# Install the packages required by the generated Spicey application:
+# Install the packages required by the generated webapp:
 .PHONY: install
 install:
 	$(CPM) install
+
+$(WEBDIR):
+	mkdir -p $(WEBDIR)
 
 # check presence of tools required for deployment and install them:
 .PHONY: checkdeploy
@@ -76,24 +82,23 @@ run: $(SOURCES)
 	$(CURRYBIN)/curry $(CURRYOPTIONS) :load Main :eval main :q
 
 # Deploy the generated Spicey application, i.e., install it in the
-# web directory WEBSERVERDIR:
+# web directory WEBDIR:
 .PHONY: deploy
-deploy: checkdeploy
-	mkdir -p $(WEBSERVERDIR)
-	$(MAKE) $(WEBSERVERDIR)/run.cgi
+deploy: checkdeploy | $(WEBDIR)
+	$(MAKE) $(WEBDIR)/run.cgi
 	# copy other files (style sheets, images,...)
-	cp -r public/* $(WEBSERVERDIR)
-	chmod -R go+rX $(WEBSERVERDIR)
+	cp -r public/* $(WEBDIR)
+	chmod -R go+rX $(WEBDIR)
 	mkdir -p $(DATADIR)
 	cp data/htaccess $(DATADIR)/.htaccess
 	chmod 700 $(DATADIR)
 	# recreate directory for storing local session data:
-	/bin/rm -rf $(WEBSERVERDIR)/sessiondata
-	mkdir -p $(WEBSERVERDIR)/sessiondata
-	cp data/htaccess $(WEBSERVERDIR)/sessiondata/.htaccess
-	chmod 700 $(WEBSERVERDIR)/sessiondata
+	/bin/rm -rf $(WEBDIR)/sessiondata
+	mkdir -p $(WEBDIR)/sessiondata
+	cp data/htaccess $(WEBDIR)/sessiondata/.htaccess
+	chmod 700 $(WEBDIR)/sessiondata
 
-$(WEBSERVERDIR)/run.cgi: $(SOURCES)
+$(WEBDIR)/run.cgi: $(SOURCES)
 	$(CURRY2CGI) --cpm="$(CPM)" --system="$(SYSTEM)" \
 	  -i Controller.SpiceySystem \
 	  -i Controller.User \
@@ -109,6 +114,19 @@ $(WEBSERVERDIR)/run.cgi: $(SOURCES)
 	  -i System.Spicey \
 	  -o $@ Main.curry
 
+# create tar file with complete web app
+.PHONY: tar
+tar:
+	/bin/rm -f $(TARFILE)
+	$(MAKE) $(TARFILE)
+
+$(TARFILE): $(WEBDIR)/run.cgi
+	cd $(WEBDIR) && tar czvf $(TARFILE) .
+	chmod 644 $(TARFILE)
+	@echo "tar file with web app generated:"
+	@echo "$(TARFILE)"
+	@echo "Copy and unpack it in the desired directory of the web server"
+
 # clean up generated the package directory
 .PHONY: clean
 clean: 
@@ -117,4 +135,4 @@ clean:
 # clean everything, including the deployed files
 .PHONY: cleanall
 cleanall: clean
-	/bin/rm -f $(WEBSERVERDIR)/run.cgi*
+	/bin/rm -f $(WEBDIR)/run.cgi*

@@ -24,7 +24,7 @@ IMPORTANT NOTES:
    be in your path).
 
 2. Before you deploy your web application, you should
-   define the variable WEBSERVERDIR in the `Makefile` according to
+   define the variable WEBDIR in the `Makefile` according to
    your desired location.
 
    Then you can deploy your web application by the command
@@ -38,6 +38,19 @@ IMPORTANT NOTES:
    During the make process, this file is translated into the pure Curry
    program `src/Model/Queries.curry` (which should not be modified).
 
+4. In the default deployment, the web application runs as a __test system__.
+   In a test system (the test status is also indicated in the main
+   header of the web page), mails are not really sent but its contents is
+   just shown in the web page which sent it (see `Controller.Mail`).
+   Moreover, the source files of packages are not downloaded and
+   nothing is sent to CPM when a package is published.
+   In order to run the deployed system as a real system, set the
+   environment variable `MASALATEST` to `no` in script execution,
+   which can be done by adding the line
+
+       export MASALATEST=no
+  
+   in the generated `run.cgi` script.
 
 The directory structure of this package is as follows
 (where <MODEL> is the name of your entity-relationship model).
