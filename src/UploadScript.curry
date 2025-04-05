@@ -4,10 +4,12 @@
 --- Install this script by `pakcs :l UploadScript :save :q`.
 ------------------------------------------------------------------------------
 
-import HTML.Base          ( string2urlencoded )
+module UploadScript where
+
+import Network.URL        ( string2urlencoded )
 import System.Environment ( getArgs )
 import System.Process     ( system )
-import System.URL
+import System.URL         ( getContentsOfURL )
 
 import Config.Masala         ( getMainScriptURL )
 import System.Authentication ( getUserHash )
