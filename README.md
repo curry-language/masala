@@ -11,8 +11,9 @@ The initial version of this implementation has been generated
 with the web framework
 [Spicey](https://cpm.curry-lang.org/pkgs/spicey.html).
 
-IMPORTANT NOTES:
-----------------
+
+Installation
+------------
 
 1. Before you compile the generated web application for the first time,
    execute the command
@@ -29,7 +30,7 @@ IMPORTANT NOTES:
 
    Then you can deploy your web application by the command
 
-       > make deploy
+       > make SYSTEM=/opt/kics2 deploy
 
 3. In order to enable code management with the Curry language server
    (e.g., using VisualCode), all SQL database queries are contained
@@ -51,6 +52,25 @@ IMPORTANT NOTES:
        export MASALATEST=no
   
    in the generated `run.cgi` script.
+
+5. To install a tar file with the complete contents of the directory
+   with the web application, run
+
+       > make tar
+
+   This generates a tar file `MASALA.tgz`.
+
+   Now copy and unpack it in the desired directory of the web server
+   (`.../masala`).
+
+   Note: if necessary, add the following `.htaccess` file after unpacking:
+
+       Options +ExecCGI
+       AddHandler cgi-script .cgi
+
+
+Files
+-----
 
 The directory structure of this package is as follows
 (where <MODEL> is the name of your entity-relationship model).

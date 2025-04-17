@@ -13,7 +13,7 @@ CURRYOPTIONS=:set -time
 
 # Target directory where the compiled cgi programs, style sheets, etc
 # should be stored, e.g.: $(HOME)/public_html
-WEBDIR = $(HOME)/public_html/masala
+WEBDIR = $(HOME)/public_html/curry/masala
 
 # Directory containing Masala data:
 DATADIR=$(WEBDIR)/data

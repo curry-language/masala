@@ -14,7 +14,7 @@ import Data.Time
 --- Is the current installation a test system?
 --- As a default, it is a test system unless the environment variable
 --- `MASALATEST` has value `no`.
---- In a test systems, mails are not really sent but its contents is
+--- In a test system, mails are not really sent but its contents is
 --- just shown in the web page which sent it (see `Controller.Mail`).
 --- Moreover, the source files of packages are not downloaded and
 --- nothing is sent to CPM when a package is published.
@@ -92,8 +92,7 @@ invalidTime = do
 --- programmers can use them. The package specification must be provided
 --- on stdin and the package's tar file must exist in the `downloadTarDir`.
 cpmUploadURL :: String
-cpmUploadURL =
-  "https://www-ps.informatik.uni-kiel.de/~cpm/cpm-upload-masala.cgi"
+cpmUploadURL = "https://cpm.curry-lang.org/cpm-upload-masala.cgi"
 
 --- The base directory where the data of CPM is stored.
 getCPMBaseDir :: IO String
